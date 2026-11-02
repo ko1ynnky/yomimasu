@@ -5,8 +5,8 @@ set -euo pipefail
 # shellcheck source=../../.claude/hooks/patterns.sh
 source "$(dirname "$0")/../../.claude/hooks/patterns.sh"
 
-# 既定の設定では日本語のパスが引用符付きで出て、拡張子の一致を逃す。
-found=$(git -c core.quotePath=false ls-files | { grep -iE "$audio_ext" || true; })
+# -z を付けないと、日本語や引用符を含むパスが引用符付きで出て、拡張子の一致を逃す。
+found=$(git ls-files -z | tr '\0' '\n' | { grep -iE "$audio_ext" || true; })
 if [[ -n $found ]]; then
   printf '音声ファイルはリポジトリに置けません：\n%s\n' "$found" >&2
   exit 1

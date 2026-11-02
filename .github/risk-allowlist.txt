@@ -3,6 +3,5 @@
 site/client/ui/*
 site/client/*.css
 test/site/*
-e2e/*
 README.md
 docs/claude-log/*

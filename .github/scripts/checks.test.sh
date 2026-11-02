@@ -39,13 +39,14 @@ ng() {
   failures=$((failures + 1))
 }
 
-# 第1引数の結果になるか、ログに第4引数が出ないかを見る。第3引数以降は検査のコマンドである。
+# 第1引数の結果（pass は成功、fail は検査の失敗、error は成功以外）になるか、ログに第3引数が出ないかを見る。
+# 第4引数以降は検査のコマンドである。
 expect() {
   local want=$1 what=$2 secret_text=$3 output code
   shift 3
   output=$("$@" 2>&1)
   code=$?
-  if [[ $want == pass && $code != 0 ]] || [[ $want == fail && $code != 1 ]]; then
+  if [[ $want == pass && $code != 0 ]] || [[ $want == fail && $code != 1 ]] || [[ $want == error && $code == 0 ]]; then
     ng "$what（期待 $want、exit $code、出力 $output）"
   fi
   if [[ -n $secret_text && $output == *"$secret_text"* ]]; then
@@ -76,6 +77,15 @@ plant "$repo" tests/録音.wav x
 expect fail 'no-audio: 日本語のファイル名でも落ちる' '' in_repo "$repo" bash "$scripts/no-audio.sh"
 
 repo=$(new_repo)
+plant "$repo" 'tests/a"b.wav' x
+expect fail 'no-audio: 引用符を含むファイル名でも落ちる' '' in_repo "$repo" bash "$scripts/no-audio.sh"
+
+outside=$(mktemp -d "$work/outside.XXXXXX")
+expect error 'no-audio: リポジトリの外では検査できないので通さない' '' in_repo "$outside" bash "$scripts/no-audio.sh"
+expect error 'no-secrets: リポジトリの外では検査できないので通さない' '' in_repo "$outside" bash "$scripts/no-secrets.sh"
+expect error 'deny-names: リポジトリの外では検査できないので通さない' '' in_repo "$outside" env DENY_NAMES="$name" bash "$scripts/deny-names.sh"
+
+repo=$(new_repo)
 plant "$repo" 設定/.env 'A=1'
 expect fail 'no-secrets: 日本語のフォルダーの .env でも落ちる' '' in_repo "$repo" bash "$scripts/no-secrets.sh"
 
@@ -86,6 +96,17 @@ expect fail 'no-secrets: 本文に鍵があると落ち、鍵をログに出さ�
 repo=$(new_repo)
 plant "$repo" .env 'A=1'
 expect fail 'no-secrets: .env を追跡していると落ちる' '' in_repo "$repo" bash "$scripts/no-secrets.sh"
+
+repo=$(new_repo)
+plant "$repo" .gitattributes '* -diff'
+plant "$repo" notes.md "key $anthropic_key"
+expect fail 'no-secrets: .gitattributes でバイナリ扱いにしても本文を見る' "$filler" in_repo "$repo" bash "$scripts/no-secrets.sh"
+
+repo=$(new_repo)
+base=$(git -C "$repo" rev-parse HEAD)
+plant "$repo" docs/a.md 'ok' "$anthropic_key"
+expect fail 'no-secrets: コミットメッセージの鍵も落とし、鍵をログに出さない' "$filler" in_repo "$repo" env SCAN_BASE="$base" bash "$scripts/no-secrets.sh"
+expect fail 'no-secrets: 読めない SCAN_BASE は検査できないので落ちる' '' in_repo "$repo" env SCAN_BASE=missing bash "$scripts/no-secrets.sh"
 
 repo=$(new_repo)
 plant "$repo" .env.example 'A='
@@ -106,24 +127,32 @@ plant "$repo" docs/a.md 'Sample Name appears'
 expect fail 'deny-names: 大文字と小文字の違いを無視する' 'Sample Name' in_repo "$repo" env DENY_NAMES='sample name' bash "$scripts/deny-names.sh"
 
 repo=$(new_repo)
+plant "$repo" .gitattributes '* -diff'
+plant "$repo" docs/a.md "文の中に$nameがある"
+expect fail 'deny-names: .gitattributes でバイナリ扱いにしても本文を見る' "$name" in_repo "$repo" env DENY_NAMES="$name" bash "$scripts/deny-names.sh"
+
+repo=$(new_repo)
 plant "$repo" "docs/$name.md" 'ok'
 expect fail 'deny-names: ファイル名の一致も落とし、名前をログに出さない' "$name" in_repo "$repo" env DENY_NAMES="$name" bash "$scripts/deny-names.sh"
 
 repo=$(new_repo)
 base=$(git -C "$repo" rev-parse HEAD)
 plant "$repo" docs/a.md 'ok' "$name"
-expect fail 'deny-names: PR のコミットメッセージの一致も落とす' "$name" in_repo "$repo" env DENY_NAMES="$name" DENY_NAMES_BASE="$base" bash "$scripts/deny-names.sh"
+expect fail 'deny-names: コミットメッセージの一致も落とす' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$base" bash "$scripts/deny-names.sh"
+expect fail 'deny-names: 読めない SCAN_BASE は検査できないので落ちる' '' in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE=missing bash "$scripts/deny-names.sh"
+expect fail 'deny-names: 新しいブランチの push でもコミットを見落とさない' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE=0000000000000000000000000000000000000000 bash "$scripts/deny-names.sh"
 
 gate() { printf '%s\n' "$@" | bash "$scripts/risk-gate.sh" "$allowlist"; }
 
 expect pass 'risk-gate: 変更がなければ通る' '' bash -c "bash '$scripts/risk-gate.sh' '$allowlist' </dev/null"
-expect pass 'risk-gate: 許可の中だけなら通る' '' gate README.md e2e/record.spec.ts docs/claude-log/2026-11-03.md
+expect pass 'risk-gate: 許可の中だけなら通る' '' gate README.md test/site/render.test.ts docs/claude-log/2026-11-03.md
 expect pass 'risk-gate: 画面の部品は通る' '' gate site/client/ui/band.tsx site/client/style.css
 expect fail 'risk-gate: 測定のコードは止める' '' gate .claude/skills/yomimasu/scripts/measure.ts
 expect fail 'risk-gate: 測定の定義は止める' '' gate docs/measure.md
 expect fail 'risk-gate: 録音のコードは止める' '' gate site/client/capture.ts
 expect fail 'risk-gate: 録音の画面は止める' '' gate site/client/recorder.tsx
 expect fail 'risk-gate: 測定のテストは止める' '' gate test/measure/measure.test.ts
+expect fail 'risk-gate: 録音の E2E は止める' '' gate e2e/record.spec.ts
 expect fail 'risk-gate: 知識の文章は止める' '' gate content/index.md
 expect fail 'risk-gate: Workflow は止める' '' gate .github/workflows/ci.yml
 expect fail 'risk-gate: 依存の宣言は止める' '' gate package.json
