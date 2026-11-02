@@ -10,7 +10,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "node --test \"test/**/*.test.ts\"",
-    "test:shell": "bash .claude/hooks/guard-files.test.sh",
+    "test:shell": "bash .claude/hooks/guard-files.test.sh && bash .github/scripts/checks.test.sh",
     "build": "node site/build.ts",
     "dev": "npm run build && wrangler dev --ip 127.0.0.1 --port 8787",
     "e2e": "playwright test",
