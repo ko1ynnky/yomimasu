@@ -17,6 +17,7 @@ env:
 
 jobs:
   # Claude は書き込みの権限のない job で動かす。結果を使う処理は次の job に分ける。
+  # github_token を渡すと、action は Claude の App のトークンを取らず、Claude の gh も読み取りだけになる。
   # PR の内容を実行しないよう、base を取り出す。REVIEW.md とスキルも base の版が効く。
   review:
     if: ${{ github.event.pull_request.user.login == 'claude[bot]' }}
@@ -24,7 +25,6 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: read
-      id-token: write
       pull-requests: read
     outputs:
       result: ${{ steps.claude.outputs.structured_output }}
@@ -39,12 +39,15 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh pr view "$PR" --json comments | bash .github/scripts/review-comments.sh >previous-reviews.json
+        run: gh pr view "$PR" --json comments | bash .github/scripts/review-comments.sh --with-answers >previous-reviews.json
 
+      # job の時間切れは取り消しの扱いで review-gate が飛ぶので、step の時間切れで失敗にする。
       - uses: anthropics/claude-code-action@d535f5172dec02b204866b393d6b20b9b2aaf98d # v1
         id: claude
+        timeout-minutes: 12
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
           allowed_bots: claude[bot],github-actions[bot]
           prompt: /review-pr ${{ github.event.pull_request.number }}
           claude_args: |

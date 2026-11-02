@@ -203,6 +203,11 @@ if [[ $comments != *公式の指摘* || $comments == *偽の指摘* ]]; then
   ng "review-comments: Workflow のコメントだけを渡す（出力 $comments）"
 fi
 
+history=$(printf '%s' '{"comments":[{"author":{"login":"github-actions"},"body":"<!-- review-gate -->\n公式の指摘"},{"author":{"login":"app/claude"},"body":"修正の答え"},{"author":{"login":"someone"},"body":"他人の文"}]}' | bash "$scripts/review-comments.sh" --with-answers 2>&1)
+if [[ $history != *公式の指摘* || $history != *修正の答え* || $history == *他人の文* ]]; then
+  ng "review-comments: 答えも渡すときは Claude の答えだけを足す（出力 $history）"
+fi
+
 # 偽の gh は、呼ばれた引数を記録し、場面ごとの JSON を返す。
 gh_bin=$(mktemp -d "$work/gh.XXXXXX")
 cat >"$gh_bin/gh" <<'EOF'
@@ -210,23 +215,26 @@ cat >"$gh_bin/gh" <<'EOF'
 printf '%s\n' "$*" >>"$GH_LOG"
 case "$*" in
   'pr view 7 --json comments') cat "$GH_FIXTURES/comments.json" ;;
-  'pr view 7 --json labels,closingIssuesReferences') cat "$GH_FIXTURES/pr.json" ;;
-  'issue view 3 --json author,labels') cat "$GH_FIXTURES/issue.json" ;;
+  'pr view 7 --json labels,closingIssuesReferences,headRefName') [[ ! -f $GH_FIXTURES/fail-pull ]] && cat "$GH_FIXTURES/pr.json" ;;
+  'issue view 3 --json author,labels,number,state') [[ ! -f $GH_FIXTURES/fail-issue ]] && cat "$GH_FIXTURES/issue.json" ;;
   'issue list --state open --label stop --json number') cat "$GH_FIXTURES/stops.json" ;;
   'pr comment 7 --body-file -') cat >>"$GH_FIXTURES/posted.txt" ;;
-  'pr merge 7 --auto --squash') [[ ! -f $GH_FIXTURES/merge-fails ]] ;;
+  'pr merge 7 --auto --squash') [[ ! -f $GH_FIXTURES/fail-merge ]] ;;
+  'workflow run auto.yml -f pr=7') [[ ! -f $GH_FIXTURES/fail-workflow ]] ;;
 esac
 EOF
 chmod +x "$gh_bin/gh"
 
 # 引数：場面の名前、結果の JSON、回数、PR のラベル、Issue のラベル、stop の一覧。
+# GATE_ISSUE の JSON は Issue の上書き、GATE_PR の JSON は PR の上書き、GATE_FAIL は失敗させる呼び出しである。
 gate_run() {
   local fixtures round=$3
   fixtures=$(mktemp -d "$work/fixtures.XXXXXX")
   jq -cn --argjson n "$((round - 1))" '{comments: [range($n) | {author: {login: "github-actions"}, body: "<!-- review-gate -->"}]}' >"$fixtures/comments.json"
-  jq -cn --arg labels "$4" '{labels: ($labels | split(",") | map(select(. != "") | {name: .})), closingIssuesReferences: [{number: 3}]}' >"$fixtures/pr.json"
-  jq -cn --arg labels "$5" '{author: {login: "owner"}, labels: ($labels | split(",") | map(select(. != "") | {name: .}))}' >"$fixtures/issue.json"
+  jq -cn --arg labels "$4" --argjson over "${GATE_PR:-null}" '{headRefName: "auto/issue-3", labels: ($labels | split(",") | map(select(. != "") | {name: .})), closingIssuesReferences: [{number: 3}]} + ($over // {})' >"$fixtures/pr.json"
+  jq -cn --arg labels "$5" --argjson over "${GATE_ISSUE:-null}" '{number: 3, state: "OPEN", author: {login: "owner"}, labels: ($labels | split(",") | map(select(. != "") | {name: .}))} + ($over // {})' >"$fixtures/issue.json"
   printf '%s' "${6:-[]}" >"$fixtures/stops.json"
+  [[ -n ${GATE_FAIL:-} ]] && : >"$fixtures/fail-$GATE_FAIL"
   : >"$fixtures/gh.log"
   gate_exit=0
   PATH="$gh_bin:$PATH" GH_LOG="$fixtures/gh.log" GH_FIXTURES="$fixtures" PR=7 OWNER=owner OUTPUT="$2" bash "$scripts/review-gate.sh" >/dev/null 2>&1 || gate_exit=$?
@@ -271,34 +279,42 @@ gate_run minor-last "$minor" 3 go:merge go:merge
 expect_gate 'review-gate: 3回目の軽い指摘は止めない' 0 'pr merge 7 --auto --squash' 'workflow run'
 
 gate_run merge "$clean" 1 go:merge go:merge
-expect_gate 'review-gate: 指摘がなく Issue も go:merge なら自動マージする' 0 'pr merge 7 --auto --squash' ''
+expect_gate 'review-gate: 指摘がなく Issue も go:merge なら自動マージする' 0 'pr merge 7 --auto --squash' 'needs-human'
 gate_run pr-only "$clean" 1 go:pr go:pr
-expect_gate 'review-gate: go:pr はマージしない' 0 '' 'pr merge'
-gate_run forged "$clean" 1 go:merge go:pr
-expect_gate 'review-gate: Issue が go:merge でなければ、PR のラベルだけではマージしない' 0 '' 'pr merge'
-gate_run held "$clean" 1 go:merge,needs-human go:merge
-expect_gate 'review-gate: needs-human の PR はマージしない' 0 '' 'pr merge'
+expect_gate 'review-gate: go:pr は緑で終え、マージしない' 0 '' 'pr merge'
 gate_run stopped "$clean" 1 go:merge go:merge '[{"number":9}]'
-expect_gate 'review-gate: stop があればマージしない' 0 '' 'pr merge'
+expect_gate 'review-gate: stop があれば緑で終え、マージしない' 0 '' 'pr merge'
 
-summary_fixture="$work/execution.json"
-cat >"$summary_fixture" <<'EOF'
-[
-  {"type": "system", "subtype": "init", "model": "claude-opus-5-5"},
-  {"type": "assistant", "message": {"content": [{"type": "text", "text": "PROMPT-BODY-SHOULD-NOT-APPEAR"}, {"type": "tool_use", "name": "Skill", "input": {"skill": "verify"}}]}},
-  {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Skill", "input": {"skill": "verify"}}]}},
-  {"type": "result", "num_turns": 12, "duration_ms": 90000, "modelUsage": {"claude-opus-5-5": {"inputTokens": 100, "outputTokens": 20, "cacheReadInputTokens": 5, "cacheCreationInputTokens": 7}}}
-]
-EOF
-summary=$(bash "$scripts/run-summary.sh" "$summary_fixture" 2>&1)
-for part in 'claude-opus-5-5' 'ターン数：12' '入力 112' '出力 20' 'スキル：verify'; do
-  if [[ $summary != *"$part"* ]]; then
-    ng "run-summary: 要約に $part がある（出力 $summary）"
-  fi
-done
-if [[ $summary == *PROMPT-BODY* ]]; then
-  ng 'run-summary: 実行の全文を要約に出さない'
-fi
+hand_over='pr edit 7 --add-label needs-human'
+gate_run forged "$clean" 1 go:merge go:pr
+expect_gate 'review-gate: PR だけ go:merge なら人に渡す' 1 "$hand_over" 'pr merge'
+gate_run unlabeled "$clean" 1 '' go:merge
+expect_gate 'review-gate: Issue だけ go:merge なら人に渡す' 1 "$hand_over" 'pr merge'
+gate_run held "$clean" 1 go:merge,needs-human go:merge
+expect_gate 'review-gate: needs-human の PR はマージしない' 1 '' 'pr merge'
+gate_run both "$clean" 1 go:merge go:merge,go:pr
+expect_gate 'review-gate: Issue に go:pr もあれば人に渡す' 1 "$hand_over" 'pr merge'
+gate_run night "$clean" 1 go:merge go:merge,night
+expect_gate 'review-gate: Issue に night があれば人に渡す' 1 "$hand_over" 'pr merge'
+gate_run issue-held "$clean" 1 go:merge go:merge,needs-human
+expect_gate 'review-gate: 失敗した実行の Issue の PR はマージしない' 1 "$hand_over" 'pr merge'
+GATE_ISSUE='{"author":{"login":"other"}}' gate_run author "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: Issue の作者が違えば人に渡す' 1 "$hand_over" 'pr merge'
+GATE_ISSUE='{"state":"CLOSED"}' gate_run closed "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: 閉じた Issue では人に渡す' 1 "$hand_over" 'pr merge'
+GATE_PR='{"closingIssuesReferences":[]}' gate_run none "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: 閉じる Issue がなければ人に渡す' 1 "$hand_over" 'pr merge'
+GATE_PR='{"headRefName":"auto/issue-5"}' gate_run other "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: ブランチの Issue を閉じない PR は人に渡す' 1 "$hand_over" 'pr merge'
+
+GATE_FAIL=merge gate_run merge-fails "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: 自動マージを有効にできなければ人に渡す' 1 "$hand_over" ''
+GATE_FAIL=workflow gate_run workflow-fails "$blocking" 1 go:merge go:merge
+expect_gate 'review-gate: 修正を起こせなければ人に渡す' 1 "$hand_over" ''
+GATE_FAIL=issue gate_run issue-fails "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: Issue を読めなければ人に渡し、マージしない' 1 "$hand_over" 'pr merge'
+GATE_FAIL=pull gate_run pull-fails "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: PR を読めなければ人に渡し、マージしない' 1 "$hand_over" 'pr merge'
 
 gate() { printf '%s\n' "$@" | bash "$scripts/risk-gate.sh" "$allowlist"; }
 

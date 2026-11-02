@@ -48,7 +48,7 @@ jobs:
           fi
           if [[ -n $PR ]]; then
             [[ $PR =~ ^[0-9]+$ ]] || { echo '::error::PR の番号の形が違います。'; exit 1; }
-            ready=$(gh pr view "$PR" --json state,labels,author --jq '.state == "OPEN" and (.author.login | test("claude")) and ([.labels[].name] | index("needs-human") == null)')
+            ready=$(gh pr view "$PR" --json state,labels,author --jq '.state == "OPEN" and (.author.login | test("^(app/)?claude(\\[bot\\])?$")) and ([.labels[].name] | index("needs-human") == null)')
             [[ $ready == true ]] || { echo "PR #$PR は修正の対象ではありません。"; exit 0; }
             echo "pr=$PR" >>"$GITHUB_OUTPUT"
             exit 0
@@ -82,17 +82,20 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
 
+      # Claude が変えられない場所へ、あとで書き込みの権限で動かすスクリプトを写しておく。
       - name: 始める前の状態を残す
         id: before
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          cp .github/scripts/run-summary.sh "$RUNNER_TEMP/run-summary.sh"
           if [[ -n $ISSUE ]]; then
             gh issue edit "$ISSUE" --add-label in-progress
           else
             gh pr view "$PR" --json comments | bash .github/scripts/review-comments.sh >previous-reviews.json
-            echo "head=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)" >>"$GITHUB_OUTPUT"
+            head=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
+            echo "head=$head" >>"$GITHUB_OUTPUT"
           fi
 
       # prompt には番号だけを入れる。Issue の本文は Claude がユーザーの依頼として読み、作者は pick で確かめてある。
@@ -136,7 +139,7 @@ jobs:
         run: |
           target=${PR:-$(gh pr list --head "auto/issue-$ISSUE" --json number --jq '.[0].number // empty')}
           if [[ -n $target ]]; then
-            bash .github/scripts/run-summary.sh "$EXECUTION_FILE" | gh pr comment "$target" --body-file -
+            bash "$RUNNER_TEMP/run-summary.sh" "$EXECUTION_FILE" | gh pr comment "$target" --body-file -
           fi
 
       # Claude が途中で諦めても action は成功で終わるので、成果の有無で確かめる。
