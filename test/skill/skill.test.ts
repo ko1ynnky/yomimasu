@@ -17,7 +17,7 @@ test('説明の先頭で、競技かるたの読みのスキルだと分かる',
 });
 
 test('名前の似た文章の推敲のスキルと取り違えないよう、説明に対象外を書く', () => {
-  assert.match(description, /推敲/);
+  assert.match(description, /関わらない文章の推敲には使わない/);
 });
 
 test('説明はスキルの一覧に載る長さに収まる', () => {
@@ -37,3 +37,11 @@ for (const [name, file] of [
 test('SKILL.md は入口の知識の本文へつなぐ', () => {
   assert.match(skill, /\(references\/README\.md\)/);
 });
+
+for (const file of ['SKILL.md', 'references/README.md']) {
+  test(`${file} が書名で挙げるファイルがある`, () => {
+    const names = [...readFileSync(join(SKILL_DIR, file), 'utf8').matchAll(/`([^`\s]+\.(?:md|ts))`/g)].map((match) => match[1]);
+    assert.ok(names.length > 0);
+    for (const name of names) assert.ok(existsSync(name.replace('${CLAUDE_SKILL_DIR}', SKILL_DIR)), name);
+  });
+}
