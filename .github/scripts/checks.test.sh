@@ -154,6 +154,66 @@ repo=$(new_repo)
 expect fail 'no-secrets: git grep の失敗を一致なしとして通さない' '' in_repo "$repo" env PATH="$fake_bin:$PATH" bash "$scripts/no-secrets.sh"
 expect fail 'deny-names: git grep の失敗を一致なしとして通さない' '' in_repo "$repo" env PATH="$fake_bin:$PATH" DENY_NAMES="$name" bash "$scripts/deny-names.sh"
 
+# 第1引数の番号が選ばれるか（空なら何も選ばれないか）を見る。第3引数は Issue の一覧の JSON である。
+picked() {
+  local want=$1 what=$2 got
+  got=$(printf '%s' "$3" | bash "$scripts/auto-pick.sh" owner 2>&1)
+  if [[ $got != "$want" ]]; then
+    ng "$what（期待 '$want'、結果 '$got'）"
+  fi
+}
+
+issue() {
+  local number=$1 labels=$2 author=${3:-owner} body=${4:-}
+  jq -cn --argjson number "$number" --arg labels "$labels" --arg author "$author" --arg body "$body" \
+    '{number: $number, author: {login: $author}, body: $body, labels: ($labels | split(",") | map(select(. != "") | {name: .}))}'
+}
+
+issues() {
+  jq -cs '.' <<<"$*"
+}
+
+picked 1 'auto-pick: ラベルの付いた最も古い Issue を選ぶ' "$(issues "$(issue 2 go:pr)" "$(issue 1 go:merge)")"
+picked '' 'auto-pick: Issue がなければ何も選ばない' '[]'
+picked '' 'auto-pick: ラベルのない Issue は選ばない' "$(issues "$(issue 1 '')")"
+picked '' 'auto-pick: night の Issue は選ばない' "$(issues "$(issue 1 night)")"
+picked '' 'auto-pick: ユーザー以外の Issue は選ばない' "$(issues "$(issue 1 go:merge other)")"
+picked 2 'auto-pick: needs-human の Issue は飛ばす' "$(issues "$(issue 1 go:merge,needs-human)" "$(issue 2 go:merge)")"
+picked 2 'auto-pick: 進行中の Issue は飛ばす' "$(issues "$(issue 1 go:merge,in-progress)" "$(issue 2 go:merge)")"
+picked '' 'auto-pick: 開いている Issue に stop があれば何も始めない' "$(issues "$(issue 1 go:merge)" "$(issue 2 stop)")"
+picked 2 'auto-pick: Depends の相手が開いていれば飛ばす' "$(issues "$(issue 1 go:merge owner 'Depends: #3')" "$(issue 2 go:merge)" "$(issue 3 night)")"
+picked 1 'auto-pick: Depends の相手が閉じていれば進める' "$(issues "$(issue 1 go:merge owner 'Depends: #9')")"
+
+expect_round() {
+  local got
+  got=$(printf '%s' "$3" | bash "$scripts/review-round.sh" 2>&1)
+  if [[ $got != "$1" ]]; then
+    ng "$2（期待 $1、結果 $got）"
+  fi
+}
+
+expect_round 1 'review-round: レビューのコメントがなければ1回目である' '{"comments":[]}'
+expect_round 3 'review-round: 印の付いたコメントだけを数える' '{"comments":[{"body":"<!-- review-gate -->\nA"},{"body":"人のコメント"},{"body":"<!-- review-gate -->\nB"}]}'
+
+summary_fixture="$work/execution.json"
+cat >"$summary_fixture" <<'EOF'
+[
+  {"type": "system", "subtype": "init", "model": "claude-opus-5-5"},
+  {"type": "assistant", "message": {"content": [{"type": "text", "text": "PROMPT-BODY-SHOULD-NOT-APPEAR"}, {"type": "tool_use", "name": "Skill", "input": {"skill": "verify"}}]}},
+  {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Skill", "input": {"skill": "verify"}}]}},
+  {"type": "result", "num_turns": 12, "duration_ms": 90000, "modelUsage": {"claude-opus-5-5": {"inputTokens": 100, "outputTokens": 20, "cacheReadInputTokens": 5, "cacheCreationInputTokens": 7}}}
+]
+EOF
+summary=$(bash "$scripts/run-summary.sh" "$summary_fixture" 2>&1)
+for part in 'claude-opus-5-5' 'ターン数：12' '入力 112' '出力 20' 'スキル：verify'; do
+  if [[ $summary != *"$part"* ]]; then
+    ng "run-summary: 要約に $part がある（出力 $summary）"
+  fi
+done
+if [[ $summary == *PROMPT-BODY* ]]; then
+  ng 'run-summary: 実行の全文を要約に出さない'
+fi
+
 gate() { printf '%s\n' "$@" | bash "$scripts/risk-gate.sh" "$allowlist"; }
 
 expect pass 'risk-gate: 変更がなければ通る' '' bash -c "bash '$scripts/risk-gate.sh' '$allowlist' </dev/null"
