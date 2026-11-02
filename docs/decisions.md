@@ -2,6 +2,80 @@
 
 あとの作業に影響する技術と設計の判断を、新しいものを上にして書く。理由と、採らなかった案も残す。結論を改めるときは、元の項目を消さずに、改めた日付と理由を足す。
 
+## 2026-11-02 アプリの技術を決める
+
+- 決めたこと：
+  - 枠組みは、Vite、Markdown から HTML を書き出す小さな生成スクリプト、録音と結果の画面の Preact にする。出力は Cloudflare Workers の静的アセットとして配る。
+  - 測定は TypeScript で書く。共有コードは `.claude/skills/yomimasu/scripts/` に置き、Web はそのファイルを読み込み、スキルは Node か Bun で型を除いて動かす。
+  - 録音は AudioWorklet で PCM を受ける。MediaRecorder は実機で AudioWorklet が使えないと分かったときの代わりとして残す。
+  - お手本の音声は AAC の m4a にする。測定に通す音は WAV にして、自分のコードで読む。
+  - 測定の結果は 0.01 秒の単位に丸めてから返す。
+  - 依存は `preact`、`vite`、`marked`、`typescript`、`@types/node`、`wrangler`、`@playwright/test` の7つにする。この Mac に pnpm がないので、パッケージの管理は npm で行う。
+  - 公開は `production` ブランチだけにし、それ以外のブランチは Worker Previews に出す。
+- 理由：検索で読めるページと録音の画面を、依存を増やさずに1つのアプリで両立できる。測定のコードは1か所に置けるので、Web とスキルの定義がずれない。
+
+枠組みの実測（ダミーの104ページ、Mac で各1回）：
+
+| 項目 | Vite と生成スクリプト | Astro 7 | React Router 8 |
+| --- | --- | --- | --- |
+| npm のパッケージ数 | 18 | 250 | 81 |
+| `node_modules` | 32MB | 151MB | 69MB |
+| 組み立て | 0.8秒 | 2.7秒 | 2.0秒 |
+| 文章ページの JS（gzip） | 1.2KB | 0.7KB | 約113KB |
+
+3案とも、`wrangler dev` の配信で、JS なしの本文、404、戻る操作、偽のマイクの測定を通った。
+
+測定の実測（16.5秒の合成音、各1回）：
+
+| 実行環境 | 測定の時間 | 間（正解1.0秒） |
+| --- | --- | --- |
+| Node 26 | 8.5ms | 0.99秒 |
+| Bun 1.4 | 15.4ms | 0.99秒 |
+| Chrome 156 | 12.8ms | 0.99秒 |
+| Safari iOS 18.2、シミュレーター | 18ms | 0.99秒 |
+| Safari iOS 26.5、シミュレーター | 23ms | 0.99秒 |
+| Chrome 134 Android、仮想デバイス | 69.6ms | 0.99秒 |
+
+音の区切りを取るときの重さの上限として、対数メルと全域の DTW も測った。合計は Chrome で約0.8秒、シミュレーターで約1.2秒、仮想デバイスで約2.0秒である。ただし実機の値ではない。
+
+録音の経路の実測（偽のマイク、正解は1.0秒と1.6秒）：
+
+| 環境 | AudioWorklet | MediaRecorder |
+| --- | --- | --- |
+| Mac の Chrome 156 | 0.99、1.60 | 1.00、1.60 |
+| Ubuntu 24.04 arm64 のコンテナー | 0.99、1.59 | 1.00、1.60 |
+| Android の仮想デバイス（1.0秒のみ） | 0.99 | 1.00 |
+
+`decodeAudioData` の頭のずれの実測：
+
+| 形式 | Chrome 156 | Android 134 | iOS 18.2 | iOS 26.5 |
+| --- | --- | --- | --- | --- |
+| WAV、FLAC、AAC | 0ms | 0ms | 0ms | 0ms |
+| MP3 | 0ms | 0ms | +12ms | +12ms |
+| Opus（WebM） | -0.5ms | 0ms | 0ms | 0ms |
+| Opus（Ogg） | 0ms | 0ms | 失敗 | 0ms |
+| Opus（mp4） | -6.5ms | 0ms | 失敗 | 失敗 |
+
+- 試行錯誤：Astro の島は、直接開くと出るが、取ってきた HTML を差し込むと描画されなかった。コマンドのように本文を足す画面と合わないので、カスタム要素と動的 import で録音の画面を読み込む形にした。この形なら枠組みの島の仕組みは要らない。
+- 試行錯誤：丸めの要否を調べるために内部の値を比べた。Node と Bun の差は1648フレーム中55フレームで、最大 1.4×10⁻¹⁴ dB だった。表示の桁には出ないが、ハッシュでは環境ごとに一致しないので、出力の前に丸める。
+- 試行錯誤：コンテナーの外の `http://host.docker.internal` を開くと録音の開始で失敗し、コンテナーの中の `127.0.0.1` では通った。原因は secure context と見ている。E2E は localhost で動かす。
+- 試行錯誤：MediaRecorder の形式は、iOS 18.2 では mp4 だけで、iOS 26.5、Chrome、Android の Chrome では webm も使えた。録音を形式に依存させると読み込みの経路が端末ごとに分かれるので、PCM に決めた。
+- 採らなかった案：Astro。出力の大きさと動きは同じ水準だが、パッケージが約14倍あり、決め手の島も使わない。自動で動かす開発では、依存の少なさを優先する。
+- 採らなかった案：React Router の事前レンダリング。読むだけのページにも約113KB の JS を配る。
+- 採らなかった案：Rust の WASM。TypeScript で時間が足りているので、CI とスキルの組み立てを増やす理由がない。
+- 採らなかった案：Python の測定。ブラウザーで動かす負担が大きいので、試していない。
+- 採らなかった案：MP3 のお手本。iOS で頭が 12ms ずれ、札の間の 1.0 秒に響く。
+- 限界：
+  - iOS の実マイクの録音は、シミュレーターでも動かしていない。確かめたのは API の存在、測定、音声の読み込みである。
+  - Android の実機と、GitHub Actions の x86-64 では動かしていない。
+  - 合成音の結果は、測定の定義が実際の読みに合うことを示さない。
+  - `production` ブランチの設定は文書で確かめただけで、実物では動かしていない。だめなら、GitHub Actions から `production` の push のときだけ `wrangler deploy` を実行する。
+  - 2つの音声を 1.0 秒あけて鳴らす処理は、まだ試していない。
+- 根拠（確認日 2026-11-02）：
+  - [Build branches](https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/)、[Workers Builds API](https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/)、[Worker Previews の設定](https://developers.cloudflare.com/workers/previews/configuration/)
+  - [Workers の料金](https://developers.cloudflare.com/workers/platform/pricing/)、[R2 の料金](https://developers.cloudflare.com/r2/pricing/)
+  - [Skills](https://code.claude.com/docs/en/skills)、[Node.js の TypeScript](https://nodejs.org/api/typescript.md)
+
 ## 2026-11-02 Anthropic の開発の記事からハーネスに入れるものを選ぶ
 
 - 決めたこと：コマンドや Workflow がなくても意味を持つものだけを、今の段階で入れる。
