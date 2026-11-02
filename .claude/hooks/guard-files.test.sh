@@ -45,6 +45,9 @@ expect blocked '本文に Anthropic の鍵がある' "$(write notes.md "key $ant
 expect blocked '編集の本文に GitHub のトークンがある' "$(edit src/a.ts "const t = '$github_token'")"
 expect blocked '本文に秘密鍵がある' "$(write notes.md "$private_key")"
 expect blocked '形の決まっていない鍵を変数へ代入している' "$(write wrangler.toml "R2_SECRET_ACCESS_KEY = \"$filler\"")"
+expect blocked '小文字の変数名の鍵も止める' "$(write config.ts "api_key = \"$filler\"")"
+expect blocked 'スマートフォンの録音の形式も音声として扱う' "$(write tests/take.3gp)"
+expect blocked '音声を含む動画の形式も止める' "$(write tests/take.m4v)"
 
 expect blocked '音声をリポジトリの中へコピーする' "$(shell 'cp /outside/a.wav tests/fixtures/')"
 expect blocked 'エラーの出力を捨てるコピーも止める' "$(shell 'cp /outside/a.wav tests/ 2>/dev/null')"
@@ -72,10 +75,31 @@ expect allowed '読むだけのコマンドは通す' "$(shell 'ls tests/a.wav 2
 expect allowed '除外の確認は通す' "$(shell 'git check-ignore -v tests/a.wav')"
 expect allowed 'コミットメッセージに拡張子が出ても通す' "$(shell 'git add .gitignore && git commit -m "*.wav を除外する"')"
 
+# 音声の一覧は hook と CI と .gitignore で食い違うと穴になるので、一覧の全件を確かめる。
+hooks=$(dirname "$guard")
+# shellcheck source=patterns.sh
+source "$hooks/patterns.sh"
+for ext in "${audio_extensions[@]}"; do
+  expect blocked "一覧の音声 .$ext を止める" "$(write "tests/a.$ext")"
+  if ! grep -qxF "*.$ext" "$hooks/../../.gitignore"; then
+    printf 'NG: .gitignore に *.%s がない\n' "$ext"
+    failures=$((failures + 1))
+  fi
+done
+
 # jq は PATH から外す。検査できないときに通すと、hook がないのと同じになる。
 code=$(printf '{}' | env PATH=/nonexistent /bin/bash "$guard" >/dev/null 2>&1; echo $?)
 if [[ $code != 2 ]]; then
   printf 'NG: jq がないときは止める（結果 exit %s）\n' "$code"
+  failures=$((failures + 1))
+fi
+
+lonely=$(mktemp -d)
+cp "$guard" "$lonely/"
+code=$(printf '{}' | bash "$lonely/guard-files.sh" >/dev/null 2>&1; echo $?)
+rm -r "$lonely"
+if [[ $code != 2 ]]; then
+  printf 'NG: patterns.sh がないときは止める（結果 exit %s）\n' "$code"
   failures=$((failures + 1))
 fi
 

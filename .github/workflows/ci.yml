@@ -1,0 +1,143 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main, production]
+    types: [opened, synchronize, reopened, labeled, edited]
+  push:
+    branches: [main, production]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.head_ref || github.ref }}
+  # main の実行を取り消すと、そのコミットのメッセージを誰も見なくなる。
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - name: 型検査
+        run: npm run typecheck
+      - name: テスト
+        run: npm test
+      - name: シェルの検査
+        run: npm run test:shell
+      - name: ビルド
+        run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+      # 音は OS の一時フォルダーにあるので、この2種類だけを上げれば声は成果物に入らない。
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: e2e
+          path: |
+            e2e-artifacts/*.png
+            e2e-artifacts/*.json
+          if-no-files-found: warn
+          retention-days: 7
+
+  no-audio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: bash .github/scripts/no-audio.sh
+
+  no-secrets:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: bash .github/scripts/no-secrets.sh
+        env:
+          SCAN_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+
+  deny-names:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # secret を読むので、変更の中のスクリプトではなく base のスクリプトを実行する。
+      # 新しいブランチの push や force push で base を読めないときは、main の版を使う。
+      # 読める base にスクリプトがないのは導入のときだけなので、そのときだけ取り出した版を実行し、ログに残す。
+      # Workflow そのものの書き換えは、この形では防げない。docs/decisions.md の限界に前提を書いた。
+      - name: 公開できない名前を探す
+        env:
+          DENY_NAMES: ${{ secrets.DENY_NAMES }}
+          SCAN_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          script="$RUNNER_TEMP/deny-names.sh"
+          source_path=.github/scripts/deny-names.sh
+          ref=$SCAN_BASE
+          git cat-file -e "$ref^{commit}" 2>/dev/null || ref=origin/main
+          if git cat-file -e "$ref:$source_path" 2>/dev/null; then
+            git show "$ref:$source_path" >"$script"
+          else
+            echo "::warning::$ref に deny-names.sh がないので、取り出した版を実行します。"
+            cp "$source_path" "$script"
+          fi
+          bash "$script"
+
+  risk-gate:
+    if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'go:merge') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # ラベルを書き換える権限を持つので、PR が変えたものではなく base のスクリプトと一覧を使う。
+      - name: 許可の外を触っていないか見る
+        # shell を書くと pipefail が付く。git diff の失敗を「変更なし」として通さない。
+        shell: bash
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          PR: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          git show "$BASE:.github/scripts/risk-gate.sh" >"$RUNNER_TEMP/risk-gate.sh"
+          git show "$BASE:.github/risk-allowlist.txt" >"$RUNNER_TEMP/risk-allowlist.txt"
+          if ! git -c core.quotePath=false diff --no-renames --name-only "$BASE...$HEAD" | bash "$RUNNER_TEMP/risk-gate.sh" "$RUNNER_TEMP/risk-allowlist.txt"; then
+            gh pr edit "$PR" --remove-label go:merge --add-label needs-human
+            exit 1
+          fi

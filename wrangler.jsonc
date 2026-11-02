@@ -1,0 +1,10 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "yomimasu",
+  "compatibility_date": "2026-10-13",
+  "assets": {
+    "directory": "./dist"
+  },
+  "preview_urls": true,
+  "previews": {}
+}

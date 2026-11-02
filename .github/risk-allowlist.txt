@@ -1,0 +1,7 @@
+# go:merge の PR が触ってよい場所。ここにない場所を触ると needs-human に変わる。
+# 測定、録音、知識の文章、依存、設定は、夜にユーザーが見るので入れない。
+site/client/ui/*
+site/client/*.css
+test/site/*
+README.md
+docs/claude-log/*

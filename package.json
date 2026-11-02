@@ -1,0 +1,30 @@
+{
+  "name": "yomimasu",
+  "version": "0.0.0",
+  "private": true,
+  "license": "SEE LICENSE IN NOTICE.md",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "test:shell": "bash .claude/hooks/guard-files.test.sh && bash .github/scripts/checks.test.sh",
+    "build": "node site/build.ts",
+    "dev": "npm run build && wrangler dev --ip 127.0.0.1 --port 8787",
+    "e2e": "playwright test",
+    "check": "npm run typecheck && npm test && npm run test:shell && npm run build"
+  },
+  "dependencies": {
+    "preact": "11.1.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@types/node": "26.6.6",
+    "marked": "18.1.2",
+    "typescript": "7.0.2",
+    "vite": "8.3.5",
+    "wrangler": "4.156.1"
+  }
+}
