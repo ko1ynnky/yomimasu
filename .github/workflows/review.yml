@@ -1,0 +1,103 @@
+name: review
+
+on:
+  pull_request:
+    branches: [main, production]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  PR: ${{ github.event.pull_request.number }}
+
+jobs:
+  # Claude は書き込みの権限のない job で動かす。結果を使う処理は次の job に分ける。
+  # github_token を渡すと、action は Claude の App のトークンを取らず、Claude の gh も読み取りだけになる。
+  # PR の内容を実行しないよう、base を取り出す。REVIEW.md とスキルも base の版が効く。
+  review:
+    if: ${{ github.event.pull_request.user.login == 'claude[bot]' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      result: ${{ steps.claude.outputs.structured_output }}
+      summary: ${{ steps.summary.outputs.text }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: 前回までのレビューを取り出す
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr view "$PR" --json comments | bash .github/scripts/review-comments.sh --with-answers >previous-reviews.json
+
+      # job の時間切れは取り消しの扱いで review-gate が飛ぶので、step の時間切れで失敗にする。
+      - uses: anthropics/claude-code-action@d535f5172dec02b204866b393d6b20b9b2aaf98d # v1
+        id: claude
+        timeout-minutes: 12
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ github.token }}
+          allowed_bots: claude[bot],github-actions[bot]
+          prompt: /review-pr ${{ github.event.pull_request.number }}
+          claude_args: |
+            --model claude-opus-5-5
+            --max-turns 30
+            --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*)"
+            --json-schema '{"type":"object","properties":{"blocking":{"type":"integer"},"minor":{"type":"integer"},"existing":{"type":"integer"},"report":{"type":"string"}},"required":["blocking","minor","existing","report"]}'
+
+      - id: summary
+        if: ${{ !cancelled() && steps.claude.outputs.execution_file != '' }}
+        continue-on-error: true
+        shell: bash
+        env:
+          EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
+        run: |
+          {
+            echo 'text<<RUN_SUMMARY_END'
+            bash .github/scripts/run-summary.sh "$EXECUTION_FILE"
+            echo 'RUN_SUMMARY_END'
+          } >>"$GITHUB_OUTPUT"
+
+  # 必須の検査の名前である。人の PR では skip になり、成功として扱われる。
+  # review が失敗しても動き、結果を読めなければ人に渡す。
+  review-gate:
+    needs: review
+    if: ${{ !cancelled() && github.event.pull_request.user.login == 'claude[bot]' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: write
+      issues: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: 実行の要約を PR に書く
+        if: ${{ needs.review.outputs.summary != '' }}
+        continue-on-error: true
+        env:
+          SUMMARY: ${{ needs.review.outputs.summary }}
+        run: gh pr comment "$PR" --body "$SUMMARY"
+
+      - name: 結果を PR に書き、次へ進める
+        env:
+          OWNER: ${{ github.repository_owner }}
+          OUTPUT: ${{ needs.review.outputs.result }}
+        run: bash .github/scripts/review-gate.sh

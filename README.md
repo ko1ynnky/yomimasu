@@ -12,6 +12,7 @@
 
 - 判断と理由は [docs/decisions.md](docs/decisions.md) にあります。
 - 日ごとの Claude とユーザーの分担は [docs/claude-log/](docs/claude-log/) にあります。
+- 測定の定義は [docs/measure.md](docs/measure.md) にあります。
 
 ## ライセンス
 

@@ -1,0 +1,168 @@
+name: auto
+
+# 平日の cron と、終わったら次の Issue を起こす処理は、試運転が通るまで入れない。
+on:
+  issues:
+    types: [labeled]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: レビューの指摘に答える PR の番号。空なら最も古い Issue を選ぶ
+        required: false
+
+permissions:
+  contents: read
+
+# 保留は1本だけなので、関係のないラベルの実行が修正の実行を押し出さないよう、別の group へ逃がす。
+concurrency:
+  group: ${{ (github.event_name == 'workflow_dispatch' || startsWith(github.event.label.name, 'go:')) && 'auto' || format('auto-ignored-{0}', github.run_id) }}
+  cancel-in-progress: false
+
+jobs:
+  pick:
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.sender.login == github.repository_owner && (github.event.label.name == 'go:merge' || github.event.label.name == 'go:pr')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    outputs:
+      issue: ${{ steps.pick.outputs.issue }}
+      pr: ${{ steps.pick.outputs.pr }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: pick
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OWNER: ${{ github.repository_owner }}
+          PR: ${{ inputs.pr }}
+        run: |
+          stops=$(gh issue list --state open --label stop --json number --jq length)
+          if [[ $stops != 0 ]]; then
+            echo '開いている Issue に stop があるので始めません。'
+            exit 0
+          fi
+          if [[ -n $PR ]]; then
+            [[ $PR =~ ^[0-9]+$ ]] || { echo '::error::PR の番号の形が違います。'; exit 1; }
+            ready=$(gh pr view "$PR" --json state,labels,author --jq '.state == "OPEN" and (.author.login | test("^(app/)?claude(\\[bot\\])?$")) and ([.labels[].name] | index("needs-human") == null)')
+            [[ $ready == true ]] || { echo "PR #$PR は修正の対象ではありません。"; exit 0; }
+            echo "pr=$PR" >>"$GITHUB_OUTPUT"
+            exit 0
+          fi
+          issue=$(gh issue list --state open --limit 200 --json number,author,labels,body | bash .github/scripts/auto-pick.sh "$OWNER")
+          echo "issue=$issue" >>"$GITHUB_OUTPUT"
+
+  work:
+    needs: pick
+    if: ${{ needs.pick.outputs.issue != '' || needs.pick.outputs.pr != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      actions: read
+      contents: write
+      id-token: write
+      issues: write
+      pull-requests: write
+    env:
+      ISSUE: ${{ needs.pick.outputs.issue }}
+      PR: ${{ needs.pick.outputs.pr }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      # Claude が変えられない場所へ、あとで書き込みの権限で動かすスクリプトを写しておく。
+      - name: 始める前の状態を残す
+        id: before
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp .github/scripts/run-summary.sh "$RUNNER_TEMP/run-summary.sh"
+          if [[ -n $ISSUE ]]; then
+            gh issue edit "$ISSUE" --add-label in-progress
+          else
+            gh pr view "$PR" --json comments | bash .github/scripts/review-comments.sh >previous-reviews.json
+            head=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
+            echo "head=$head" >>"$GITHUB_OUTPUT"
+          fi
+
+      # prompt には番号だけを入れる。Issue の本文は Claude がユーザーの依頼として読み、作者は pick で確かめてある。
+      - uses: anthropics/claude-code-action@d535f5172dec02b204866b393d6b20b9b2aaf98d # v1
+        id: claude
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          bot_id: '209825114'
+          bot_name: claude[bot]
+          allowed_bots: claude[bot],github-actions[bot]
+          prompt: |
+            ${{ needs.pick.outputs.issue != '' && format('Issue #{0} を実装する。', needs.pick.outputs.issue) || format('PR #{0} のレビューの指摘に答える。', needs.pick.outputs.pr) }}
+
+            最初に AGENTS.md と REVIEW.md を読む。
+
+            Issue を実装するとき：
+            1. `gh issue view` で目的と完了の条件を読む。
+            2. `auto/issue-<番号>` のブランチを切る。
+            3. AGENTS.md の TDD の順で書き、目的ごとにコミットする。
+            4. `/verify` の手順で確かめる。
+            5. `gh pr create` で PR を開く。本文は PR のテンプレートの見出しで書き、`Closes #<番号>` を入れる。Issue の go:merge か go:pr のラベルを PR にも付ける。
+
+            レビューの指摘に答えるとき：
+            1. `previous-reviews.json` の最後の項目を読む。指摘はこのファイルだけを正とする。
+            2. PR のブランチへ移り、指摘のすべてに修正か理由で答える。コミットのない答えでは先へ進まないので、修正できる指摘は必ず修正する。
+            3. `/verify` の手順で確かめて push し、答えを PR のコメントに書く。
+
+            完了の条件を満たせないときは、PR を開かず、理由を Issue か PR のコメントに書く。
+          claude_args: |
+            --model claude-opus-5-5
+            --max-turns 80
+            --allowedTools "Skill,Read,Edit,Write,Glob,Grep,Bash(npm run:*),Bash(npm test:*),Bash(npx playwright:*),Bash(lsof:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git add:*),Bash(git commit:*),Bash(git switch:*),Bash(git fetch:*),Bash(git push origin auto/*),Bash(git push -u origin auto/*),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr create:*),Bash(gh pr comment:*)"
+
+      - name: 実行の要約を PR に書く
+        if: ${{ !cancelled() && steps.claude.outputs.execution_file != '' }}
+        continue-on-error: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
+        run: |
+          target=${PR:-$(gh pr list --head "auto/issue-$ISSUE" --json number --jq '.[0].number // empty')}
+          if [[ -n $target ]]; then
+            bash "$RUNNER_TEMP/run-summary.sh" "$EXECUTION_FILE" | gh pr comment "$target" --body-file -
+          fi
+
+      # Claude が途中で諦めても action は成功で終わるので、成果の有無で確かめる。
+      - name: 成果があるかを確かめる
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_BEFORE: ${{ steps.before.outputs.head }}
+        run: |
+          if [[ -n $ISSUE ]]; then
+            [[ -n $(gh pr list --head "auto/issue-$ISSUE" --state open --json number --jq '.[0].number // empty') ]]
+          else
+            [[ $(gh pr view "$PR" --json headRefOid --jq .headRefOid) != "$HEAD_BEFORE" ]]
+          fi
+
+      - name: 失敗したら人に渡す
+        if: ${{ failure() || cancelled() }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ -n $ISSUE ]]; then
+            gh issue edit "$ISSUE" --add-label needs-human --remove-label in-progress
+          else
+            gh pr edit "$PR" --add-label needs-human
+          fi
