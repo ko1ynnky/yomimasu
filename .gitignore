@@ -44,3 +44,6 @@ dist/
 .wrangler/
 test-results/
 e2e-artifacts/
+
+# Workflow が Claude に渡すレビューの写し
+previous-reviews.json

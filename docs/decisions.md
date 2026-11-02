@@ -6,15 +6,23 @@
 
 - 決めたこと：
   - `auto.yml` は Issue にラベルが付いたときと手動の起動だけで動く。平日の cron と、終わったら次の Issue を起こす処理は入れない。
-  - 動かすのは、ユーザーが `go:merge` か `go:pr` を付けた、ユーザーの Issue だけである。開いている Issue に `stop` があれば始めない。
-  - 実行は1本ずつにする。失敗したら `needs-human` を付けて飛ばす。
-  - `review.yml` は `claude[bot]` の PR だけをレビューし、3回で通らなければ `needs-human` を付けて止める。
-  - `review.yml` は base を取り出して動かす。`.claude/skills/review-pr/` と `REVIEW.md` は base の版が効く。
-  - 指摘がなければ、`go:merge` の PR の自動マージを許す。止める指摘があれば `auto.yml` を起こして直す。
-- 理由：ユーザーの許可は「試運転まで可」である。`main` に Workflow が入っても、ラベルを付けない限り動かない形にする。
+  - 選ぶのは、作者がユーザーで `go:merge` か `go:pr` が付き、`night`、`needs-human`、`in-progress` のない Issue である。開いている Issue に `stop` があれば、実行も自動マージも始めない。
+  - 実行は1本ずつにする。失敗、取り消し、成果がない終わり方のときは `needs-human` を付けて人に渡す。成果は、Issue なら開いた PR、PR の修正なら head の変化で確かめる。
+  - `review.yml` は `claude[bot]` の PR だけをレビューする。Claude は書き込みの権限のない job で動かし、結果を使う処理は `review-gate` の job に分ける。
+  - レビューは base の内容で動く。`.claude/skills/review-pr/`、`REVIEW.md`、検査のスクリプトは base の版が効く。`review.yml` そのものは PR 側の版が動く。
+  - 3回目のレビューで止める指摘が残ったら、その場で人に渡す。軽い指摘にも答えを求め、3回目に残った軽い指摘は止めない。
+  - 自動マージの直前に、PR のラベル、閉じる Issue の作者とラベル、`stop` の一覧を読み直す。PR のラベルは Claude が付けるので、Issue が `go:merge` でなければマージしない。
+  - `auto.yml` の実行では `reviewer` を呼べないので、`review.yml` がその役を持つ。
+- 理由：ユーザーの許可は「試運転まで可」である。`main` に Workflow が入っても、ラベルを付けない限り動かない形にする。判断を Workflow の式に書くと試せないので、`.github/scripts/` に分けてテストする。
 - 判断：`CLAUDE_AUTH` による API キーへの切り替えは入れない。キーをまだ登録しておらず、試運転では要らない。
+- 判断：`needs-human` のあとに人が引き取った PR は、`review-gate` が赤のままになるので、管理者としてマージする。`main` の保護は管理者に適用しない。
+- 試行錯誤：レビューで、起動の時点のラベルの写しで自動マージを判定すること、`go:pr` の Issue の PR を Claude が `go:merge` にできること、`stop` の検査が `gh` の失敗で通ること、Issue が `needs-human` へ渡らないまま止まる経路が複数あることが分かった。判定を `review-gate.sh` へ分け、偽の `gh` でテストした。
+- 試行錯誤：`/review-pr` をロックファイル込みで4863行の差分に当てると、12回の上限で結果が出なかった。結果が空でも修正を起こす形だったので、読めないときは人に渡す形にした。
 - 採らなかった案：レビューの2回目以降を、前回の SHA からの差分だけにする案。今回は全体を読み直す。1回の差分が小さい間は読む量が増えず、形も簡単である。
 - 限界：
+  - `--allowedTools` は境界にならない。`Edit` と `npm run` を組み合わせれば任意のコマンドを実行できる。入力をユーザーの Issue と Workflow のコメントに絞ることと、`stop` で止めることで守る。
+  - GitHub の FAQ は、Claude の GitHub App に Workflow の書き込みの権限がないと書く。実物では試運転で確かめる。
+  - `gh pr merge --auto` は必須の検査がないとすぐマージするので、自動マージは `main` の保護を設定してから使う。
   - `go:merge` の自動マージは `GITHUB_TOKEN` で有効にするので、マージの push では `ci.yml` が動かない見込みである。スカッシュのメッセージの検査はこの経路では動かない。
   - Workflow はまだ GitHub Actions で動かしていない。動いたかどうかは試運転で確かめる。
 

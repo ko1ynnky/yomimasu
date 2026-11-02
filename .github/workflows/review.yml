@@ -12,40 +12,37 @@ concurrency:
   group: review-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+env:
+  PR: ${{ github.event.pull_request.number }}
+
 jobs:
-  # 人の PR は人が見るので、Claude の PR だけをレビューする。必須の検査では skip は成功として扱われる。
-  review-gate:
+  # Claude は書き込みの権限のない job で動かす。結果を使う処理は次の job に分ける。
+  # PR の内容を実行しないよう、base を取り出す。REVIEW.md とスキルも base の版が効く。
+  review:
     if: ${{ github.event.pull_request.user.login == 'claude[bot]' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
-      actions: write
-      contents: write
+      contents: read
       id-token: write
-      issues: write
-      pull-requests: write
-    env:
-      GH_TOKEN: ${{ github.token }}
-      PR: ${{ github.event.pull_request.number }}
+      pull-requests: read
+    outputs:
+      result: ${{ steps.claude.outputs.structured_output }}
+      summary: ${{ steps.summary.outputs.text }}
     steps:
-      # PR の内容を実行しないよう、base を取り出す。REVIEW.md とスキルも base の版が効く。
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
 
-      - name: レビューの回数を確かめる
+      - name: 前回までのレビューを取り出す
         shell: bash
-        run: |
-          round=$(gh pr view "$PR" --json comments | bash .github/scripts/review-round.sh)
-          if ((round > 3)); then
-            echo "::error::レビューが3回で通らなかったので止めます。"
-            gh pr edit "$PR" --add-label needs-human
-            exit 1
-          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr view "$PR" --json comments | bash .github/scripts/review-comments.sh >previous-reviews.json
 
       - uses: anthropics/claude-code-action@d535f5172dec02b204866b393d6b20b9b2aaf98d # v1
-        id: review
+        id: claude
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           allowed_bots: claude[bot],github-actions[bot]
@@ -56,20 +53,48 @@ jobs:
             --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*)"
             --json-schema '{"type":"object","properties":{"blocking":{"type":"integer"},"minor":{"type":"integer"},"existing":{"type":"integer"},"report":{"type":"string"}},"required":["blocking","minor","existing","report"]}'
 
-      - name: 結果を PR に書き、次へ進める
+      - id: summary
+        if: ${{ !cancelled() && steps.claude.outputs.execution_file != '' }}
+        continue-on-error: true
         shell: bash
         env:
-          OUTPUT: ${{ steps.review.outputs.structured_output }}
-          EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
-          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
         run: |
-          { echo '<!-- review-gate -->'; echo; jq -r .report <<<"$OUTPUT"; } | gh pr comment "$PR" --body-file -
-          bash .github/scripts/run-summary.sh "$EXECUTION_FILE" | gh pr comment "$PR" --body-file -
+          {
+            echo 'text<<RUN_SUMMARY_END'
+            bash .github/scripts/run-summary.sh "$EXECUTION_FILE"
+            echo 'RUN_SUMMARY_END'
+          } >>"$GITHUB_OUTPUT"
 
-          if [[ $(jq -r .blocking <<<"$OUTPUT") != 0 ]]; then
-            gh workflow run auto.yml -f pr="$PR"
-            exit 1
-          fi
-          if jq -e 'index("go:merge")' <<<"$LABELS" >/dev/null; then
-            gh pr merge "$PR" --auto --squash
-          fi
+  # 必須の検査の名前である。人の PR では skip になり、成功として扱われる。
+  # review が失敗しても動き、結果を読めなければ人に渡す。
+  review-gate:
+    needs: review
+    if: ${{ !cancelled() && github.event.pull_request.user.login == 'claude[bot]' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: write
+      issues: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: 実行の要約を PR に書く
+        if: ${{ needs.review.outputs.summary != '' }}
+        continue-on-error: true
+        env:
+          SUMMARY: ${{ needs.review.outputs.summary }}
+        run: gh pr comment "$PR" --body "$SUMMARY"
+
+      - name: 結果を PR に書き、次へ進める
+        env:
+          OWNER: ${{ github.repository_owner }}
+          OUTPUT: ${{ needs.review.outputs.result }}
+        run: bash .github/scripts/review-gate.sh

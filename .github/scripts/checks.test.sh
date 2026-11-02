@@ -177,6 +177,7 @@ picked 1 'auto-pick: ラベルの付いた最も古い Issue を選ぶ' "$(issue
 picked '' 'auto-pick: Issue がなければ何も選ばない' '[]'
 picked '' 'auto-pick: ラベルのない Issue は選ばない' "$(issues "$(issue 1 '')")"
 picked '' 'auto-pick: night の Issue は選ばない' "$(issues "$(issue 1 night)")"
+picked '' 'auto-pick: night と go:merge の両方があれば選ばない' "$(issues "$(issue 1 go:merge,night)")"
 picked '' 'auto-pick: ユーザー以外の Issue は選ばない' "$(issues "$(issue 1 go:merge other)")"
 picked 2 'auto-pick: needs-human の Issue は飛ばす' "$(issues "$(issue 1 go:merge,needs-human)" "$(issue 2 go:merge)")"
 picked 2 'auto-pick: 進行中の Issue は飛ばす' "$(issues "$(issue 1 go:merge,in-progress)" "$(issue 2 go:merge)")"
@@ -193,7 +194,92 @@ expect_round() {
 }
 
 expect_round 1 'review-round: レビューのコメントがなければ1回目である' '{"comments":[]}'
-expect_round 3 'review-round: 印の付いたコメントだけを数える' '{"comments":[{"body":"<!-- review-gate -->\nA"},{"body":"人のコメント"},{"body":"<!-- review-gate -->\nB"}]}'
+expect_round 3 'review-round: Workflow が書いた印のコメントだけを数える' '{"comments":[{"author":{"login":"github-actions"},"body":"<!-- review-gate -->\nA"},{"author":{"login":"owner"},"body":"人のコメント"},{"author":{"login":"github-actions[bot]"},"body":"<!-- review-gate -->\nB"}]}'
+expect_round 1 'review-round: 他の人が書いた印は数えない' '{"comments":[{"author":{"login":"someone"},"body":"<!-- review-gate -->\nA"}]}'
+expect_round 1 'review-round: 印を引用しただけのコメントは数えない' '{"comments":[{"author":{"login":"github-actions"},"body":"前回の <!-- review-gate --> を引用"}]}'
+
+comments=$(printf '%s' '{"comments":[{"author":{"login":"github-actions"},"body":"<!-- review-gate -->\n公式の指摘"},{"author":{"login":"someone"},"body":"<!-- review-gate -->\n偽の指摘"}]}' | bash "$scripts/review-comments.sh" 2>&1)
+if [[ $comments != *公式の指摘* || $comments == *偽の指摘* ]]; then
+  ng "review-comments: Workflow のコメントだけを渡す（出力 $comments）"
+fi
+
+# 偽の gh は、呼ばれた引数を記録し、場面ごとの JSON を返す。
+gh_bin=$(mktemp -d "$work/gh.XXXXXX")
+cat >"$gh_bin/gh" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >>"$GH_LOG"
+case "$*" in
+  'pr view 7 --json comments') cat "$GH_FIXTURES/comments.json" ;;
+  'pr view 7 --json labels,closingIssuesReferences') cat "$GH_FIXTURES/pr.json" ;;
+  'issue view 3 --json author,labels') cat "$GH_FIXTURES/issue.json" ;;
+  'issue list --state open --label stop --json number') cat "$GH_FIXTURES/stops.json" ;;
+  'pr comment 7 --body-file -') cat >>"$GH_FIXTURES/posted.txt" ;;
+  'pr merge 7 --auto --squash') [[ ! -f $GH_FIXTURES/merge-fails ]] ;;
+esac
+EOF
+chmod +x "$gh_bin/gh"
+
+# 引数：場面の名前、結果の JSON、回数、PR のラベル、Issue のラベル、stop の一覧。
+gate_run() {
+  local fixtures round=$3
+  fixtures=$(mktemp -d "$work/fixtures.XXXXXX")
+  jq -cn --argjson n "$((round - 1))" '{comments: [range($n) | {author: {login: "github-actions"}, body: "<!-- review-gate -->"}]}' >"$fixtures/comments.json"
+  jq -cn --arg labels "$4" '{labels: ($labels | split(",") | map(select(. != "") | {name: .})), closingIssuesReferences: [{number: 3}]}' >"$fixtures/pr.json"
+  jq -cn --arg labels "$5" '{author: {login: "owner"}, labels: ($labels | split(",") | map(select(. != "") | {name: .}))}' >"$fixtures/issue.json"
+  printf '%s' "${6:-[]}" >"$fixtures/stops.json"
+  : >"$fixtures/gh.log"
+  gate_exit=0
+  PATH="$gh_bin:$PATH" GH_LOG="$fixtures/gh.log" GH_FIXTURES="$fixtures" PR=7 OWNER=owner OUTPUT="$2" bash "$scripts/review-gate.sh" >/dev/null 2>&1 || gate_exit=$?
+  gate_log=$(cat "$fixtures/gh.log")
+  gate_fixtures=$fixtures
+}
+
+clean='{"blocking":0,"minor":0,"existing":0,"report":"指摘なし"}'
+minor='{"blocking":0,"minor":1,"existing":0,"report":"軽い 1件"}'
+blocking='{"blocking":1,"minor":0,"existing":0,"report":"重要 1件"}'
+
+expect_gate() {
+  local what=$1 want_exit=$2 want=$3 unwanted=$4
+  if [[ $gate_exit != "$want_exit" ]]; then
+    ng "$what（期待 exit $want_exit、結果 exit $gate_exit、呼び出し $gate_log）"
+  fi
+  if [[ -n $want && $gate_log != *"$want"* ]]; then
+    ng "$what（$want がない：$gate_log）"
+  fi
+  if [[ -n $unwanted && $gate_log == *"$unwanted"* ]]; then
+    ng "$what（$unwanted がある：$gate_log）"
+  fi
+}
+
+gate_run empty '' 1 go:merge go:merge
+expect_gate 'review-gate: 結果が空なら人に渡し、マージしない' 1 'pr edit 7 --add-label needs-human' 'pr merge'
+gate_run broken 'not json' 1 go:merge go:merge
+expect_gate 'review-gate: 結果が壊れていれば人に渡す' 1 'pr edit 7 --add-label needs-human' 'pr merge'
+gate_run past "$clean" 4 go:merge go:merge
+expect_gate 'review-gate: 4回目は人に渡す' 1 'pr edit 7 --add-label needs-human' 'pr merge'
+
+gate_run fix "$blocking" 1 go:merge go:merge
+expect_gate 'review-gate: 止める指摘は修正を起こして赤にする' 1 'workflow run auto.yml -f pr=7' 'pr merge'
+if ! grep -q '<!-- review-gate -->' "$gate_fixtures/posted.txt"; then
+  ng 'review-gate: 印を付けて報告を書く'
+fi
+gate_run third "$blocking" 3 go:merge go:merge
+expect_gate 'review-gate: 3回目に止める指摘が残れば人に渡す' 1 'pr edit 7 --add-label needs-human' 'workflow run'
+gate_run minor "$minor" 1 go:merge go:merge
+expect_gate 'review-gate: 軽い指摘にも答えを求める' 1 'workflow run auto.yml -f pr=7' 'pr merge'
+gate_run minor-last "$minor" 3 go:merge go:merge
+expect_gate 'review-gate: 3回目の軽い指摘は止めない' 0 'pr merge 7 --auto --squash' 'workflow run'
+
+gate_run merge "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: 指摘がなく Issue も go:merge なら自動マージする' 0 'pr merge 7 --auto --squash' ''
+gate_run pr-only "$clean" 1 go:pr go:pr
+expect_gate 'review-gate: go:pr はマージしない' 0 '' 'pr merge'
+gate_run forged "$clean" 1 go:merge go:pr
+expect_gate 'review-gate: Issue が go:merge でなければ、PR のラベルだけではマージしない' 0 '' 'pr merge'
+gate_run held "$clean" 1 go:merge,needs-human go:merge
+expect_gate 'review-gate: needs-human の PR はマージしない' 0 '' 'pr merge'
+gate_run stopped "$clean" 1 go:merge go:merge '[{"number":9}]'
+expect_gate 'review-gate: stop があればマージしない' 0 '' 'pr merge'
 
 summary_fixture="$work/execution.json"
 cat >"$summary_fixture" <<'EOF'

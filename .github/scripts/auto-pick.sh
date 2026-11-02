@@ -12,7 +12,7 @@ jq -r --arg owner "$1" '
       map(select(
         .author.login == $owner
         and (names | (index("go:merge") or index("go:pr")))
-        and (names | (index("needs-human") or index("in-progress")) | not)
+        and (names | (index("night") or index("needs-human") or index("in-progress")) | not)
         and (depends | all(. as $number | $open | index($number) | not))
       ))
       | sort_by(.number)
