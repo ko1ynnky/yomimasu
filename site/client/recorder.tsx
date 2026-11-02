@@ -3,7 +3,18 @@ import { useState } from 'preact/hooks';
 import { measure, type Measurement } from '../../.claude/skills/yomimasu/scripts/measure.ts';
 import { startCapture, type Capture } from './capture.ts';
 
-type View = { kind: 'idle' } | { kind: 'recording'; capture: Capture } | { kind: 'measured'; result: Measurement } | { kind: 'failed' };
+type Failure = 'denied' | 'unavailable';
+type View =
+  | { kind: 'idle' }
+  | { kind: 'starting' }
+  | { kind: 'recording'; capture: Capture }
+  | { kind: 'measured'; result: Measurement }
+  | { kind: 'failed'; failure: Failure };
+
+const FAILURE_MESSAGES: Record<Failure, string> = {
+  denied: 'マイクを使えませんでした。ブラウザーの設定でマイクを許可してください。',
+  unavailable: '録音を始められませんでした。ページを開き直してください。',
+};
 
 const seconds = (value: number) => value.toFixed(2);
 
@@ -22,10 +33,11 @@ function Recorder() {
   const [view, setView] = useState<View>({ kind: 'idle' });
 
   async function start() {
+    setView({ kind: 'starting' });
     try {
       setView({ kind: 'recording', capture: await startCapture() });
-    } catch {
-      setView({ kind: 'failed' });
+    } catch (error) {
+      setView({ kind: 'failed', failure: error instanceof DOMException && error.name === 'NotAllowedError' ? 'denied' : 'unavailable' });
     }
   }
 
@@ -38,9 +50,11 @@ function Recorder() {
 
   return (
     <>
-      <button onClick={start}>読む</button>
+      <button onClick={start} disabled={view.kind === 'starting'}>
+        読む
+      </button>
       {view.kind === 'measured' && <p role="status">{describe(view.result)}</p>}
-      {view.kind === 'failed' && <p role="alert">マイクを使えませんでした。ブラウザーの設定でマイクを許可してください。</p>}
+      {view.kind === 'failed' && <p role="alert">{FAILURE_MESSAGES[view.failure]}</p>}
     </>
   );
 }

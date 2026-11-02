@@ -6,8 +6,11 @@
 
 - 「読む」で録音が始まり、「止める」で秒数が出る。
 - 間を長くした合成音では、画面の間も長くなる。
-- マイクを使えないと、理由を画面に出す。
+- マイクを許可しないと、許可を促す。
+- 録音の準備に失敗すると、マイクを閉じて理由を出す。
 - 測れない録音では、値を作らず理由を出す。
+- 「読む」を続けて押しても、マイクは1つだけ開く。
+- 止めたあとに、マイクが閉じている。
 
 ## 利用者の経路
 
@@ -23,7 +26,7 @@
 --use-file-for-fake-audio-capture=<合成音の WAV>%noloop
 ```
 
-ボタンは `getByRole('button', { name: '読む' })`、結果は `getByRole('status')` で取る。
+ボタンは `getByRole('button', { name: '読む' })`、結果は `getByRole('status')`、失敗は `getByRole('alert')` で取る。マイクが閉じたかは、`e2e/record.spec.ts` の `openedMicrophones` で見る。
 
 ## 注意
 
