@@ -221,6 +221,16 @@ case "$*" in
   'pr comment 7 --body-file -') cat >>"$GH_FIXTURES/posted.txt" ;;
   'pr merge 7 --auto --squash') [[ ! -f $GH_FIXTURES/fail-merge ]] ;;
   'workflow run auto.yml -f pr=7') [[ ! -f $GH_FIXTURES/fail-workflow ]] ;;
+  'pr view 7 --json state,closingIssuesReferences')
+    state=$(head -n 1 "$GH_FIXTURES/states")
+    if (($(wc -l <"$GH_FIXTURES/states") > 1)); then
+      sed -i.bak 1d "$GH_FIXTURES/states"
+    fi
+    [[ $state != UNREADABLE ]] && jq -cn --arg state "$state" '{state: $state, closingIssuesReferences: [{number: 3}, {number: 4}]}'
+    ;;
+  'issue close 3' | 'issue close 4') [[ ! -f $GH_FIXTURES/fail-close-$3 ]] ;;
+  'issue edit 3 --remove-label in-progress' | 'issue edit 4 --remove-label in-progress') [[ ! -f $GH_FIXTURES/fail-unlabel-$3 ]] ;;
+  'workflow run ci.yml --ref main -f scan_base=base-sha') [[ ! -f $GH_FIXTURES/fail-ci ]] ;;
 esac
 EOF
 chmod +x "$gh_bin/gh"
@@ -236,8 +246,9 @@ gate_run() {
   printf '%s' "${6:-[]}" >"$fixtures/stops.json"
   [[ -n ${GATE_FAIL:-} ]] && : >"$fixtures/fail-$GATE_FAIL"
   : >"$fixtures/gh.log"
+  : >"$fixtures/output"
   gate_exit=0
-  PATH="$gh_bin:$PATH" GH_LOG="$fixtures/gh.log" GH_FIXTURES="$fixtures" PR=7 OWNER=owner OUTPUT="$2" bash "$scripts/review-gate.sh" >/dev/null 2>&1 || gate_exit=$?
+  PATH="$gh_bin:$PATH" GH_LOG="$fixtures/gh.log" GH_FIXTURES="$fixtures" GITHUB_OUTPUT="$fixtures/output" PR=7 OWNER=owner OUTPUT="$2" bash "$scripts/review-gate.sh" >/dev/null 2>&1 || gate_exit=$?
   gate_log=$(cat "$fixtures/gh.log")
   gate_fixtures=$fixtures
 }
@@ -280,8 +291,14 @@ expect_gate 'review-gate: 3回目の軽い指摘は止めない' 0 'pr merge 7 -
 
 gate_run merge "$clean" 1 go:merge go:merge
 expect_gate 'review-gate: 指摘がなく Issue も go:merge なら自動マージする' 0 'pr merge 7 --auto --squash' 'needs-human'
+if [[ $(cat "$gate_fixtures/output") != merging=true ]]; then
+  ng 'review-gate: 自動マージを有効にしたら後始末の job へ進める'
+fi
 gate_run pr-only "$clean" 1 go:pr go:pr
 expect_gate 'review-gate: go:pr は緑で終え、マージしない' 0 '' 'pr merge'
+if [[ -s $gate_fixtures/output ]]; then
+  ng 'review-gate: マージしないなら後始末の job へ進めない'
+fi
 gate_run stopped "$clean" 1 go:merge go:merge '[{"number":9}]'
 expect_gate 'review-gate: stop があれば緑で終え、マージしない' 0 '' 'pr merge'
 
@@ -309,12 +326,60 @@ expect_gate 'review-gate: ブランチの Issue を閉じない PR は人に渡�
 
 GATE_FAIL=merge gate_run merge-fails "$clean" 1 go:merge go:merge
 expect_gate 'review-gate: 自動マージを有効にできなければ人に渡す' 1 "$hand_over" ''
+if [[ -s $gate_fixtures/output ]]; then
+  ng 'review-gate: 自動マージを有効にできなければ後始末の job へ進めない'
+fi
 GATE_FAIL=workflow gate_run workflow-fails "$blocking" 1 go:merge go:merge
 expect_gate 'review-gate: 修正を起こせなければ人に渡す' 1 "$hand_over" ''
 GATE_FAIL=issue gate_run issue-fails "$clean" 1 go:merge go:merge
 expect_gate 'review-gate: Issue を読めなければ人に渡し、マージしない' 1 "$hand_over" 'pr merge'
 GATE_FAIL=pull gate_run pull-fails "$clean" 1 go:merge go:merge
 expect_gate 'review-gate: PR を読めなければ人に渡し、マージしない' 1 "$hand_over" 'pr merge'
+
+# 引数：PR を読むたびに返す state を順に並べる。最後の値を返し続ける。UNREADABLE は読み取りの失敗である。
+after_merge_run() {
+  local fixtures
+  fixtures=$(mktemp -d "$work/fixtures.XXXXXX")
+  printf '%s\n' "$@" >"$fixtures/states"
+  [[ -n ${GATE_FAIL:-} ]] && : >"$fixtures/fail-$GATE_FAIL"
+  : >"$fixtures/gh.log"
+  gate_exit=0
+  PATH="$gh_bin:$PATH" GH_LOG="$fixtures/gh.log" GH_FIXTURES="$fixtures" PR=7 SCAN_BASE=base-sha POLL_SECONDS=0 bash "$scripts/after-merge.sh" >/dev/null 2>&1 || gate_exit=$?
+  gate_log=$(cat "$fixtures/gh.log")
+}
+
+after_merge_run MERGED
+expect_gate 'after-merge: マージされたら ci.yml を main で起こし、検査の起点を渡す' 0 'workflow run ci.yml --ref main -f scan_base=base-sha' 'needs-human'
+for number in 3 4; do
+  expect_gate 'after-merge: マージされたら閉じる Issue をすべて閉じる' 0 "issue close $number" ''
+  expect_gate 'after-merge: マージされたら Issue の in-progress を外す' 0 "issue edit $number --remove-label in-progress" ''
+done
+
+after_merge_run OPEN OPEN MERGED
+expect_gate 'after-merge: マージされるまで待つ' 0 'issue close 3' 'needs-human'
+after_merge_run UNREADABLE MERGED
+expect_gate 'after-merge: 読めない回があっても待ち続ける' 0 'issue close 3' 'needs-human'
+
+after_merge_run CLOSED
+expect_gate 'after-merge: マージせずに閉じた PR の Issue は閉じない' 0 '' 'issue close'
+expect_gate 'after-merge: マージせずに閉じた PR では ci.yml を起こさない' 0 '' 'workflow run'
+expect_gate 'after-merge: マージせずに閉じた PR は人に渡さない' 0 '' 'needs-human'
+
+after_merge_run OPEN
+expect_gate 'after-merge: マージされないままなら失敗で終わり、Issue を閉じない' 1 '' 'issue close'
+after_merge_run UNREADABLE
+expect_gate 'after-merge: 読めないままなら失敗で終わり、Issue を閉じない' 1 '' 'issue close'
+
+GATE_FAIL=ci after_merge_run MERGED
+expect_gate 'after-merge: ci.yml を起こせなくても Issue を閉じて、失敗で終わる' 1 'issue close 3' 'issue edit 3 --add-label needs-human'
+
+GATE_FAIL=close-3 after_merge_run MERGED
+expect_gate 'after-merge: 閉じられない Issue を人に渡す' 1 'issue edit 3 --add-label needs-human' ''
+expect_gate 'after-merge: 閉じられない Issue があっても残りを閉じる' 1 'issue close 4' 'issue edit 4 --add-label needs-human'
+expect_gate 'after-merge: 閉じられない Issue があっても ci.yml を起こす' 1 'workflow run ci.yml' ''
+
+GATE_FAIL=unlabel-3 after_merge_run MERGED
+expect_gate 'after-merge: in-progress を外せない Issue を人に渡す' 1 'issue edit 3 --add-label needs-human' 'issue edit 4 --add-label needs-human'
 
 gate() { printf '%s\n' "$@" | bash "$scripts/risk-gate.sh" "$allowlist"; }
 

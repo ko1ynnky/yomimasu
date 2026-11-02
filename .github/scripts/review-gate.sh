@@ -66,7 +66,10 @@ decision=$(jq -r --arg owner "$OWNER" --argjson issues "$issues" --argjson stops
 ' <<<"$pull")
 
 case $decision in
-  merge) gh pr merge "$PR" --auto --squash || hand_over '自動マージを有効にできないので人に渡します。' ;;
+  merge)
+    gh pr merge "$PR" --auto --squash || hand_over '自動マージを有効にできないので人に渡します。'
+    printf 'merging=true\n' >>"$GITHUB_OUTPUT"
+    ;;
   hold) ;;
   *) hand_over 'go:merge の条件が揃わないので人に渡します。' ;;
 esac

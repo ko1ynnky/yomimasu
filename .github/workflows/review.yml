@@ -81,6 +81,8 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+    outputs:
+      merging: ${{ steps.gate.outputs.merging }}
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -97,7 +99,42 @@ jobs:
         run: gh pr comment "$PR" --body "$SUMMARY"
 
       - name: 結果を PR に書き、次へ進める
+        id: gate
         env:
           OWNER: ${{ github.repository_owner }}
           OUTPUT: ${{ needs.review.outputs.result }}
         run: bash .github/scripts/review-gate.sh
+
+  # GITHUB_TOKEN のマージは push の実行を作らず、pull_request の closed も起こさない見込みなので、別の Workflow では受けない。
+  # review-gate は必須の検査で、終わるまでマージされないので、その中では待てない。
+  after-merge:
+    needs: review-gate
+    # 既定の success() は review の失敗も見る。自動マージを有効にしたあとは、後始末を飛ばさない。
+    if: ${{ !cancelled() && needs.review-gate.outputs.merging == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      actions: write
+      contents: read
+      issues: write
+      pull-requests: write
+    env:
+      GH_REPO: ${{ github.repository }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      # job の時間切れは取り消しの扱いで次の step が飛ぶので、step の時間切れで失敗にする。
+      - name: マージを待って後始末をする
+        timeout-minutes: 17
+        env:
+          SCAN_BASE: ${{ github.event.pull_request.base.sha }}
+        run: bash .github/scripts/after-merge.sh
+
+      # 新しい push による取り消しは次の実行が引き継ぐので、cancelled() は入れない。
+      - name: 失敗したら人に渡す
+        if: ${{ failure() }}
+        run: gh pr edit "$PR" --add-label needs-human
