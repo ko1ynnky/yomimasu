@@ -1,4 +1,15 @@
 {
+  "permissions": {
+    "deny": [
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(!.env.example)",
+      "Read(.dev.vars)",
+      "Read(.dev.vars.*)",
+      "Read(!.dev.vars.example)",
+      "Read(secrets/**)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
