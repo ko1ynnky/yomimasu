@@ -10,13 +10,11 @@ block() {
 
 # exit 2 以外では Claude Code が処理を続けるので、検査できないときも 2 で止める。
 command -v jq >/dev/null 2>&1 || block 'guard-files: jq がないので検査できません。'
+# shellcheck source=patterns.sh
+source "$(dirname "${BASH_SOURCE[0]}")/patterns.sh" 2>/dev/null || block 'guard-files: patterns.sh がないので検査できません。'
 
 project=${CLAUDE_PROJECT_DIR:-$PWD}
 
-audio_ext='\.(wav|wave|mp3|m4a|aac|flac|ogg|oga|opus|aif|aiff|caf|wma|weba|webm|mp4|mov)$'
-key_file='(^|/)(\.env(\.[^/]*)?|\.dev\.vars(\.[^/]*)?|[^/]*\.(pem|key|p12|pfx)|id_rsa|id_ed25519|secrets/.*)$'
-key_sample='\.(example|sample)$'
-secret="sk-ant-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|(KEY|TOKEN|SECRET)[A-Z_]*[\"']?[[:space:]]*[:=][[:space:]]*[\"']?[A-Za-z0-9_-]{32,}"
 # 読むだけのコマンドと、コミットメッセージに出てくる拡張子は止めたくないので、
 # 書き込むコマンドの引数とリダイレクトの先だけを見る。
 write_command='^[[:space:]]*(sudo[[:space:]]+)?(curl|wget|tee|ffmpeg|sox|afconvert|yt-dlp|git([[:space:]]+-C[[:space:]]+[^[:space:]]+)?[[:space:]]+add)([[:space:]]|$)'
