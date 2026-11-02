@@ -28,6 +28,7 @@
 *.key
 *.p12
 *.pfx
+secrets/
 
 # 手元の設定
 .claude/settings.local.json

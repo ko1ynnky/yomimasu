@@ -14,7 +14,7 @@ command -v jq >/dev/null 2>&1 || block 'guard-files: jq がないので検査で
 project=${CLAUDE_PROJECT_DIR:-$PWD}
 
 audio_ext='\.(wav|wave|mp3|m4a|aac|flac|ogg|oga|opus|aif|aiff|caf|wma|weba|webm|mp4|mov)$'
-key_file='(^|/)(\.env(\.[^/]*)?|\.dev\.vars(\.[^/]*)?|[^/]*\.(pem|key|p12|pfx)|id_rsa|id_ed25519)$'
+key_file='(^|/)(\.env(\.[^/]*)?|\.dev\.vars(\.[^/]*)?|[^/]*\.(pem|key|p12|pfx)|id_rsa|id_ed25519|secrets/.*)$'
 key_sample='\.(example|sample)$'
 secret="sk-ant-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|(KEY|TOKEN|SECRET)[A-Z_]*[\"']?[[:space:]]*[:=][[:space:]]*[\"']?[A-Za-z0-9_-]{32,}"
 # 読むだけのコマンドと、コミットメッセージに出てくる拡張子は止めたくないので、

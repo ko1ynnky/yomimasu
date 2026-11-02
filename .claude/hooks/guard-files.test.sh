@@ -40,6 +40,7 @@ expect blocked 'ノートブックの経路でも音声を止める' "$(notebook
 expect blocked '.env を書く' "$(write .env 'A=1')"
 expect blocked 'Workers の秘密の変数のファイルを書く' "$(edit .dev.vars 'A=1')"
 expect blocked '秘密鍵のファイルを書く' "$(write certs/server.pem)"
+expect blocked '秘密の置き場へ書く' "$(write secrets/token.txt)"
 expect blocked '本文に Anthropic の鍵がある' "$(write notes.md "key $anthropic_key")"
 expect blocked '編集の本文に GitHub のトークンがある' "$(edit src/a.ts "const t = '$github_token'")"
 expect blocked '本文に秘密鍵がある' "$(write notes.md "$private_key")"
