@@ -45,6 +45,9 @@ expect blocked '本文に Anthropic の鍵がある' "$(write notes.md "key $ant
 expect blocked '編集の本文に GitHub のトークンがある' "$(edit src/a.ts "const t = '$github_token'")"
 expect blocked '本文に秘密鍵がある' "$(write notes.md "$private_key")"
 expect blocked '形の決まっていない鍵を変数へ代入している' "$(write wrangler.toml "R2_SECRET_ACCESS_KEY = \"$filler\"")"
+expect blocked '小文字の変数名の鍵も止める' "$(write config.ts "api_key = \"$filler\"")"
+expect blocked 'スマートフォンの録音の形式も音声として扱う' "$(write tests/take.3gp)"
+expect blocked '音声を含む動画の形式も止める' "$(write tests/take.m4v)"
 
 expect blocked '音声をリポジトリの中へコピーする' "$(shell 'cp /outside/a.wav tests/fixtures/')"
 expect blocked 'エラーの出力を捨てるコピーも止める' "$(shell 'cp /outside/a.wav tests/ 2>/dev/null')"

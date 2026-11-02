@@ -16,6 +16,10 @@
 *.webm
 *.mp4
 *.mov
+*.3gp
+*.amr
+*.mkv
+*.m4v
 
 # 鍵
 .env
