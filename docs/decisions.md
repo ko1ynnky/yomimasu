@@ -18,7 +18,9 @@
   - `.github/workflows/ci.yml` に `check`、`e2e`、`no-audio`、`no-secrets`、`deny-names`、`risk-gate` を置く。型検査、テスト、シェルの検査、ビルドは `check` の中で順に動かす。
   - 音声の拡張子と鍵の形は `.claude/hooks/patterns.sh` の1か所に置き、hook と CI が読み込む。`.gitignore` は読み込めないので、食い違いをテストで止める。
   - `deny-names` の一覧は GitHub の secret `DENY_NAMES` に1行1件で置く。空なら失敗する。
-  - `deny-names` と `risk-gate` は、PR が変えたものではなく base のスクリプトを実行する。`pull_request` の対象は `main` と `production` に絞り、スクリプトのない古いブランチを base にできないようにする。
+  - `deny-names` と `risk-gate` は、変更の中のものではなく base のスクリプトを実行する。`pull_request` の対象は `main` と `production` に絞り、スクリプトのない古いブランチを base にできないようにする。
+  - `deny-names` は、base を読めないときは `main` の版を使う。読める base にスクリプトがないのは導入のときだけなので、そのときだけ取り出した版を実行し、ログに警告を残す。
+  - `main` と `production` への push の実行は取り消さない。取り消すと、そのコミットのメッセージを誰も見なくなる。
   - Action は版のタグではなくコミットの SHA で固定する。
 - 理由：
   - 一覧が2か所にあると、片方だけ直したときに穴になる。
@@ -30,9 +32,11 @@
 - 採らなかった案：gitleaks などの Action を使う案。依存を増やさず、hook と同じ形で見られる。
 - 試行錯誤：Linux のコンテナーで通して、`git ls-files` が日本語のパスを引用符付きで出し、音声、鍵、名前のファイル名の検査が空振りすると分かった。手元の Mac は `core.quotepath` が false で隠れていた。`-z` で受ける形にして、テストのリポジトリを CI の既定に揃えた。
 - 試行錯誤：レビューで、`git grep -I` が `.gitattributes` でバイナリ扱いにしたファイルを飛ばすこと、`git grep` と `git rev-list` の失敗が隠れること、`e2e/*` の許可で録音の許容の幅を自動でマージできることが分かった。それぞれ `-a`、失敗の区別、許可からの削除で直した。
-- 採らなかった案：`pull_request_target` で base の Workflow を動かす案。開発の方針で使わないと決めてある。PR のコードを取り出さない形なら安全に作れるので、下の限界の前提が崩れたら見直す。
+- 試行錯誤：2回目のレビューで、どの理由の失敗でも取り出した版へ切り替わること、切り替わりがログに残らないこと、`git grep` の失敗のテストが別の行で先に止まり守れていないことが分かった。切り替えの条件を絞り、`git grep` だけを失敗させる偽の `git` でテストした。
+- 採らなかった案：`pull_request_target` で base の Workflow を動かす案。secret を持つ Workflow が PR の内容を扱う形は、外部の入力を閉じる考え方と合わない。`deny-names` は PR の本文を読むので、PR のコードを実行しない形なら作れるが、下の限界の前提が崩れるまでは使わない。
 - 限界：
-  - `pull_request` の実行は PR 側の `ci.yml` を使う。Workflow を書き換えられる人は、secret に届き、`risk-gate` も外せる。自動の実行のトークンに `workflows` の権限を渡さないことを前提にし、`auto.yml` を書くときに確かめる。
+  - `pull_request` の実行は PR 側の `ci.yml` を使う。同じリポジトリへ push でき、Workflow も書き換えられる人は、secret に届き、`risk-gate` も外せる。fork の PR には secret は渡らない。自動の実行のトークンに `workflows` の権限を渡さないことを前提にし、`auto.yml` を書くときに確かめる。
+  - 導入の PR がマージされるまでは、取り出した版の `deny-names.sh` が secret を読む。導入の PR は人が読むので、そこで止める。
   - `no-audio`、`no-secrets`、`deny-names` の本文の検査は、今の版のファイルだけを見る。PR の途中のコミットで足して消したものは見つけない。
   - PR のタイトルと本文は検査しない。タイトルから作るスカッシュのメッセージは、`main` への push で見つける。
   - `no-audio` は拡張子で見るので、拡張子を変えた音声は見つけない。

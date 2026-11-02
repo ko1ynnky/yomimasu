@@ -142,6 +142,18 @@ expect fail 'deny-names: コミットメッセージの一致も落とす' "$nam
 expect fail 'deny-names: 読めない SCAN_BASE は検査できないので落ちる' '' in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE=missing bash "$scripts/deny-names.sh"
 expect fail 'deny-names: 新しいブランチの push でもコミットを見落とさない' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE=0000000000000000000000000000000000000000 bash "$scripts/deny-names.sh"
 
+# git grep だけを失敗させる。リポジトリの外の検査は git ls-files で先に止まり、この経路を通らない。
+fake_bin=$(mktemp -d "$work/bin.XXXXXX")
+cat >"$fake_bin/git" <<EOF
+#!/usr/bin/env bash
+if [[ \$1 == grep ]]; then exit 128; fi
+exec "$(command -v git)" "\$@"
+EOF
+chmod +x "$fake_bin/git"
+repo=$(new_repo)
+expect fail 'no-secrets: git grep の失敗を一致なしとして通さない' '' in_repo "$repo" env PATH="$fake_bin:$PATH" bash "$scripts/no-secrets.sh"
+expect fail 'deny-names: git grep の失敗を一致なしとして通さない' '' in_repo "$repo" env PATH="$fake_bin:$PATH" DENY_NAMES="$name" bash "$scripts/deny-names.sh"
+
 gate() { printf '%s\n' "$@" | bash "$scripts/risk-gate.sh" "$allowlist"; }
 
 expect pass 'risk-gate: 変更がなければ通る' '' bash -c "bash '$scripts/risk-gate.sh' '$allowlist' </dev/null"
