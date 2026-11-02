@@ -6,7 +6,8 @@ set -euo pipefail
 # shellcheck source=../../.claude/hooks/patterns.sh
 source "$(dirname "$0")/../../.claude/hooks/patterns.sh"
 
-files=$(git ls-files | { grep -iE "$key_file" || true; } | { grep -ivE "$key_sample" || true; })
+# 既定の設定では日本語のパスが引用符付きで出て、ファイル名の一致を逃す。
+files=$(git -c core.quotePath=false ls-files | { grep -iE "$key_file" || true; } | { grep -ivE "$key_sample" || true; })
 lines=$({ git grep -nIE -e "$secret" || true; } | cut -d: -f1,2)
 if [[ -n $files || -n $lines ]]; then
   printf '鍵らしいものがあります：\n%s\n%s\n' "$files" "$lines" >&2

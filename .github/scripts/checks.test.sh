@@ -19,6 +19,8 @@ new_repo() {
   git -C "$repo" init -q
   git -C "$repo" config user.name test
   git -C "$repo" config user.email test@example.invalid
+  # CI の既定の設定に揃える。手元の設定が false だと、日本語のパスの問題が隠れる。
+  git -C "$repo" config core.quotepath true
   printf 'ok\n' >"$repo/README.md"
   git -C "$repo" add README.md
   git -C "$repo" commit -qm first
@@ -68,6 +70,14 @@ expect fail 'no-audio: 音声を追跡していると落ちる' '' in_repo "$rep
 repo=$(new_repo)
 plant "$repo" tests/A.WEBM x
 expect fail 'no-audio: 大文字の拡張子でも落ちる' '' in_repo "$repo" bash "$scripts/no-audio.sh"
+
+repo=$(new_repo)
+plant "$repo" tests/録音.wav x
+expect fail 'no-audio: 日本語のファイル名でも落ちる' '' in_repo "$repo" bash "$scripts/no-audio.sh"
+
+repo=$(new_repo)
+plant "$repo" 設定/.env 'A=1'
+expect fail 'no-secrets: 日本語のフォルダーの .env でも落ちる' '' in_repo "$repo" bash "$scripts/no-secrets.sh"
 
 repo=$(new_repo)
 plant "$repo" notes.md "key $anthropic_key"

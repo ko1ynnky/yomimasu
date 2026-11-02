@@ -16,7 +16,8 @@ fi
 
 failed=false
 
-path_hits=$(git ls-files | { grep -ciF -f "$names" || true; })
+# 既定の設定では日本語のパスが8進数の表記で出て、名前の一致を逃す。
+path_hits=$(git -c core.quotePath=false ls-files | { grep -ciF -f "$names" || true; })
 if [[ $path_hits != 0 ]]; then
   printf 'ファイル名に公開できない名前があります：%s 件\n' "$path_hits" >&2
   failed=true
