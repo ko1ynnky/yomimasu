@@ -2,6 +2,40 @@
 
 あとの作業に影響する技術と設計の判断を、新しいものを上にして書く。理由と、採らなかった案も残す。結論を改めるときは、元の項目を消さずに、改めた日付と理由を足す。
 
+## 2026-11-03 自動マージの後始末を Workflow の中で行う
+
+- 決めたこと：
+  - `review.yml` に `after-merge` の job を足す。`review-gate` が自動マージを有効にしたときだけ動き、PR のマージを最長15分待つ。マージされたら `ci.yml` を `main` で起こし、閉じる Issue を閉じて `in-progress` を外す。
+  - `ci.yml` に `workflow_dispatch` を足す。入力の `scan_base` から HEAD までのコミットメッセージを、`no-secrets` と `deny-names` が見る。
+  - 待っても確かめられなければ `needs-human` を付けて人に渡す。マージせずに閉じた PR では何もしない。
+  - マージのあとの処理は、1つが失敗しても残りを試す。閉じられない Issue には `needs-human` を付ける。
+  - `deny-names` は `scan_base` でスクリプトの版を選ばない。手動の起動では `origin/main` の版を使う。
+- 理由：試運転の PR #6 で、`github-actions[bot]` が有効にした自動マージのあとに、`main` の `ci.yml` が動かず、`Closes #5` の Issue も閉じなかった。secret を足すかどうかはユーザーが決めるので、secret なしで動く形を先に入れる。
+- 原因：
+  - `ci.yml` が動かなかったのは、`GITHUB_TOKEN` によるイベントが workflow の実行を作らないからである。文書に書いてあり、実物とも合う。`e6349de` の実行は `auto` だけで、ユーザーがマージした PR #1 から #3 のコミットには `push` の `ci` がある。
+  - Issue が閉じなかった原因は推定である。文書は既定のブランチへのマージで閉じると書くだけで、`GITHUB_TOKEN` の例外に触れない。PR #6 は既定のブランチへのマージで、`closingIssuesReferences` に 5 が入っていた。Issue の events は `referenced` だけだった。ほかの PR に `Closes` がなく、ユーザーのマージと比べられない。`after-merge` は原因によらず同じ結果になるので、推定のまま進める。
+- 判断：閉じる処理は GitHub が閉じた Issue にも実行する。`gh issue close` は閉じた Issue でも成功するので、GitHub の動きが変わっても壊れない。
+- 採らなかった案：
+  - `pull_request` の `closed` で受ける案。文書の例外は `opened`、`synchronize`、`reopened` だけなので、`GITHUB_TOKEN` のマージでは起きない見込みである。
+  - `review-gate` の中で待つ案。必須の検査なので、終わるまでマージされない。
+  - `workflow_run` で `review` と `ci` の完了を受ける案。Workflow が1本増え、PR の実行のたびに起き、マージとの前後を待つ処理も要る。
+  - cron で掃除する案。平日の cron はまだ入れない。
+  - Claude の App のトークンで有効にする案。action は OIDC のトークンを Anthropic の交換の API へ送って取得する。公開の手順ではないので Workflow から直接は呼ばない。action を通すと、書き込みの job で Claude を動かすことになり、`review` と `review-gate` を分けた形が崩れる。
+- 見直す条件：secret を足すとユーザーが決めたら、GitHub App のトークンか PAT で `gh pr merge --auto` を実行する。GitHub の文書が勧める形で、`push` の実行が起きる。Issue も閉じるなら、`after-merge` と `ci.yml` の `workflow_dispatch` を消す。
+- 限界：
+  - `after-merge` はまだ GitHub Actions で動かしていない。次の `go:merge` の Issue で確かめる。
+  - `push` のイベントは起きないままなので、`push` だけで動く処理を足すときは、この経路で動かない。
+  - 起こした `ci.yml` の結果は PR に戻らない。起動者が `github-actions[bot]` なので、失敗の通知も人に届かない見込みである。PR の実行は途中のコミットのメッセージを見ているので、ここで初めて見るのは PR のタイトルだけである。赤は `main` の実行の一覧で見る。
+  - `gh issue edit --remove-label` は、ラベルのない Issue でも成功する見込みである。`in-progress` は `auto.yml` がブランチの Issue にしか付けないので、PR が複数の Issue を閉じると、この場合に当たる。
+  - `go:pr` は人がマージするので `after-merge` を通らない。閉じた Issue に `in-progress` が残る。`auto-pick` は開いた Issue だけを見るので、選び方には響かない。
+  - 待つ間は runner を1台使う。公開リポジトリなので料金はかからない。
+  - 15分のあとにマージされた PR は、`needs-human` が付くだけで、後始末は人が行う。
+  - 自動マージを有効にしたあとに人が push し、次の判定が `merge` でなければ、`after-merge` は動かない。自動マージは有効のままなので、人が切るか、後始末を行う。
+  - `ci.yml` を起こせないときの印は、マージ済みの PR の `needs-human` と赤い job だけである。開いた Issue には残らないので、`gh pr list --state merged --label needs-human` で見る。
+- 根拠（確認日 2026-11-03）：
+  - [GITHUB_TOKEN](https://docs.github.com/en/actions/concepts/security/github_token)、[Triggering a workflow from a workflow](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow)
+  - [Linking a pull request to an issue](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue)
+
 ## 2026-11-03 自走の試運転の形を決める
 
 - 決めたこと：
@@ -27,6 +61,7 @@
   - GitHub の FAQ は、Claude の GitHub App に Workflow の書き込みの権限がないと書く。実物では試運転で確かめる。
   - `gh pr merge --auto` は必須の検査がないとすぐマージするので、自動マージは `main` の保護を設定してから使う。
   - `go:merge` の自動マージは `GITHUB_TOKEN` で有効にするので、マージの push では `ci.yml` が動かない見込みである。スカッシュのメッセージの検査はこの経路では動かない。
+    - 改めた点（2026-11-03）：PR #6 で見込みのとおりになり、Issue も閉じなかった。`after-merge` の job で `ci.yml` を起こし、Issue を閉じる形にした。「自動マージの後始末を Workflow の中で行う」を見る。
   - Workflow はまだ GitHub Actions で動かしていない。動いたかどうかは試運転で確かめる。
 ## 2026-11-03 協会の回答を許可の表に反映する
 
@@ -73,6 +108,7 @@
   - 導入の PR がマージされるまでは、取り出した版の `deny-names.sh` が secret を読む。導入の PR は人が読むので、そこで止める。
   - `no-audio`、`no-secrets`、`deny-names` の本文の検査は、今の版のファイルだけを見る。PR の途中のコミットで足して消したものは見つけない。
   - PR のタイトルと本文は検査しない。タイトルから作るスカッシュのメッセージは、`main` への push で見つける。
+    - 改めた点（2026-11-03）：`go:merge` の自動マージでは push の実行が起きないので、`after-merge` が起こす `ci.yml` で見つける。
   - `no-audio` は拡張子で見るので、拡張子を変えた音声は見つけない。
   - `risk-gate` のラベルの付け替えは、ラベルを作ってから確かめる。
   - Workflow はまだ GitHub Actions で動かしていない。
