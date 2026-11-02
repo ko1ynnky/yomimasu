@@ -33,3 +33,10 @@ secrets/
 # 手元の設定
 .claude/settings.local.json
 .DS_Store
+
+# 依存と生成物
+node_modules/
+dist/
+.wrangler/
+test-results/
+e2e-artifacts/
