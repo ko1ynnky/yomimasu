@@ -24,7 +24,8 @@
   - [Building verification loops in Claude Code with skills](https://claude.com/resources/articles/building-verification-loops-in-claude-code-with-skills)
   - [Configure permissions](https://code.claude.com/docs/en/permissions)、[Subagents](https://code.claude.com/docs/en/sub-agents)
 - 採らなかった案：複数のエージェントの投票で指摘を絞る案と、人の承認を2名にする段階分け。開発は1人なので重い。夜ごとに既存のコードを走査する案も、既存のコードがないので見送る。
-- 採らなかった案：`AGENTS.md` の落とし穴の行を知識の文章の置き場へ移す案。実装で取り違えないための用語の短い注意で、解説ではない。
+- 採らなかった案：`AGENTS.md` の競技かるたの落とし穴の行を知識の文章の置き場へ移す案。実装で取り違えないための用語の短い注意で、解説ではない。
+- 採らなかった案：競技かるたの落とし穴を `/yomimasu` とは別のスキルにする案。今は5行で、毎回読ませても重くない。スキルにすると、読み込まれない実行で見落とす。行が増えて読みと測定の作業でしか要らなくなったら分ける。
 - あとで入れるもの：テストのコマンド、Stop hook、`verify` のスキル、PR の E2E の成果物、`auto.yml` の上限と失敗時の扱い、音声と鍵の CI の検査、ブランチ保護、Workflow の変更を人が見る設定、secret scanning、レビューをコメントだけで試す期間、わざと崩した PR での `reviewer` の確認。どれも、コマンド、Workflow、公開のリポジトリのどれかができてから決める。
 
 ## 2026-11-02 音声と鍵の書き込みを hook で止める
