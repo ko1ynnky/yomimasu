@@ -1,5 +1,5 @@
 import { render } from 'preact';
-import { useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import { measure, type Measurement } from '../../.claude/skills/yomimasu/scripts/measure.ts';
 import { startCapture, type Capture } from './capture.ts';
 
@@ -16,6 +16,9 @@ const FAILURE_MESSAGES: Record<Failure, string> = {
   unavailable: '録音を始められませんでした。ページを開き直してください。',
 };
 
+// 「止める」を続けて押すと、2回目が同じ位置の「読む」に当たり、結果が消えてマイクが開く。
+const RESTART_GUARD_MS = 500;
+
 const seconds = (value: number) => value.toFixed(2);
 
 function describe(result: Measurement): string {
@@ -31,8 +34,10 @@ function describe(result: Measurement): string {
 
 function Recorder() {
   const [view, setView] = useState<View>({ kind: 'idle' });
+  const stoppedAt = useRef(Number.NEGATIVE_INFINITY);
 
   async function start() {
+    if (performance.now() - stoppedAt.current < RESTART_GUARD_MS) return;
     setView({ kind: 'starting' });
     try {
       setView({ kind: 'recording', capture: await startCapture() });
@@ -42,6 +47,7 @@ function Recorder() {
   }
 
   function stop(capture: Capture) {
+    stoppedAt.current = performance.now();
     const { pcm, sampleRate } = capture.stop();
     setView({ kind: 'measured', result: measure(pcm, sampleRate) });
   }

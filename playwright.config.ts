@@ -6,6 +6,7 @@ export default defineConfig({
   testDir: 'e2e',
   outputDir: 'test-results',
   reporter: 'list',
+  forbidOnly: !!process.env.CI,
   // 録音は実時間で進むので、1本の時間は音の長さより短くならない。
   timeout: 30_000,
   use: { baseURL: `http://127.0.0.1:${PORT}` },

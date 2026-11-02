@@ -124,6 +124,40 @@ test('録音の準備に失敗したら、マイクを閉じて理由を見せ�
   await browser.close();
 });
 
+test('録音をつなぐ処理に失敗したら、マイクを閉じて理由を見せる', async ({ baseURL }) => {
+  const rate = standardReading.sampleRate;
+  const browser = await launchWithFakeMic(writeFakeMicFile(new Float32Array(rate), rate));
+  const page = await (await browser.newContext({ baseURL })).newPage();
+  await watchMicrophone(page);
+  await page.addInitScript(() => {
+    AudioContext.prototype.createMediaStreamSource = () => {
+      throw new DOMException('failed', 'NotSupportedError');
+    };
+  });
+  await page.goto('/');
+
+  await page.getByRole('button', { name: '読む' }).click();
+
+  await expect(page.getByRole('alert')).toContainText('録音を始められませんでした');
+  expect(await openedMicrophones(page)).toEqual([true]);
+  await browser.close();
+});
+
+test('止めるを続けて押しても、結果が残りマイクは開かない', async ({ baseURL }) => {
+  const rate = standardReading.sampleRate;
+  const browser = await launchWithFakeMic(writeFakeMicFile(new Float32Array(rate), rate));
+  const page = await (await browser.newContext({ baseURL })).newPage();
+  await watchMicrophone(page);
+  await page.goto('/');
+
+  await page.getByRole('button', { name: '読む' }).click();
+  await page.getByRole('button', { name: '止める' }).dblclick();
+
+  await expect(page.getByRole('status')).toContainText('測れませんでした');
+  expect(await openedMicrophones(page)).toEqual([true]);
+  await browser.close();
+});
+
 test('読むを続けて押しても、マイクは1つだけ開く', async ({ baseURL }) => {
   const rate = standardReading.sampleRate;
   const browser = await launchWithFakeMic(writeFakeMicFile(new Float32Array(rate), rate));

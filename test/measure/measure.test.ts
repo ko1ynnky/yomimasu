@@ -60,6 +60,10 @@ test('声のない録音では、値を作らず too-quiet を返す', () => {
   assert.deepEqual(measure(new Float32Array(3 * rate), rate), { status: 'too-quiet' });
 });
 
+test('窓より短い録音では、値を作らない', () => {
+  assert.notEqual(measure(new Float32Array(10), standardReading.sampleRate).status, 'ok');
+});
+
 test('秒数は 0.01 秒の単位で返す', () => {
   const result = measured(standardReading);
   assertOk(result);
