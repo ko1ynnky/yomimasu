@@ -1,0 +1,34 @@
+# 音声と動画。ブラウザの録音は webm か mp4 で保存されるので、この2つも含める
+*.wav
+*.wave
+*.mp3
+*.m4a
+*.aac
+*.flac
+*.ogg
+*.oga
+*.opus
+*.aif
+*.aiff
+*.caf
+*.wma
+*.weba
+*.webm
+*.mp4
+*.mov
+
+# 鍵
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# 手元の設定
+.claude/settings.local.json
+.DS_Store
