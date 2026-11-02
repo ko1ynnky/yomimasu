@@ -154,6 +154,168 @@ repo=$(new_repo)
 expect fail 'no-secrets: git grep の失敗を一致なしとして通さない' '' in_repo "$repo" env PATH="$fake_bin:$PATH" bash "$scripts/no-secrets.sh"
 expect fail 'deny-names: git grep の失敗を一致なしとして通さない' '' in_repo "$repo" env PATH="$fake_bin:$PATH" DENY_NAMES="$name" bash "$scripts/deny-names.sh"
 
+# 第1引数の番号が選ばれるか（空なら何も選ばれないか）を見る。第3引数は Issue の一覧の JSON である。
+picked() {
+  local want=$1 what=$2 got
+  got=$(printf '%s' "$3" | bash "$scripts/auto-pick.sh" owner 2>&1)
+  if [[ $got != "$want" ]]; then
+    ng "$what（期待 '$want'、結果 '$got'）"
+  fi
+}
+
+issue() {
+  local number=$1 labels=$2 author=${3:-owner} body=${4:-}
+  jq -cn --argjson number "$number" --arg labels "$labels" --arg author "$author" --arg body "$body" \
+    '{number: $number, author: {login: $author}, body: $body, labels: ($labels | split(",") | map(select(. != "") | {name: .}))}'
+}
+
+issues() {
+  jq -cs '.' <<<"$*"
+}
+
+picked 1 'auto-pick: ラベルの付いた最も古い Issue を選ぶ' "$(issues "$(issue 2 go:pr)" "$(issue 1 go:merge)")"
+picked '' 'auto-pick: Issue がなければ何も選ばない' '[]'
+picked '' 'auto-pick: ラベルのない Issue は選ばない' "$(issues "$(issue 1 '')")"
+picked '' 'auto-pick: night の Issue は選ばない' "$(issues "$(issue 1 night)")"
+picked '' 'auto-pick: night と go:merge の両方があれば選ばない' "$(issues "$(issue 1 go:merge,night)")"
+picked '' 'auto-pick: ユーザー以外の Issue は選ばない' "$(issues "$(issue 1 go:merge other)")"
+picked 2 'auto-pick: needs-human の Issue は飛ばす' "$(issues "$(issue 1 go:merge,needs-human)" "$(issue 2 go:merge)")"
+picked 2 'auto-pick: 進行中の Issue は飛ばす' "$(issues "$(issue 1 go:merge,in-progress)" "$(issue 2 go:merge)")"
+picked '' 'auto-pick: 開いている Issue に stop があれば何も始めない' "$(issues "$(issue 1 go:merge)" "$(issue 2 stop)")"
+picked 2 'auto-pick: Depends の相手が開いていれば飛ばす' "$(issues "$(issue 1 go:merge owner 'Depends: #3')" "$(issue 2 go:merge)" "$(issue 3 night)")"
+picked 1 'auto-pick: Depends の相手が閉じていれば進める' "$(issues "$(issue 1 go:merge owner 'Depends: #9')")"
+
+expect_round() {
+  local got
+  got=$(printf '%s' "$3" | bash "$scripts/review-round.sh" 2>&1)
+  if [[ $got != "$1" ]]; then
+    ng "$2（期待 $1、結果 $got）"
+  fi
+}
+
+expect_round 1 'review-round: レビューのコメントがなければ1回目である' '{"comments":[]}'
+expect_round 3 'review-round: Workflow が書いた印のコメントだけを数える' '{"comments":[{"author":{"login":"github-actions"},"body":"<!-- review-gate -->\nA"},{"author":{"login":"owner"},"body":"人のコメント"},{"author":{"login":"github-actions[bot]"},"body":"<!-- review-gate -->\nB"}]}'
+expect_round 1 'review-round: 他の人が書いた印は数えない' '{"comments":[{"author":{"login":"someone"},"body":"<!-- review-gate -->\nA"}]}'
+expect_round 1 'review-round: 印を引用しただけのコメントは数えない' '{"comments":[{"author":{"login":"github-actions"},"body":"前回の <!-- review-gate --> を引用"}]}'
+
+comments=$(printf '%s' '{"comments":[{"author":{"login":"github-actions"},"body":"<!-- review-gate -->\n公式の指摘"},{"author":{"login":"someone"},"body":"<!-- review-gate -->\n偽の指摘"}]}' | bash "$scripts/review-comments.sh" 2>&1)
+if [[ $comments != *公式の指摘* || $comments == *偽の指摘* ]]; then
+  ng "review-comments: Workflow のコメントだけを渡す（出力 $comments）"
+fi
+
+history=$(printf '%s' '{"comments":[{"author":{"login":"github-actions"},"body":"<!-- review-gate -->\n公式の指摘"},{"author":{"login":"app/claude"},"body":"修正の答え"},{"author":{"login":"someone"},"body":"他人の文"}]}' | bash "$scripts/review-comments.sh" --with-answers 2>&1)
+if [[ $history != *公式の指摘* || $history != *修正の答え* || $history == *他人の文* ]]; then
+  ng "review-comments: 答えも渡すときは Claude の答えだけを足す（出力 $history）"
+fi
+
+# 偽の gh は、呼ばれた引数を記録し、場面ごとの JSON を返す。
+gh_bin=$(mktemp -d "$work/gh.XXXXXX")
+cat >"$gh_bin/gh" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >>"$GH_LOG"
+case "$*" in
+  'pr view 7 --json comments') cat "$GH_FIXTURES/comments.json" ;;
+  'pr view 7 --json labels,closingIssuesReferences,headRefName') [[ ! -f $GH_FIXTURES/fail-pull ]] && cat "$GH_FIXTURES/pr.json" ;;
+  'issue view 3 --json author,labels,number,state') [[ ! -f $GH_FIXTURES/fail-issue ]] && cat "$GH_FIXTURES/issue.json" ;;
+  'issue list --state open --label stop --json number') cat "$GH_FIXTURES/stops.json" ;;
+  'pr comment 7 --body-file -') cat >>"$GH_FIXTURES/posted.txt" ;;
+  'pr merge 7 --auto --squash') [[ ! -f $GH_FIXTURES/fail-merge ]] ;;
+  'workflow run auto.yml -f pr=7') [[ ! -f $GH_FIXTURES/fail-workflow ]] ;;
+esac
+EOF
+chmod +x "$gh_bin/gh"
+
+# 引数：場面の名前、結果の JSON、回数、PR のラベル、Issue のラベル、stop の一覧。
+# GATE_ISSUE の JSON は Issue の上書き、GATE_PR の JSON は PR の上書き、GATE_FAIL は失敗させる呼び出しである。
+gate_run() {
+  local fixtures round=$3
+  fixtures=$(mktemp -d "$work/fixtures.XXXXXX")
+  jq -cn --argjson n "$((round - 1))" '{comments: [range($n) | {author: {login: "github-actions"}, body: "<!-- review-gate -->"}]}' >"$fixtures/comments.json"
+  jq -cn --arg labels "$4" --argjson over "${GATE_PR:-null}" '{headRefName: "auto/issue-3", labels: ($labels | split(",") | map(select(. != "") | {name: .})), closingIssuesReferences: [{number: 3}]} + ($over // {})' >"$fixtures/pr.json"
+  jq -cn --arg labels "$5" --argjson over "${GATE_ISSUE:-null}" '{number: 3, state: "OPEN", author: {login: "owner"}, labels: ($labels | split(",") | map(select(. != "") | {name: .}))} + ($over // {})' >"$fixtures/issue.json"
+  printf '%s' "${6:-[]}" >"$fixtures/stops.json"
+  [[ -n ${GATE_FAIL:-} ]] && : >"$fixtures/fail-$GATE_FAIL"
+  : >"$fixtures/gh.log"
+  gate_exit=0
+  PATH="$gh_bin:$PATH" GH_LOG="$fixtures/gh.log" GH_FIXTURES="$fixtures" PR=7 OWNER=owner OUTPUT="$2" bash "$scripts/review-gate.sh" >/dev/null 2>&1 || gate_exit=$?
+  gate_log=$(cat "$fixtures/gh.log")
+  gate_fixtures=$fixtures
+}
+
+clean='{"blocking":0,"minor":0,"existing":0,"report":"指摘なし"}'
+minor='{"blocking":0,"minor":1,"existing":0,"report":"軽い 1件"}'
+blocking='{"blocking":1,"minor":0,"existing":0,"report":"重要 1件"}'
+
+expect_gate() {
+  local what=$1 want_exit=$2 want=$3 unwanted=$4
+  if [[ $gate_exit != "$want_exit" ]]; then
+    ng "$what（期待 exit $want_exit、結果 exit $gate_exit、呼び出し $gate_log）"
+  fi
+  if [[ -n $want && $gate_log != *"$want"* ]]; then
+    ng "$what（$want がない：$gate_log）"
+  fi
+  if [[ -n $unwanted && $gate_log == *"$unwanted"* ]]; then
+    ng "$what（$unwanted がある：$gate_log）"
+  fi
+}
+
+gate_run empty '' 1 go:merge go:merge
+expect_gate 'review-gate: 結果が空なら人に渡し、マージしない' 1 'pr edit 7 --add-label needs-human' 'pr merge'
+gate_run broken 'not json' 1 go:merge go:merge
+expect_gate 'review-gate: 結果が壊れていれば人に渡す' 1 'pr edit 7 --add-label needs-human' 'pr merge'
+gate_run past "$clean" 4 go:merge go:merge
+expect_gate 'review-gate: 4回目は人に渡す' 1 'pr edit 7 --add-label needs-human' 'pr merge'
+
+gate_run fix "$blocking" 1 go:merge go:merge
+expect_gate 'review-gate: 止める指摘は修正を起こして赤にする' 1 'workflow run auto.yml -f pr=7' 'pr merge'
+if ! grep -q '<!-- review-gate -->' "$gate_fixtures/posted.txt"; then
+  ng 'review-gate: 印を付けて報告を書く'
+fi
+gate_run third "$blocking" 3 go:merge go:merge
+expect_gate 'review-gate: 3回目に止める指摘が残れば人に渡す' 1 'pr edit 7 --add-label needs-human' 'workflow run'
+gate_run minor "$minor" 1 go:merge go:merge
+expect_gate 'review-gate: 軽い指摘にも答えを求める' 1 'workflow run auto.yml -f pr=7' 'pr merge'
+gate_run minor-last "$minor" 3 go:merge go:merge
+expect_gate 'review-gate: 3回目の軽い指摘は止めない' 0 'pr merge 7 --auto --squash' 'workflow run'
+
+gate_run merge "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: 指摘がなく Issue も go:merge なら自動マージする' 0 'pr merge 7 --auto --squash' 'needs-human'
+gate_run pr-only "$clean" 1 go:pr go:pr
+expect_gate 'review-gate: go:pr は緑で終え、マージしない' 0 '' 'pr merge'
+gate_run stopped "$clean" 1 go:merge go:merge '[{"number":9}]'
+expect_gate 'review-gate: stop があれば緑で終え、マージしない' 0 '' 'pr merge'
+
+hand_over='pr edit 7 --add-label needs-human'
+gate_run forged "$clean" 1 go:merge go:pr
+expect_gate 'review-gate: PR だけ go:merge なら人に渡す' 1 "$hand_over" 'pr merge'
+gate_run unlabeled "$clean" 1 '' go:merge
+expect_gate 'review-gate: Issue だけ go:merge なら人に渡す' 1 "$hand_over" 'pr merge'
+gate_run held "$clean" 1 go:merge,needs-human go:merge
+expect_gate 'review-gate: needs-human の PR はマージしない' 1 '' 'pr merge'
+gate_run both "$clean" 1 go:merge go:merge,go:pr
+expect_gate 'review-gate: Issue に go:pr もあれば人に渡す' 1 "$hand_over" 'pr merge'
+gate_run night "$clean" 1 go:merge go:merge,night
+expect_gate 'review-gate: Issue に night があれば人に渡す' 1 "$hand_over" 'pr merge'
+gate_run issue-held "$clean" 1 go:merge go:merge,needs-human
+expect_gate 'review-gate: 失敗した実行の Issue の PR はマージしない' 1 "$hand_over" 'pr merge'
+GATE_ISSUE='{"author":{"login":"other"}}' gate_run author "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: Issue の作者が違えば人に渡す' 1 "$hand_over" 'pr merge'
+GATE_ISSUE='{"state":"CLOSED"}' gate_run closed "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: 閉じた Issue では人に渡す' 1 "$hand_over" 'pr merge'
+GATE_PR='{"closingIssuesReferences":[]}' gate_run none "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: 閉じる Issue がなければ人に渡す' 1 "$hand_over" 'pr merge'
+GATE_PR='{"headRefName":"auto/issue-5"}' gate_run other "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: ブランチの Issue を閉じない PR は人に渡す' 1 "$hand_over" 'pr merge'
+
+GATE_FAIL=merge gate_run merge-fails "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: 自動マージを有効にできなければ人に渡す' 1 "$hand_over" ''
+GATE_FAIL=workflow gate_run workflow-fails "$blocking" 1 go:merge go:merge
+expect_gate 'review-gate: 修正を起こせなければ人に渡す' 1 "$hand_over" ''
+GATE_FAIL=issue gate_run issue-fails "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: Issue を読めなければ人に渡し、マージしない' 1 "$hand_over" 'pr merge'
+GATE_FAIL=pull gate_run pull-fails "$clean" 1 go:merge go:merge
+expect_gate 'review-gate: PR を読めなければ人に渡し、マージしない' 1 "$hand_over" 'pr merge'
+
 gate() { printf '%s\n' "$@" | bash "$scripts/risk-gate.sh" "$allowlist"; }
 
 expect pass 'risk-gate: 変更がなければ通る' '' bash -c "bash '$scripts/risk-gate.sh' '$allowlist' </dev/null"
