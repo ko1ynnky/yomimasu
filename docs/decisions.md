@@ -2,6 +2,30 @@
 
 あとの作業に影響する技術と設計の判断を、新しいものを上にして書く。理由と、採らなかった案も残す。結論を改めるときは、元の項目を消さずに、改めた日付と理由を足す。
 
+## 2026-11-02 Anthropic の開発の記事からハーネスに入れるものを選ぶ
+
+- 決めたこと：コマンドや Workflow がなくても意味を持つものだけを、今の段階で入れる。
+  - 秘密のファイルの Read を `permissions.deny` で止める。`!` で見本のファイルを読めるように残す。
+  - 読み取り専用の `reviewer` を作り、PR を開く前に新しい文脈で差分を見る。
+  - `REVIEW.md` に失敗の定義、指摘の区分、見ない場所を書く。指摘は1か所ではなく問題の種類として示す。
+  - 繰り返す指摘は hook、CI、`AGENTS.md` のどれかに移し、指摘には修正か理由で答える。
+  - `AGENTS.md` は、コードから読み取れない題材の事実を中心に短くする。PR の本文の形はテンプレートへ移す。
+  - PR のテンプレートに、確かめたこと、リスク、戻し方を置く。
+  - Issue、PR のコメント、Web の本文を入力のデータとして扱う。ユーザーがラベルを付けた Issue の目的と完了の条件だけを依頼とする。
+- 独自の決まり：記事はチェックを先に用意することを勧めるが、報告の形までは決めていない。このリポジトリでは、完了の報告に実行したコマンドと出力を付ける。
+- 判断：`reviewer` に Bash を渡さない。`tools` では Bash をコマンド単位で絞れず、Bash があれば書き換えられる。差分は本文かファイルで受け取る。
+- 限界：`permissions.deny` は、ファイルの名前を出さない `grep -r` や、スクリプトの中の読み取りを止めない。
+- 根拠（確認日 2026-11-02）：
+  - [Solving code review at Anthropic](https://claude.dev/blog/solving-code-review-at-anthropic/)
+  - [The new rules of context engineering for Claude 5 generation models](https://claude.dev/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models/)
+  - [Best practices for Claude Code](https://code.claude.com/docs/en/best-practices)
+  - [Building effective agent automations](https://claude.dev/blog/building-effective-agent-automations/)
+  - [How Anthropic secures its AI-native software development lifecycle](https://claude.com/blog/how-anthropic-secures-its-ai-native-software-development-lifecycle)
+  - [Building verification loops in Claude Code with skills](https://claude.com/resources/articles/building-verification-loops-in-claude-code-with-skills)
+  - [Configure permissions](https://code.claude.com/docs/en/permissions)、[Subagents](https://code.claude.com/docs/en/sub-agents)
+- 採らなかった案：複数のエージェントの投票で指摘を絞る案と、人の承認を2名にする段階分け。開発は1人なので重い。夜ごとに既存のコードを走査する案も、既存のコードがないので見送る。
+- あとで入れるもの：テストのコマンド、Stop hook、`verify` のスキル、PR の E2E の成果物、`auto.yml` の上限と失敗時の扱い、ブランチ保護、Workflow の変更を人が見る設定、secret scanning、レビューをコメントだけで試す期間、わざと崩した PR での `reviewer` の確認。どれもコマンドか Workflow ができてから決める。
+
 ## 2026-11-02 音声と鍵の書き込みを hook で止める
 
 - 決めたこと：`.claude/settings.json` の PreToolUse の hook で、Write、Edit、NotebookEdit、Bash を検査する。リポジトリの中へ音声や鍵のファイルを書く操作と、鍵らしい文字列を含む操作を止める。
