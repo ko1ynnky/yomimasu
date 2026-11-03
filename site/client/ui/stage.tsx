@@ -192,6 +192,8 @@ export function Stage({ segments, lines, t = 0, assisted = true, tap = false, co
   );
 }
 
+// 読む画面は録音の部品の中で枠を描くので、<yomimasu-stage> を使うページは今はない。
+// 要素の登録（main.ts）はこの Issue の範囲の外なので残し、お手本を聞く画面などで使うかは Y-18 で決める。
 export function mountStage(element: HTMLElement) {
   const pair = pairOf(location.search);
   render(<Stage segments={segmentsOf(pair)} lines={pairLines(cards, pair)} />, element);

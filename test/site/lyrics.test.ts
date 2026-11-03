@@ -62,6 +62,11 @@ test('余韻で押す字は、下の句の最後の字である', () => {
   assert.equal(tapCharOf(pairLines(cards, { shimo: 77, kami: 29 })), 'ふ');
 });
 
+test('下の句が漢字で終わる札では、余韻で押す字を最後の音の仮名で示す', () => {
+  // 2番は「天の香具山」で終わる。余韻は最後の音「ま」から始まるので、「山」で押すと1音早くなる。
+  assert.equal(tapCharOf(pairLines(cards, { shimo: 2, kami: 1 })), 'ま');
+});
+
 test('下の句の2行目の始まりは、下の句の標準の秒数を2行の字数で分けた位置にする', () => {
   // 81番は「ただー有明のー」7字と「月ぞ残ーれる」6字である。
   assert.equal(secondShimoLineAt(pairLines(cards, { shimo: 81, kami: 45 }), 5), (5 * 7) / 13);

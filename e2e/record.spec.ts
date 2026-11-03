@@ -178,6 +178,11 @@ test('余韻の入りで画面を押すと、その時刻から余韻と間を�
   await expect(finishButton(page)).toBeEnabled({ timeout: 6000 });
   await finishButton(page).click();
   const take = await takeOf(page);
+  // 確かめる画面と読み直す画面には、前の読みのタップの差を残さない。
+  await expect(page.locator('.run')).not.toContainText('タップ');
+  await page.getByRole('button', { name: '読み直す' }).click();
+  await expect(startButton(page)).toBeVisible();
+  await expect(page.locator('.run')).not.toContainText('タップ');
   expect(Number(take.yoinTapSec)).toBeGreaterThan(2);
   expect(Number(take.yoinTapSec)).toBeLessThan(5);
 

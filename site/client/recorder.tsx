@@ -167,6 +167,8 @@ function Recorder({ fix }: { fix?: string }) {
       voiceProcessing,
     };
     putLastTake(take);
+    // 確かめる画面では数値を先に見せないので、タップの差の行も消す。
+    setTapLine(null);
     setView({ kind: 'heard', take });
   }
 

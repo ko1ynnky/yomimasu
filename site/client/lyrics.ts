@@ -79,7 +79,12 @@ export function pairLines(cards: readonly Card[], pair: Pair): PairLines {
   return { shimo: linesOf(find(pair.shimo), LOWER), kami: linesOf(find(pair.kami), UPPER) };
 }
 
-export const tapCharOf = (lines: PairLines) => lines.shimo.at(-1)!.at(-1)!.text.at(-1)!;
+// 余韻は最後の音から始まる。漢字で終わる札（2番の「山」など）で字をそのまま出すと、1音早く押すことになるので、読みの最後の仮名を出す。
+export function tapCharOf(lines: PairLines): string {
+  const last = lines.shimo.at(-1)!.at(-1)!;
+  const char = last.text.at(-1)!;
+  return /\p{Script=Han}/u.test(char) && last.ruby ? last.ruby.at(-1)! : char;
+}
 
 // 文字の時刻の列は C3 で表に入る。それまでは字数で分けた仮の位置で、押し間違いを数えない範囲にだけ使う。
 export function secondShimoLineAt(lines: PairLines, shimoSec: number): number {
