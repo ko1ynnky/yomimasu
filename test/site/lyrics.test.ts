@@ -72,12 +72,24 @@ test('伸ばす印を除いて読みと仮名をつなぐと、札の表の実�
 
 test('余韻で押す字は、下の句の最後の字である', () => {
   assert.equal(tapCharOf(pairLines(cards, { shimo: 81, kami: 45 })), 'る');
-  assert.equal(tapCharOf(pairLines(cards, { shimo: 77, kami: 29 })), 'ふ');
 });
 
 test('下の句が漢字で終わる札では、余韻で押す字を最後の音の仮名で示す', () => {
   // 2番は「天の香具山」で終わる。余韻は最後の音「ま」から始まるので、「山」で押すと1音早くなる。
   assert.equal(tapCharOf(pairLines(cards, { shimo: 2, kami: 1 })), 'ま');
+});
+
+test('下の句が発音の違う仮名で終わる札では、余韻で押す字を聞こえる最後の音で示す', () => {
+  // 77番は「思ふ」で終わり、「おもお」と振る。「ふ」で押すよう案内すると、聞こえる音と食い違う。
+  assert.equal(tapCharOf(pairLines(cards, { shimo: 77, kami: 29 })), 'お');
+});
+
+test('どの札でも、余韻で押す字は、ふりがなを含めて下の句の最後に聞こえる音である', () => {
+  for (const card of cards.filter((c) => c.no !== 0)) {
+    const lines = pairLines(cards, { shimo: card.no, kami: card.no === 1 ? 2 : 1 });
+    const heard = lines.shimo.at(-1)!.filter((token) => !token.nobi).map((token) => token.ruby ?? token.text).join('');
+    assert.equal(tapCharOf(lines), heard.at(-1), `${card.no}番`);
+  }
 });
 
 test('下の句の2行目の始まりは、下の句の標準の秒数を2行の字数で分けた位置にする', () => {
