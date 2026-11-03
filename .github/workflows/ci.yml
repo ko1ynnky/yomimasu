@@ -6,6 +6,12 @@ on:
     types: [opened, synchronize, reopened, labeled, edited]
   push:
     branches: [main, production]
+  # GITHUB_TOKEN のマージは push の実行を作らないので、after-merge.sh がここから起こす。
+  workflow_dispatch:
+    inputs:
+      scan_base:
+        description: コミットメッセージを見始めるコミット
+        required: true
 
 permissions:
   contents: read
@@ -81,7 +87,7 @@ jobs:
           persist-credentials: false
       - run: bash .github/scripts/no-secrets.sh
         env:
-          SCAN_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          SCAN_BASE: ${{ github.event.pull_request.base.sha || github.event.before || inputs.scan_base }}
 
   deny-names:
     runs-on: ubuntu-latest
@@ -94,15 +100,17 @@ jobs:
       # secret を読むので、変更の中のスクリプトではなく base のスクリプトを実行する。
       # 新しいブランチの push や force push で base を読めないときは、main の版を使う。
       # 読める base にスクリプトがないのは導入のときだけなので、そのときだけ取り出した版を実行し、ログに残す。
+      # 起動する人が書ける scan_base では版を選ばない。手動の起動はいつも main の版を使う。
       # Workflow そのものの書き換えは、この形では防げない。docs/decisions.md の限界に前提を書いた。
       - name: 公開できない名前を探す
         env:
           DENY_NAMES: ${{ secrets.DENY_NAMES }}
-          SCAN_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          SCAN_BASE: ${{ github.event.pull_request.base.sha || github.event.before || inputs.scan_base }}
+          SCRIPT_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           script="$RUNNER_TEMP/deny-names.sh"
           source_path=.github/scripts/deny-names.sh
-          ref=$SCAN_BASE
+          ref=$SCRIPT_BASE
           git cat-file -e "$ref^{commit}" 2>/dev/null || ref=origin/main
           if git cat-file -e "$ref:$source_path" 2>/dev/null; then
             git show "$ref:$source_path" >"$script"
