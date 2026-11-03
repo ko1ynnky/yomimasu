@@ -404,6 +404,161 @@ picked 2 'auto-pick: Depends の行を全部読み、どれか1つでも開い�
 picked 2 'auto-pick: 改行が CRLF でも Depends を読む' "$(issues "$(issue 1 go:merge owner $'Depends: #8\r\nDepends: #3\r\n')" "$(issue 2 go:merge)" "$(issue 3 night)")"
 picked 2 'auto-pick: Depends の1行に並べた番号もすべて読む' "$(issues "$(issue 1 go:merge owner 'Depends: #8, #3')" "$(issue 2 go:merge)" "$(issue 3 night)")"
 
+# 自走の偽の gh は、上の review-gate の偽の gh と分けておく。呼ばれた引数を記録し、場面のファイルを返す。
+auto_gh=$(mktemp -d "$work/auto-gh.XXXXXX")
+cat >"$auto_gh/gh" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >>"$GH_LOG"
+case "$*" in
+  'issue list --state open --label stop --json number') cat "$GH_FIXTURES/stops.json" ;;
+  'issue list --state open --limit 200 --json number,author,labels,body') cat "$GH_FIXTURES/issues.json" ;;
+  'pr list --state open --limit 100 --json number,author,labels,statusCheckRollup') jq 'map(del(.state))' "$GH_FIXTURES/pulls.json" ;;
+  'pr view '*' --json state,labels,author') jq --argjson number "$3" '.[] | select(.number == $number)' "$GH_FIXTURES/pulls.json" ;;
+  'api repos/{owner}/{repo}/issues/events?per_page=100&page='*)
+    [[ ! -f $GH_FIXTURES/fail-events ]] || exit 1
+    cat "$GH_FIXTURES/events-${2##*page=}.json" 2>/dev/null || printf '[]'
+    ;;
+  'workflow run auto.yml') [[ ! -f $GH_FIXTURES/fail-dispatch ]] ;;
+  *) exit 64 ;;
+esac
+EOF
+chmod +x "$auto_gh/gh"
+
+# 引数：番号、review-gate の結果を古い順に並べたもの（IN_PROGRESS は実行中）、ラベル、作者。
+pull() {
+  local number=$1 gates=${2:-} labels=${3:-} author=${4:-app/claude}
+  jq -cn --argjson number "$number" --arg gates "$gates" --arg labels "$labels" --arg author "$author" '
+    {number: $number, state: "OPEN", author: {login: $author},
+     labels: ($labels | split(",") | map(select(. != "") | {name: .})),
+     statusCheckRollup: ([{__typename: "CheckRun", workflowName: "ci", name: "check", startedAt: "2026-11-03T00:30:00Z", status: "COMPLETED", conclusion: "FAILURE"}]
+       + ($gates | split(",") | map(select(. != "")) | to_entries
+         | map({__typename: "CheckRun", workflowName: "review", name: "review-gate",
+                startedAt: "2026-11-03T0\(.key + 1):00:00Z",
+                status: (if .value == "IN_PROGRESS" then "IN_PROGRESS" else "COMPLETED" end),
+                conclusion: (if .value == "IN_PROGRESS" then "" else .value end)})
+         | reverse))}'
+}
+
+# 引数：時刻（UTC）、ラベル、付けた人。GitHub は新しい順に返す。
+event() {
+  jq -cn --arg at "$1" --arg label "${2:-in-progress}" --arg actor "${3:-github-actions[bot]}" \
+    '{event: "labeled", created_at: $at, label: {name: $label}, actor: {login: $actor}}'
+}
+
+# 引数：Issue の一覧、PR の一覧、events の1ページ目。今日は日本時間の 2026-11-03 とする。
+auto_scene() {
+  auto_dir=$(mktemp -d "$work/auto.XXXXXX")
+  printf '%s' "${1:-[]}" >"$auto_dir/issues.json"
+  printf '%s' "${2:-[]}" >"$auto_dir/pulls.json"
+  printf '%s' "${3:-[]}" >"$auto_dir/events-1.json"
+  printf '[]' >"$auto_dir/stops.json"
+}
+
+# 引数：PR の入力。GITHUB_OUTPUT に書いた中身を auto_out に入れる。上限は AUTO_LIMIT で変える。
+auto_target() {
+  : >"$auto_dir/gh.log"
+  : >"$auto_dir/output"
+  auto_exit=0
+  PATH="$auto_gh:$PATH" GH_LOG="$auto_dir/gh.log" GH_FIXTURES="$auto_dir" GITHUB_OUTPUT="$auto_dir/output" \
+    OWNER=owner PR="${1:-}" DAILY_LIMIT="${AUTO_LIMIT:-2}" TODAY=2026-11-03 \
+    bash "$scripts/auto-target.sh" >/dev/null 2>&1 || auto_exit=$?
+  auto_out=$(cat "$auto_dir/output")
+}
+
+expect_target() {
+  local what=$1 want=$2 want_exit=${3:-0}
+  if [[ $auto_out != "$want" || $auto_exit != "$want_exit" ]]; then
+    ng "$what（期待 '$want' exit $want_exit、結果 '$auto_out' exit $auto_exit）"
+  fi
+}
+
+# 自走が Issue を始めたときの変化を場面に足す。
+auto_started() {
+  jq --argjson number "$1" 'map(if .number == $number then .labels += [{name: "in-progress"}] else . end)' "$auto_dir/issues.json" >"$auto_dir/next.json"
+  mv "$auto_dir/next.json" "$auto_dir/issues.json"
+  jq --argjson event "$(event "$2")" '[$event] + .' "$auto_dir/events-1.json" >"$auto_dir/next.json"
+  mv "$auto_dir/next.json" "$auto_dir/events-1.json"
+}
+
+open_issues=$(issues "$(issue 1 go:merge)" "$(issue 2 go:pr)" "$(issue 3 go:merge)")
+
+auto_scene "$open_issues"
+auto_target
+expect_target 'auto-target: 上限の内なら最も古い Issue を選ぶ' 'issue=1'
+
+auto_scene "$open_issues"
+printf '[{"number":9}]' >"$auto_dir/stops.json"
+auto_target
+expect_target 'auto-target: stop があれば何も選ばない' ''
+
+auto_scene "$open_issues" "$(issues "$(pull 5)")"
+auto_target 5
+expect_target 'auto-target: 渡された PR が Claude の開いた PR なら修正の対象にする' 'pr=5'
+auto_scene "$open_issues" "$(issues "$(pull 5 '' needs-human)")"
+auto_target 5
+expect_target 'auto-target: 渡された PR に needs-human があれば何もしない' ''
+auto_target '5;x'
+expect_target 'auto-target: 渡された PR の番号の形が違えば失敗する' '' 1
+
+auto_scene "$open_issues" "$(issues "$(pull 6 FAILURE)" "$(pull 5 FAILURE)")"
+auto_target
+expect_target 'auto-target: 修正を待つ PR を Issue より先に、古い順に選ぶ' 'pr=5'
+auto_scene "$open_issues" "$(issues "$(pull 5 SUCCESS)")"
+auto_target
+expect_target 'auto-target: レビューが通った PR は修正の対象にしない' 'issue=1'
+auto_scene "$open_issues" "$(issues "$(pull 5 FAILURE,IN_PROGRESS)")"
+auto_target
+expect_target 'auto-target: レビューの途中の PR は修正の対象にしない' 'issue=1'
+auto_scene "$open_issues" "$(issues "$(pull 5 FAILURE,SUCCESS)")"
+auto_target
+expect_target 'auto-target: 前の回の赤ではなく、最新の review-gate を見る' 'issue=1'
+auto_scene "$open_issues" "$(issues "$(pull 5 SUCCESS,FAILURE)")"
+auto_target
+expect_target 'auto-target: 最新の review-gate が赤なら修正の対象にする' 'pr=5'
+auto_scene "$open_issues" "$(issues "$(pull 5 FAILURE needs-human)")"
+auto_target
+expect_target 'auto-target: needs-human の PR は修正の対象にしない' 'issue=1'
+auto_scene "$open_issues" "$(issues "$(pull 5 FAILURE '' owner)")"
+auto_target
+expect_target 'auto-target: 人の PR は修正の対象にしない' 'issue=1'
+
+today_twice=$(issues "$(event 2026-11-03T03:00:00Z)" "$(event 2026-11-03T01:00:00Z)")
+auto_scene "$open_issues" '[]' "$today_twice"
+auto_target
+expect_target 'auto-target: 今日始めた件数が上限に達していれば Issue を始めない' ''
+auto_scene "$open_issues" "$(issues "$(pull 5 FAILURE)")" "$today_twice"
+auto_target
+expect_target 'auto-target: 上限に達していても修正は進める' 'pr=5'
+auto_scene "$open_issues" '[]' "$(issues "$(event 2026-11-02T23:00:00Z)" "$(event 2026-11-02T15:00:00Z)")"
+auto_target
+expect_target 'auto-target: 日本時間の今日の0時から数える' ''
+auto_scene "$open_issues" '[]' "$(issues "$(event 2026-11-03T01:00:00Z)" "$(event 2026-11-02T14:59:59Z)" "$(event 2026-11-02T14:00:00Z)")"
+auto_target
+expect_target 'auto-target: 日本時間の前の日に始めた件数は数えない' 'issue=1'
+auto_scene "$open_issues" '[]' "$(issues "$(event 2026-11-03T03:00:00Z in-progress owner)" "$(event 2026-11-03T02:00:00Z go:merge)" "$(event 2026-11-03T01:00:00Z)")"
+auto_target
+expect_target 'auto-target: 自走が付けた in-progress だけを数える' 'issue=1'
+auto_scene "$open_issues" '[]' "$(jq -cn '[range(100) | {event: "labeled", created_at: "2026-11-03T05:00:00Z", label: {name: "go:pr"}, actor: {login: "owner"}}]')"
+printf '%s' "$today_twice" >"$auto_dir/events-2.json"
+auto_target
+expect_target 'auto-target: 今日の分が1ページに収まらなければ次のページも読む' ''
+auto_scene "$open_issues"
+: >"$auto_dir/fail-events"
+auto_target
+expect_target 'auto-target: 今日の件数を読めなければ始めない' '' 1
+
+# ラベルをまとめて付けると、保留の実行は新しい起動に押し出される。どの起動から始まっても、残りを古い順に1件ずつ拾う。
+AUTO_LIMIT=5
+auto_scene "$open_issues"
+for number in 1 2 3; do
+  auto_target
+  expect_target "auto-target: まとめて付けた Issue を1件ずつ順に拾う（$number 件目）" "issue=$number"
+  auto_started "$number" "2026-11-03T0${number}:00:00Z"
+done
+auto_target
+expect_target 'auto-target: 拾い終えたら何も選ばない' ''
+unset AUTO_LIMIT
+
 if ((failures > 0)); then
   printf '%s 件失敗\n' "$failures"
   exit 1

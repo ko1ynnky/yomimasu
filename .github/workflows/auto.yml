@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       pr:
-        description: レビューの指摘に答える PR の番号。空なら最も古い Issue を選ぶ
+        description: レビューの指摘に答える PR の番号。空なら修正を待つ PR か、最も古い Issue を選ぶ
         required: false
 
 permissions:
@@ -23,10 +23,13 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event.sender.login == github.repository_owner && (github.event.label.name == 'go:merge' || github.event.label.name == 'go:pr')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # PR の修正を待つかどうかを review-gate の検査の結果で見るので、checks と statuses も読む。
     permissions:
+      checks: read
       contents: read
       issues: read
       pull-requests: read
+      statuses: read
     outputs:
       issue: ${{ steps.pick.outputs.issue }}
       pr: ${{ steps.pick.outputs.pr }}
@@ -40,21 +43,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           OWNER: ${{ github.repository_owner }}
           PR: ${{ inputs.pr }}
-        run: |
-          stops=$(gh issue list --state open --label stop --json number --jq length)
-          if [[ $stops != 0 ]]; then
-            echo '開いている Issue に stop があるので始めません。'
-            exit 0
-          fi
-          if [[ -n $PR ]]; then
-            [[ $PR =~ ^[0-9]+$ ]] || { echo '::error::PR の番号の形が違います。'; exit 1; }
-            ready=$(gh pr view "$PR" --json state,labels,author --jq '.state == "OPEN" and (.author.login | test("^(app/)?claude(\\[bot\\])?$")) and ([.labels[].name] | index("needs-human") == null)')
-            [[ $ready == true ]] || { echo "PR #$PR は修正の対象ではありません。"; exit 0; }
-            echo "pr=$PR" >>"$GITHUB_OUTPUT"
-            exit 0
-          fi
-          issue=$(gh issue list --state open --limit 200 --json number,author,labels,body | bash .github/scripts/auto-pick.sh "$OWNER")
-          echo "issue=$issue" >>"$GITHUB_OUTPUT"
+          # 日本時間の1日に始める Issue の上限。失敗した実行も数え、PR の修正は数えない。
+          DAILY_LIMIT: 5
+        run: bash .github/scripts/auto-target.sh
 
   work:
     needs: pick
