@@ -15,7 +15,7 @@
 
 ## 利用者の経路
 
-`/` を開き、「読む」を押して読み、「止める」を押す。
+`/read/rec/` を開き、「読む」を押して読み、「止める」を押す。組は `?shimo=53&kami=86` のように URL で替えられ、指定がなければ 77番と29番である。
 
 ## Playwright での動かし方
 
@@ -27,7 +27,7 @@
 --use-file-for-fake-audio-capture=<合成音の WAV>%noloop
 ```
 
-ボタンは `getByRole('button', { name: '読む' })`、結果は `getByRole('status')`、失敗は `getByRole('alert')` で取る。マイクが閉じたかは、`e2e/record.spec.ts` の `openedMicrophones` で見る。
+ボタンは `getByRole('button', { name: '読む' })`、結果の秒数は `getByTestId('ma-sec')` などの `data-testid` で取り、文の言い回しに頼らない。測れなかったときの文は `getByRole('status')`、失敗は `getByRole('alert')` で取る。マイクが閉じたかは、`e2e/record.spec.ts` の `openedMicrophones` で見る。
 
 ## 注意
 
