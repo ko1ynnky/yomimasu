@@ -46,7 +46,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           OWNER: ${{ github.repository_owner }}
           PR: ${{ inputs.pr }}
-          # 日本時間の1日に始める Issue の上限。失敗した実行も数え、PR の修正は数えない。
+          # 日本時間の1日に始める Issue の上限。in-progress を付けたあとに失敗した実行は数え、PR の修正は数えない。
           DAILY_LIMIT: 5
         run: bash .github/scripts/auto-target.sh
 

@@ -7,8 +7,8 @@
 - 決めたこと：
   - `auto.yml` を cron で、日本時間の平日 9:00〜18:30 に30分ごとに起こす。cron は UTC で `*/30 0-9 * * 1-5` と書く。日本の祝日は見分けない。
   - `work` が成功したら、`next` の job が `auto.yml` を `workflow_dispatch` で起こす。番号は渡さない。平日の 9:00〜18:30 の外と、失敗のあとは起こさない。
-  - どの実行も、起動のきっかけによらず、`auto-target.sh` がいまの状態から対象を選ぶ。順は、渡された PR、修正を待つ PR、Issue である。修正を待つ PR は、Claude の開いた PR で、最新の `review-gate` が赤で、`needs-human` のないものとする。
-  - 日本時間の1日に始める Issue を5件までにする。`work` が付ける `in-progress` の、今日の回数を数える。失敗した実行も数え、PR の修正は数えない。
+  - どの実行も、起動のきっかけによらず、`auto-target.sh` がいまの状態から対象を選ぶ。順は、渡された PR、修正を待つ PR、Issue である。修正を待つ PR は、Claude の開いた PR で、最新の `review-gate` が赤で、`needs-human` がなく、レビューの回数が `review-gate.sh` の `MAX_ROUNDS` を超えていないものとする。
+  - 日本時間の1日に始める Issue を5件までにする。`work` が付ける `in-progress` の、今日の回数を数える。`in-progress` を付けたあとに失敗した実行は数え、準備の段階（checkout、依存の導入）で落ちた実行と PR の修正は数えない。
   - 本文の `Depends:` を含む行の `#番号` を、行の数によらずすべて依存として読む。1つでも開いていれば飛ばす。
   - Claude の action に、`additional_permissions` で contents、pull_requests、issues の3つを書いて求める。すべての Workflow の Claude の step が、GITHUB_TOKEN か、この3つだけを求めたトークンを使うことを `checks.test.sh` で確かめる。
 - 理由：
@@ -20,7 +20,8 @@
   - 失敗のあとは次を起こさない。鍵の期限切れのような原因では、残りの Issue を次々に `needs-human` にしてしまう。30分ごとの cron と1日の上限で抑える。
   - 平日の昼の外では次を起こさない。夜にラベルを付けた実行は動くが、続きは翌朝の cron に任せる。夜にユーザーと手元で作業する分と、Claude の利用枠を取り合わないためである。
   - 上限の5件は仮の値で、`auto.yml` の `DAILY_LIMIT` で変える。PR の修正はレビューの3回で止まるので、1日の実行は最大で15本ほどになる。
-  - 件数は `issues/events` を新しい順に読み、ページが今日の分で埋まっているときだけ次のページを読む。読めなければ始めない。
+  - 件数は `issues/events` を新しい順に読み、ページが今日の分で埋まっているときだけ次のページを読む。読めないときと、新しい順に並んでいないときは始めない。並びが違うと今日の分を読み落とし、上限が黙って外れるからである。
+  - 修正を待つ PR はレビューの回数でも絞る。`needs-human` を付けられずに赤で終わった PR や、人が `needs-human` を外した PR を、回数が残っていなければ拾わない。回数が残っている PR は、人が `needs-human` を外すと自走が修正に戻る。
   - `Depends:` は広く読む。読み落とすと依存より先に実装が始まり、余分に読んでも待つだけで済む。
 - 採らなかった案：
   - 次の実行を起こす前に、保留の実行があるかを `gh run list` で見る案。cron とラベルの起動による押し出しは防げず、保留の実行が API でどう見えるかも手元で確かめられない。
@@ -32,10 +33,13 @@
 - 限界：
   - GitHub Actions ではまだ動かしていない。cron、`next` の起動、`statusCheckRollup` を読む権限（`checks: read`、`statuses: read`）、`issues/events` の並びは、実物で確かめる。
   - 交換のサーバーが、求めた権限でトークンを発行するかは手元で確かめられない。検査は Workflow の書き方を見るだけで、インストールの権限は見ない。実物では、自走の実行で `.github/workflows/` を変える push が拒まれるのを見て確かめる。
+  - `work` の job は `id-token: write` を持つ。Claude の Bash から OIDC の要求の環境変数が見えると、Claude が権限を書かずに交換のサーバーへ送り、App の全範囲（`workflows: write` を含む）のトークンを取れる見込みがある。上の push の確かめ方は渡されたトークンしか試さないので、この経路は分からない。試運転で、Claude の Bash から `ACTIONS_ID_TOKEN_REQUEST_URL` と `ACTIONS_ID_TOKEN_REQUEST_TOKEN` が見えるかを、値を出さずに有無だけ確かめる。トークンによらずに `.github/workflows/` への push を拒む手段（ruleset のパスの制限など）は、非公開のプランで使えるかを確かめていない。
+  - `additional_permissions` の扱いの読みは、action の `d535f51` のものである。action の SHA を上げたら読み直す。
   - 時間帯は cron（UTC）と `auto-next.sh`（日本時間）の2か所にある。変えるときは両方を直す。
   - 日本の祝日も動く。止めたい日は `stop` を付ける。cron は GitHub の混み具合で遅れることがある。
   - 非公開の間は、何も選ばずに終わる cron の実行も Actions の分数を使う。1回を1分とすると、何もない日は20分である。
-  - 修正を待つ PR の見分けは、`review-gate` が人に渡すときに `needs-human` を付けることに頼る。付けるのに失敗した PR は、修正の対象として選ばれる。修正の実行は、head が変わらなければ `needs-human` を付けて終わる。
+  - 修正を待つ PR の見分けは、`review-gate` が人に渡すときに `needs-human` を付けることと、レビューの回数に頼る。`needs-human` を付けるのに失敗した PR は、回数が残っている間だけ修正の対象として選ばれる。
+  - 準備の段階の失敗（npm や apt の障害）が続くと、30分ごとに Issue を1件ずつ人に渡し、1日の上限にかからない。Claude の利用枠は使わない。
   - `gh issue list --limit 200` に入らない開いた Issue は、`Depends` の相手でも閉じたものとして扱う。
 - 根拠（確認日 2026-11-03）：
   - `GET https://api.github.com/apps/claude` の `permissions`

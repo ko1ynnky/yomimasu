@@ -414,6 +414,7 @@ case "$*" in
   'issue list --state open --limit 200 --json number,author,labels,body') cat "$GH_FIXTURES/issues.json" ;;
   'pr list --state open --limit 100 --json number,author,labels,statusCheckRollup') jq 'map(del(.state))' "$GH_FIXTURES/pulls.json" ;;
   'pr view '*' --json state,labels,author') jq --argjson number "$3" '.[] | select(.number == $number)' "$GH_FIXTURES/pulls.json" ;;
+  'pr view '*' --json comments') cat "$GH_FIXTURES/comments-$3.json" 2>/dev/null || printf '{"comments":[]}' ;;
   'api repos/{owner}/{repo}/issues/events?per_page=100&page='*)
     [[ ! -f $GH_FIXTURES/fail-events ]] || exit 1
     cat "$GH_FIXTURES/events-${2##*page=}.json" 2>/dev/null || printf '[]'
@@ -522,6 +523,35 @@ auto_scene "$open_issues" "$(issues "$(pull 5 FAILURE '' owner)")"
 auto_target
 expect_target 'auto-target: 人の PR は修正の対象にしない' 'issue=1'
 
+# 引数：PR の番号、review.yml が書いたレビューの数。
+reviews_done() {
+  jq -n --argjson count "$2" '{comments: [range($count) | {author: {login: "github-actions[bot]"}, body: "<!-- review-gate -->"}]}' >"$auto_dir/comments-$1.json"
+}
+auto_scene "$open_issues" "$(issues "$(pull 5 FAILURE)")"
+reviews_done 5 3
+auto_target
+expect_target 'auto-target: レビューの回数を使い切った PR は、needs-human がなくても修正の対象にしない' 'issue=1'
+auto_scene "$open_issues" "$(issues "$(pull 5 FAILURE)")"
+reviews_done 5 2
+auto_target
+expect_target 'auto-target: レビューの回数が残っている PR は修正の対象にする' 'pr=5'
+auto_scene "$open_issues" "$(issues "$(pull 6 FAILURE)" "$(pull 5 FAILURE)")"
+reviews_done 5 3
+auto_target
+expect_target 'auto-target: 回数を使い切った PR を飛ばし、次に古い PR を選ぶ' 'pr=6'
+
+newest_in_middle=$(pull 5 SUCCESS,SUCCESS,FAILURE | jq -c '.statusCheckRollup |= (.[0:1] + [.[2], .[1], .[3]])')
+auto_scene "$open_issues" "$(issues "$newest_in_middle")"
+auto_target
+expect_target 'auto-target: review-gate の結果の並びに頼らず、始めた時刻が最も新しいものを見る' 'pr=5'
+
+auto_scene "$open_issues" "$(issues "$(pull 5 FAILURE)")"
+printf '[{"number":9}]' >"$auto_dir/stops.json"
+auto_target
+expect_target 'auto-target: stop があれば、修正を待つ PR も選ばない' ''
+auto_target 5
+expect_target 'auto-target: stop があれば、渡された PR も修正しない' ''
+
 today_twice=$(issues "$(event 2026-11-03T03:00:00Z)" "$(event 2026-11-03T01:00:00Z)")
 auto_scene "$open_issues" '[]' "$today_twice"
 auto_target
@@ -538,6 +568,9 @@ expect_target 'auto-target: 日本時間の前の日に始めた件数は数え�
 auto_scene "$open_issues" '[]' "$(issues "$(event 2026-11-03T03:00:00Z in-progress owner)" "$(event 2026-11-03T02:00:00Z go:merge)" "$(event 2026-11-03T01:00:00Z)")"
 auto_target
 expect_target 'auto-target: 自走が付けた in-progress だけを数える' 'issue=1'
+auto_scene "$open_issues" '[]' "$(issues "$(event 2026-11-03T01:00:00Z)" "$(event 2026-11-03T03:00:00Z)")"
+auto_target
+expect_target 'auto-target: events が新しい順でなければ、今日の件数を数えられないので始めない' '' 1
 auto_scene "$open_issues" '[]' "$(jq -cn '[range(100) | {event: "labeled", created_at: "2026-11-03T05:00:00Z", label: {name: "go:pr"}, actor: {login: "owner"}}]')"
 printf '%s' "$today_twice" >"$auto_dir/events-2.json"
 auto_target
@@ -594,9 +627,10 @@ expect_next 'auto-next: 日曜は起こさない' ''
 NEXT_FAIL=1 next_run 31200
 expect_next 'auto-next: 起こせなければ失敗で終わる' 'workflow run auto.yml' 1
 
-# Claude のトークンが workflows の権限を持たず、.github/workflows/ を書き換える push を GitHub が拒むことを、
-# Workflow の書き方で確かめる。GITHUB_TOKEN は workflows を持てない。Claude の App は workflows: write を求めているので、
-# App のトークンは additional_permissions で権限を書いて求めたときだけ、範囲が Workflow から決まる。
+# Claude の step に渡すトークンが workflows の権限を求めていないことを、Workflow の書き方で確かめる。
+# GITHUB_TOKEN は workflows を持てない。Claude の App は workflows: write を求めているので、App のトークンは
+# additional_permissions で権限を書いて求めたときだけ、範囲が Workflow から決まる。交換のサーバーが求めたとおりに
+# 絞るか、Claude が自分で別のトークンを取れないかは、この検査では分からない（docs/decisions.md の限界）。
 # Claude の step ごとに、GITHUB_TOKEN を渡していれば github_token の値を、App のトークンなら求めた権限を1行で出す。
 claude_tokens() {
   awk '
@@ -618,7 +652,7 @@ claude_tokens() {
       block = 0
       if (inside && current <= step_indent) flush()
     }
-    /uses: anthropics\/claude-code-action@/ { inside = 1; step_indent = current; token = ""; perms = ""; next }
+    /uses:[[:space:]]*["\047]?anthropics\/claude-code-action(\/base-action)?@/ { inside = 1; step_indent = current; token = ""; perms = ""; next }
     inside && /^[[:space:]]*additional_permissions:[[:space:]]*\|/ { block = 1; block_indent = current; next }
     inside && /^[[:space:]]*github_token:/ { token = $0; sub(/^[[:space:]]*github_token:[[:space:]]*/, "", token); next }
     END { flush() }
@@ -626,15 +660,38 @@ claude_tokens() {
 }
 
 app_token='app:contents: write,pull_requests: write,issues: write'
-for workflow in "$scripts"/../workflows/*.yml; do
+# 問題を1行ずつ出す。問題がなければ何も出さない。
+token_problems() {
+  local workflow=$1 tokens
   tokens=$(claude_tokens "$workflow")
-  if [[ $(grep -c 'uses: anthropics/claude-code-action@' "$workflow") != $(grep -c . <<<"$tokens") ]]; then
-    ng "token: $(basename "$workflow") の Claude の step をすべて読めない（結果 $tokens）"
+  if [[ $(grep -cE "uses:[[:space:]]*[\"']?anthropics/claude-code-action(/base-action)?@" "$workflow") != $(grep -c . <<<"$tokens") ]]; then
+    echo "Claude の step をすべて読めない（結果 $tokens）"
   fi
   while IFS= read -r token; do
     [[ -z $token || $token == '${{ github.token }}' || $token == "$app_token" ]] && continue
-    ng "token: $(basename "$workflow") の Claude には、GITHUB_TOKEN か、contents、pull_requests、issues だけを求めたトークンを渡す（結果 $token）"
+    echo "Claude には、GITHUB_TOKEN か、contents、pull_requests、issues だけを求めたトークンを渡す（結果 $token）"
   done <<<"$tokens"
+}
+
+for workflow in "$scripts"/../workflows/*.yml; do
+  while IFS= read -r problem; do
+    [[ -z $problem ]] || ng "token: $(basename "$workflow") の $problem"
+  done <<<"$(token_problems "$workflow")"
+done
+
+# 検査そのものが壊れて何でも通すことのないよう、通してはいけない Workflow の見本で問題が出ることを確かめる。
+claude_step() {
+  printf 'jobs:\n  work:\n    steps:\n      - uses: %s\n        with:\n%s\n      - run: echo done\n' "$1" "$2"
+}
+bad_workflow=$(mktemp "$work/bad.XXXXXX")
+for sample in \
+  "anthropics/claude-code-action@abc|          additional_permissions: |\n            contents: write\n            workflows: write" \
+  "anthropics/claude-code-action@abc|          prompt: hi" \
+  "'anthropics/claude-code-action@abc'|          prompt: hi" \
+  "anthropics/claude-code-action/base-action@abc|          prompt: hi" \
+  "anthropics/claude-code-action@abc|          github_token: \${{ secrets.PAT }}"; do
+  claude_step "${sample%%|*}" "$(printf '%b' "${sample#*|}")" >"$bad_workflow"
+  [[ -n $(token_problems "$bad_workflow") ]] || ng "token: 通してはいけない Workflow を通した（${sample%%|*}、${sample#*|}）"
 done
 
 if ((failures > 0)); then

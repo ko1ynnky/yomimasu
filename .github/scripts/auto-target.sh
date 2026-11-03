@@ -25,21 +25,31 @@ fi
 
 # review-gate は、修正を起こしたときは赤で終わり、人に渡したときは needs-human も付ける。
 # 最新の review-gate が赤で needs-human のない PR は、起こした修正がまだ動いていない PR である。
-pr=$(gh pr list --state open --limit 100 --json number,author,labels,statusCheckRollup | jq -r "
+# ラベルを付けられずに赤で終わった PR や、人が needs-human を外した PR を回し続けないよう、レビューの回数も見る。
+max_rounds=$(sed -n 's/^MAX_ROUNDS=//p' "$here/review-gate.sh")
+waiting=$(gh pr list --state open --limit 100 --json number,author,labels,statusCheckRollup | jq -r "
   map(select($claude_pr
     and ([.statusCheckRollup[] | select(.workflowName == \"review\" and .name == \"review-gate\")]
       | max_by(.startedAt) | .conclusion == \"FAILURE\")))
-  | min_by(.number) | .number // empty")
-if [[ -n $pr ]]; then
-  echo "pr=$pr" >>"$GITHUB_OUTPUT"
-  exit 0
-fi
+  | sort_by(.number) | .[].number")
+for pr in $waiting; do
+  round=$(gh pr view "$pr" --json comments | bash "$here/review-round.sh")
+  if ((round <= max_rounds)); then
+    echo "pr=$pr" >>"$GITHUB_OUTPUT"
+    exit 0
+  fi
+done
 
 # Issue を始めるときに work の job が in-progress を付けるので、日本時間の今日に付けた回数を始めた件数とする。
 # 失敗した実行も Claude の利用枠を使うので数える。PR の修正はレビューの回数で止まるので、上限に含めない。
 started=0
 for ((page = 1; ; page++)); do
   events=$(gh api "repos/{owner}/{repo}/issues/events?per_page=100&page=$page")
+  # 新しい順でなければ、今日の分を読み落として上限が黙って外れる。数えられないときは始めない。
+  if [[ $(jq '[.[].created_at] | . == (sort | reverse)' <<<"$events") != true ]]; then
+    echo '::error::Issue のイベントが新しい順に並んでいないので、今日始めた件数を数えられません。始めません。'
+    exit 1
+  fi
   todays=$(jq --arg today "$today" '
     (("\($today)T00:00:00Z" | fromdateiso8601) - 9 * 3600) as $start
     | map(select((.created_at | fromdateiso8601) >= $start))' <<<"$events")
