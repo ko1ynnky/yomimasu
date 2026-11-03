@@ -12,8 +12,9 @@ import {
   type Card,
   type Stretch,
 } from '../../.claude/skills/yomimasu/scripts/cards.ts';
+import { comparable } from '../../scripts/cards/assemble.ts';
 
-const cards = deck.cards as Card[];
+const cards = deck.cards as unknown as Card[];
 const card = (no: number) => {
   const found = cards.find((c) => c.no === no);
   assert.ok(found, `${no} 番がない`);
@@ -235,6 +236,127 @@ test('1番、77番、29番は、手で確かめた形である', () => {
   assert.equal(card(29).marked.upper, '心あてにー折らばや折らむー初霜ーのー');
 });
 
+const notation = (c: Card) => [...c.furigana, ...c.notes];
+const numbersWith = (has: (c: Card) => boolean) => cards.filter(has).map((c) => c.no);
+const total = (count: (c: Card) => number) => cards.reduce((sum, c) => sum + count(c), 0);
+
+test('ふりがなは序歌と100首のどの札にもあり、合わせて707か所である', () => {
+  assert.equal(total((c) => c.furigana.length), 707);
+  assert.deepEqual(numbersWith((c) => c.furigana.length === 0), []);
+});
+
+test('注は10首に12か所あり、95番だけ3か所である', () => {
+  assert.deepEqual(numbersWith((c) => c.notes.length > 0), [16, 20, 39, 44, 45, 60, 62, 71, 77, 95]);
+  assert.equal(total((c) => c.notes.length), 12);
+  assert.equal(card(95).notes.length, 3);
+});
+
+test('別の読みは10首に1つずつあり、大山札は初句と二句、ほかの4首は四句の読み方である', () => {
+  assert.deepEqual(numbersWith((c) => c.alternatives.length > 0), [5, 11, 15, 31, 41, 50, 64, 76, 95, 99]);
+  for (const c of cards.filter((c) => c.alternatives.length > 0)) {
+    assert.equal(c.alternatives.length, 1, `${c.no} 番`);
+    assert.deepEqual(c.alternatives[0].phrases, GRAND_CARDS.has(c.no) ? [0, 1] : [3, 3], `${c.no} 番`);
+  }
+});
+
+test('大山札の別の読みは、二句の途中で1か所多く伸ばす', () => {
+  for (const no of GRAND_CARDS) {
+    const c = card(no);
+    const [alternative] = c.alternatives;
+    const main = c.stretches.filter((s) => s.phrase <= 1);
+    const added = alternative.stretches.filter((s) => !main.some((m) => key(m) === key(s)));
+    assert.ok(main.every((m) => alternative.stretches.some((s) => key(s) === key(m))), `${no} 番`);
+    assert.equal(added.length, 1, `${no} 番`);
+    assert.equal(added[0].phrase, 1, `${no} 番`);
+    assert.ok(0 < added[0].after && added[0].after < c.phrases[1].kana.length, `${no} 番`);
+  }
+});
+
+test('四句の別の読みは、四句の途中の伸ばしを後ろへずらす', () => {
+  for (const no of [5, 41, 95, 99]) {
+    const c = card(no);
+    const [alternative] = c.alternatives;
+    const inside = (stretches: Stretch[]) => stretches.filter((s) => s.phrase === 3 && s.after < c.phrases[3].kana.length);
+    assert.equal(inside(alternative.stretches).length, 1, `${no} 番`);
+    assert.ok(inside(alternative.stretches)[0].after > inside(c.stretches)[0].after, `${no} 番`);
+    assert.deepEqual(alternative.stretches.at(-1), { phrase: 3, after: c.phrases[3].kana.length }, `${no} 番`);
+  }
+});
+
+test('99番の別の読みは、「思ふ」の長音を伸ばしの印が兼ねる', () => {
+  assert.deepEqual(card(99).alternatives, [
+    {
+      phrases: [3, 3],
+      marked: 'よをおもーゆえにー',
+      stretches: [
+        { phrase: 3, after: 5 },
+        { phrase: 3, after: 8 },
+      ],
+    },
+  ]);
+});
+
+test('余韻の印は序歌と100首のすべてにあり、下の句の終わりに置く', () => {
+  for (const c of cards) assert.deepEqual(c.yoin, { phrase: 4, after: c.phrases[4].kana.length }, `${c.no} 番`);
+});
+
+test('ふりがなと注は句の中で重ならずに並び、どれも発音の位置へ移せる', () => {
+  for (const c of cards) {
+    c.phrases.forEach((p, phrase) => {
+      const spans = notation(c).filter((f) => f.phrase === phrase).sort((a, b) => a.at - b.at);
+      spans.forEach((f, i) => {
+        assert.ok(f.length > 0 && f.at + f.length <= p.kana.length, `${c.no} 番「${p.kana}」`);
+        assert.ok(i === 0 || spans[i - 1].at + spans[i - 1].length <= f.at, `${c.no} 番「${p.kana}」`);
+        assert.doesNotThrow(() => [soundOffset(p, f.at), soundOffset(p, f.at + f.length)], `${c.no} 番「${p.kana}」`);
+      });
+    });
+  }
+});
+
+test('ふりがなと注の読みは、掛かる範囲の発音の列と同じ音である', () => {
+  for (const c of cards) {
+    c.phrases.forEach((p, phrase) => {
+      let read = '';
+      let cursor = 0;
+      for (const f of notation(c).filter((f) => f.phrase === phrase).sort((a, b) => a.at - b.at)) {
+        read += p.sound.slice(cursor, soundOffset(p, f.at)) + f.reading;
+        cursor = soundOffset(p, f.at + f.length);
+      }
+      assert.equal(comparable(read + p.sound.slice(cursor)), comparable(p.sound), `${c.no} 番「${p.kana}」`);
+    });
+  }
+});
+
+test('「を」のほかの読み替えた字には、どれもふりがなか注が掛かる', () => {
+  for (const c of cards) {
+    c.phrases.forEach((p, phrase) => {
+      for (const d of p.diffs.filter((d) => d.kana !== 'を')) {
+        const covered = notation(c).some((f) => f.phrase === phrase && f.at <= d.at && d.at < f.at + f.length);
+        assert.ok(covered, `${c.no} 番「${p.kana}」の「${d.kana}」`);
+      }
+    });
+  }
+});
+
+test('81番の下の句と45番の上の句は、完全版のスキャンと1字ずつ照らした形である', () => {
+  assert.deepEqual(card(81).furigana.filter((f) => f.phrase >= 3), [
+    { phrase: 4, at: 0, length: 2, reading: 'つき' },
+    { phrase: 4, at: 3, length: 2, reading: 'のこ' },
+  ]);
+  assert.deepEqual(card(81).notes, []);
+  assert.deepEqual(card(81).alternatives, []);
+  assert.deepEqual(card(81).yoin, { phrase: 4, after: 7 });
+  assert.deepEqual(card(45).furigana.filter((f) => f.phrase <= 2), [
+    { phrase: 0, at: 1, length: 1, reading: 'わ' },
+    { phrase: 1, at: 0, length: 1, reading: 'ゆ' },
+    { phrase: 1, at: 1, length: 1, reading: 'ー' },
+    { phrase: 1, at: 4, length: 2, reading: 'ひと' },
+    { phrase: 1, at: 6, length: 1, reading: 'わ' },
+    { phrase: 2, at: 0, length: 2, reading: 'おも' },
+  ]);
+  assert.deepEqual(card(45).notes, [{ phrase: 2, at: 2, length: 1, reading: 'お' }]);
+});
+
 test('どの札にも本文、発音、伸ばす箇所の由来がある', () => {
   for (const c of cards) {
     assert.ok(c.origin.text.source in deck.sources, `${c.no} 番`);
@@ -246,12 +368,22 @@ test('どの札にも本文、発音、伸ばす箇所の由来がある', () =>
   }
 });
 
+test('ふりがな、注、別の読み、余韻の印は、どの札も完全版の同じページから来て、抜粋版の文字のデータで読み取った', () => {
+  for (const c of cards) {
+    assert.equal(c.origin.notation.source, 'booklet', `${c.no} 番`);
+    assert.equal(c.origin.notation.readFrom, 'list', `${c.no} 番`);
+    assert.equal(c.origin.notation.page, c.origin.stretches.page, `${c.no} 番`);
+  }
+});
+
 test('出典の版と置き場が記録されている', () => {
   assert.match(deck.sources.csv.url, /^https:\/\/github\.com\/nyoronjp\/Ogura_Hyakunin_Isshu\.csv/);
   assert.equal(deck.sources.csv.license, 'Unlicense');
   assert.match(deck.sources.csv.sha256, /^[0-9a-f]{64}$/);
   assert.match(deck.sources.list.edition, /令和7年4月1日/);
   assert.match(deck.sources.list.sha256, /^[0-9a-f]{64}$/);
+  assert.match(deck.sources.booklet.edition, /令和2年4月1日/);
+  assert.equal(deck.sources.booklet.pages, deck.sources.list.pages);
 });
 
 test('修正した札には、元の形と直した形が残る', () => {
@@ -267,7 +399,7 @@ test('修正した札には、元の形と直した形が残る', () => {
 });
 
 test('許可の範囲の外の項目を持たない', () => {
-  const allowed = ['no', 'phrases', 'kimariji', 'ruleStretches', 'stretches', 'marked', 'origin'];
+  const allowed = ['no', 'phrases', 'kimariji', 'ruleStretches', 'stretches', 'marked', 'furigana', 'notes', 'alternatives', 'yoin', 'origin'];
   const allowedInPhrase = ['text', 'kana', 'sound', 'parts', 'diffs'];
   for (const c of cards) {
     assert.deepEqual(Object.keys(c).sort(), [...allowed].sort(), `${c.no} 番`);

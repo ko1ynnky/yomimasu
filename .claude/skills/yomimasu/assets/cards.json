@@ -20,7 +20,13 @@
       "url": "https://www.karuta.or.jp/karuta/reading/",
       "pages": "5-15",
       "sha256": "ae619e9a8a75e1702014f0c41d53b7ae8c32d3015926985090ad8a4c6c182a77",
-      "use": "本文の列の伸ばしの印の位置を、全日本かるた協会の回答の範囲で使う。33、44、74番の本文もこの形に合わせた。一覧のふりがなの字は表に持たず、発音の列と比べて語の切れ目を見つけるのに使った"
+      "use": "本文の列の伸ばしの印の位置を、全日本かるた協会の回答の範囲で使う。33、44、74番の本文もこの形に合わせた。一覧のふりがなは発音の列と比べて語の切れ目を見つけるのに使った。ふりがな、注、別の読み、余韻の印は、この版の文字のデータと画像の位置から読み取り、完全版（booklet）の値として表に持つ"
+    },
+    "booklet": {
+      "title": "小倉百人一首 競技かるた読手テキスト 冊子 読み方一覧",
+      "edition": "令和2年4月1日初版",
+      "pages": "5-15",
+      "use": "ふりがな、注、別の読み、余韻の印を、全日本かるた協会の回答の範囲で使う。値は抜粋版の読み方一覧の文字のデータと画像の位置から機械で読み取り、この版のスキャンの画像と目で照らした。2つの版の読み方一覧は同じページに同じ形で載っている"
     },
     "rules": {
       "title": "小倉百人一首 競技かるた読手テキスト HP掲載用抜粋版 読唱上の決まり",
@@ -42,7 +48,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"難波津にー咲くやこの花ー冬ごもーりー","lower":"今をー春べとー咲くやこのー花"},
-      "origin": {"text":{"source":"joka","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "furigana": [{"phrase":0,"at":0,"length":4,"reading":"なにわず"},{"phrase":1,"at":0,"length":1,"reading":"さ"},{"phrase":1,"at":5,"length":2,"reading":"はな"},{"phrase":2,"at":0,"length":2,"reading":"ふゆ"},{"phrase":3,"at":0,"length":2,"reading":"いま"},{"phrase":3,"at":3,"length":2,"reading":"はる"},{"phrase":4,"at":0,"length":1,"reading":"さ"},{"phrase":4,"at":5,"length":2,"reading":"はな"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"joka","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5},"notation":{"source":"booklet","page":5,"readFrom":"list"}},
       "kimariji": null
     },
     {
@@ -57,7 +67,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"秋の田のーかりほの庵のー苫をあらーみー","lower":"わがー衣手はー露にぬれーつつ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"あき"},{"phrase":0,"at":3,"length":1,"reading":"た"},{"phrase":1,"at":2,"length":1,"reading":"お"},{"phrase":1,"at":4,"length":2,"reading":"いお"},{"phrase":2,"at":0,"length":2,"reading":"とま"},{"phrase":3,"at":2,"length":4,"reading":"ころもで"},{"phrase":3,"at":6,"length":1,"reading":"わ"},{"phrase":4,"at":0,"length":2,"reading":"つゆ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5},"notation":{"source":"booklet","page":5,"readFrom":"list"}},
       "kimariji": {"kana":"あきの","sound":"あきの"}
     },
     {
@@ -72,7 +86,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"春過ぎてー夏来にけらしー白妙ーのー","lower":"衣ー干すてふー天の香具ー山"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "furigana": [{"phrase":0,"at":0,"length":3,"reading":"はるす"},{"phrase":1,"at":0,"length":3,"reading":"なつき"},{"phrase":2,"at":0,"length":4,"reading":"しろたえ"},{"phrase":3,"at":0,"length":3,"reading":"ころも"},{"phrase":3,"at":5,"length":2,"reading":"ちょー"},{"phrase":4,"at":0,"length":2,"reading":"あま"},{"phrase":4,"at":3,"length":2,"reading":"かぐ"},{"phrase":4,"at":5,"length":2,"reading":"やま"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10},"notation":{"source":"booklet","page":10,"readFrom":"list"}},
       "kimariji": {"kana":"はるす","sound":"はるす"}
     },
     {
@@ -87,7 +105,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"あしびきのー山鳥の尾のーしだり尾ーのー","lower":"ながながしー夜をーひとりかもー寝む"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "furigana": [{"phrase":1,"at":0,"length":4,"reading":"やまどり"},{"phrase":1,"at":5,"length":1,"reading":"お"},{"phrase":2,"at":3,"length":1,"reading":"お"},{"phrase":3,"at":5,"length":1,"reading":"よ"},{"phrase":4,"at":5,"length":1,"reading":"ね"},{"phrase":4,"at":6,"length":1,"reading":"ん"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6},"notation":{"source":"booklet","page":6,"readFrom":"list"}},
       "kimariji": {"kana":"あし","sound":"あし"}
     },
     {
@@ -102,7 +124,11 @@
       "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"田子の浦にーうち出でてみればー白妙ーのー","lower":"富士のー高嶺にー雪は降りーつつ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"たご"},{"phrase":0,"at":3,"length":2,"reading":"うら"},{"phrase":1,"at":2,"length":1,"reading":"い"},{"phrase":1,"at":5,"length":1,"reading":"み"},{"phrase":2,"at":0,"length":4,"reading":"しろたえ"},{"phrase":3,"at":0,"length":2,"reading":"ふじ"},{"phrase":3,"at":3,"length":3,"reading":"たかね"},{"phrase":4,"at":0,"length":2,"reading":"ゆき"},{"phrase":4,"at":2,"length":1,"reading":"わ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8},"notation":{"source":"booklet","page":8,"readFrom":"list"}},
       "kimariji": {"kana":"たご","sound":"たご"}
     },
     {
@@ -117,7 +143,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"奥山にー紅葉踏み分けー鳴く鹿ーのー","lower":"声ー聞く時ぞー秋は悲ーしき"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "furigana": [{"phrase":0,"at":0,"length":4,"reading":"おくやま"},{"phrase":1,"at":2,"length":1,"reading":"じ"},{"phrase":2,"at":0,"length":1,"reading":"な"},{"phrase":2,"at":2,"length":2,"reading":"しか"},{"phrase":3,"at":0,"length":2,"reading":"こえ"},{"phrase":3,"at":2,"length":1,"reading":"き"},{"phrase":4,"at":0,"length":2,"reading":"あき"},{"phrase":4,"at":2,"length":1,"reading":"わ"},{"phrase":4,"at":3,"length":2,"reading":"かな"}],
+      "notes": [],
+      "alternatives": [{"phrases":[3,3],"marked":"こえきくーときぞー","stretches":[{"phrase":3,"after":4},{"phrase":3,"after":7}]}],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7},"notation":{"source":"booklet","page":7,"readFrom":"list"}},
       "kimariji": {"kana":"おく","sound":"おく"}
     },
     {
@@ -132,7 +162,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"かささぎのー渡せる橋にー置く霜ーのー","lower":"白きをー見ればー夜ぞ更けにーける"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "furigana": [{"phrase":1,"at":0,"length":2,"reading":"わた"},{"phrase":1,"at":4,"length":2,"reading":"はし"},{"phrase":2,"at":2,"length":2,"reading":"しも"},{"phrase":3,"at":0,"length":2,"reading":"しろ"},{"phrase":3,"at":4,"length":1,"reading":"み"},{"phrase":4,"at":0,"length":1,"reading":"よ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12},"notation":{"source":"booklet","page":12,"readFrom":"list"}},
       "kimariji": {"kana":"かさ","sound":"かさ"}
     },
     {
@@ -147,7 +181,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"天の原ーふりさけみればー春日ーなるー","lower":"三笠のー山にー出でし月ーかも"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"あま"},{"phrase":0,"at":3,"length":2,"reading":"はら"},{"phrase":1,"at":4,"length":1,"reading":"み"},{"phrase":2,"at":0,"length":3,"reading":"かすが"},{"phrase":3,"at":0,"length":3,"reading":"みかさ"},{"phrase":3,"at":4,"length":2,"reading":"やま"},{"phrase":4,"at":0,"length":1,"reading":"い"},{"phrase":4,"at":3,"length":2,"reading":"つき"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5},"notation":{"source":"booklet","page":5,"readFrom":"list"}},
       "kimariji": {"kana":"あまの","sound":"あまの"}
     },
     {
@@ -162,7 +200,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"わが庵はー都の辰巳ーしかぞー住むー","lower":"世をーうぢ山とー人はいふーなり"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":4,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "furigana": [{"phrase":0,"at":2,"length":2,"reading":"いお"},{"phrase":0,"at":4,"length":1,"reading":"わ"},{"phrase":1,"at":0,"length":3,"reading":"みやこ"},{"phrase":3,"at":0,"length":1,"reading":"よ"},{"phrase":3,"at":3,"length":1,"reading":"じ"},{"phrase":3,"at":4,"length":2,"reading":"やま"},{"phrase":4,"at":0,"length":2,"reading":"ひと"},{"phrase":4,"at":2,"length":1,"reading":"わ"},{"phrase":4,"at":3,"length":1,"reading":"ゆ"},{"phrase":4,"at":4,"length":1,"reading":"ー"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":4,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8},"notation":{"source":"booklet","page":8,"readFrom":"list"}},
       "kimariji": {"kana":"わがい","sound":"わがい"}
     },
     {
@@ -177,7 +219,11 @@
       "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"花の色はー移りにけりなーいたづらーにー","lower":"わが身ー世にふるーながめせしーまに"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":5,"kana":"ふ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"はな"},{"phrase":0,"at":3,"length":2,"reading":"いろ"},{"phrase":0,"at":5,"length":1,"reading":"わ"},{"phrase":2,"at":2,"length":1,"reading":"ず"},{"phrase":3,"at":2,"length":1,"reading":"み"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":5,"kana":"ふ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10},"notation":{"source":"booklet","page":10,"readFrom":"list"}},
       "kimariji": {"kana":"はなの","sound":"はなの"}
     },
     {
@@ -192,7 +238,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"これやこのー行くも帰るもー別れてーはー","lower":"知るもー知らぬもー逢坂のー関"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "furigana": [{"phrase":1,"at":0,"length":1,"reading":"ゆ"},{"phrase":1,"at":3,"length":2,"reading":"かえ"},{"phrase":2,"at":0,"length":2,"reading":"わか"},{"phrase":2,"at":4,"length":1,"reading":"わ"},{"phrase":3,"at":0,"length":1,"reading":"し"},{"phrase":3,"at":3,"length":1,"reading":"し"},{"phrase":4,"at":0,"length":4,"reading":"おーさか"},{"phrase":4,"at":5,"length":2,"reading":"せき"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9},"notation":{"source":"booklet","page":9,"readFrom":"list"}},
       "kimariji": {"kana":"これ","sound":"これ"}
     },
     {
@@ -207,7 +257,11 @@
       "ruleStretches": [{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"わたの原八十島かけてー漕ぎ出でぬーとー","lower":"人にはーつげよー海人の釣ー船"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "furigana": [{"phrase":0,"at":3,"length":2,"reading":"はら"},{"phrase":1,"at":0,"length":4,"reading":"やそしま"},{"phrase":2,"at":0,"length":1,"reading":"こ"},{"phrase":2,"at":2,"length":1,"reading":"い"},{"phrase":3,"at":0,"length":2,"reading":"ひと"},{"phrase":3,"at":3,"length":1,"reading":"わ"},{"phrase":3,"at":4,"length":1,"reading":"つ"},{"phrase":4,"at":5,"length":2,"reading":"ぶね"}],
+      "notes": [],
+      "alternatives": [{"phrases":[0,1],"marked":"わたのはらやそしまーかけてー","stretches":[{"phrase":1,"after":4},{"phrase":1,"after":7}]}],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8},"notation":{"source":"booklet","page":8,"readFrom":"list"}},
       "kimariji": {"kana":"わたのはらや","sound":"わたのはらや"}
     },
     {
@@ -222,7 +276,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"天つ風ー雲の通ひ路ー吹きとぢーよー","lower":"乙女のー姿ーしばしとどーめむ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"あま"},{"phrase":0,"at":3,"length":2,"reading":"かぜ"},{"phrase":1,"at":0,"length":2,"reading":"くも"},{"phrase":1,"at":5,"length":1,"reading":"い"},{"phrase":1,"at":6,"length":1,"reading":"じ"},{"phrase":2,"at":0,"length":1,"reading":"ふ"},{"phrase":2,"at":3,"length":1,"reading":"じ"},{"phrase":3,"at":0,"length":1,"reading":"お"},{"phrase":3,"at":4,"length":3,"reading":"すがた"},{"phrase":4,"at":6,"length":1,"reading":"ん"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5},"notation":{"source":"booklet","page":5,"readFrom":"list"}},
       "kimariji": {"kana":"あまつ","sound":"あまつ"}
     },
     {
@@ -237,7 +295,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"筑波嶺のー峰より落つるーみなのー川ー","lower":"恋ぞーつもりてー淵となりーぬる"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "furigana": [{"phrase":1,"at":0,"length":2,"reading":"みね"},{"phrase":2,"at":3,"length":2,"reading":"がわ"},{"phrase":3,"at":1,"length":1,"reading":"い"},{"phrase":4,"at":0,"length":2,"reading":"ふち"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14},"notation":{"source":"booklet","page":14,"readFrom":"list"}},
       "kimariji": {"kana":"つく","sound":"つく"}
     },
     {
@@ -252,7 +314,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
       "marked": {"upper":"陸奥のーしのぶもぢずりーたれゆゑーにー","lower":"乱れそめーにしーわれならーなくに"},
-      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"たれゆえに","to":"たれゆゑに","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "furigana": [{"phrase":1,"at":4,"length":1,"reading":"じ"},{"phrase":2,"at":0,"length":2,"reading":"たれ"},{"phrase":2,"at":3,"length":1,"reading":"え"},{"phrase":3,"at":0,"length":2,"reading":"みだ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"たれゆえに","to":"たれゆゑに","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10},"notation":{"source":"booklet","page":10,"readFrom":"list"}},
       "kimariji": {"kana":"みち","sound":"みち"}
     },
     {
@@ -267,7 +333,11 @@
       "ruleStretches": [{"phrase":1,"after":8},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":1,"after":8},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"君がため春の野に出でてー若菜ー摘むー","lower":"わがー衣手にー雪は降りーつつ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":4,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"きみ"},{"phrase":1,"at":0,"length":2,"reading":"はる"},{"phrase":1,"at":3,"length":1,"reading":"の"},{"phrase":1,"at":5,"length":1,"reading":"い"},{"phrase":2,"at":0,"length":3,"reading":"わかな"},{"phrase":3,"at":2,"length":4,"reading":"ころもで"},{"phrase":4,"at":0,"length":2,"reading":"ゆき"},{"phrase":4,"at":2,"length":1,"reading":"わ"},{"phrase":4,"at":3,"length":1,"reading":"ふ"}],
+      "notes": [],
+      "alternatives": [{"phrases":[0,1],"marked":"きみがためはるのーのにいでてー","stretches":[{"phrase":1,"after":3},{"phrase":1,"after":8}]}],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":4,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13},"notation":{"source":"booklet","page":13,"readFrom":"list"}},
       "kimariji": {"kana":"きみがためは","sound":"きみがためは"}
     },
     {
@@ -282,7 +352,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"立ち別れーいなばの山のー峰に生ふーるー","lower":"まつとしー聞かばー今帰りー来む"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "furigana": [{"phrase":0,"at":2,"length":2,"reading":"わか"},{"phrase":1,"at":4,"length":2,"reading":"やま"},{"phrase":2,"at":0,"length":2,"reading":"みね"},{"phrase":2,"at":3,"length":1,"reading":"お"},{"phrase":3,"at":4,"length":1,"reading":"き"},{"phrase":4,"at":2,"length":2,"reading":"かえ"},{"phrase":4,"at":6,"length":1,"reading":"ん"}],
+      "notes": [{"phrase":2,"at":4,"length":1,"reading":"う"}],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9},"notation":{"source":"booklet","page":9,"readFrom":"list"}},
       "kimariji": {"kana":"たち","sound":"たち"}
     },
     {
@@ -297,7 +371,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"ちはやぶるー神代も聞かずー竜田ー川ー","lower":"からー紅にー水くくるーとは"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":0,"at":1,"kana":"は","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "furigana": [{"phrase":1,"at":0,"length":3,"reading":"かみよ"},{"phrase":2,"at":0,"length":3,"reading":"たつた"},{"phrase":2,"at":3,"length":2,"reading":"がわ"},{"phrase":3,"at":5,"length":1,"reading":"い"},{"phrase":4,"at":0,"length":2,"reading":"みず"},{"phrase":4,"at":6,"length":1,"reading":"わ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":0,"at":1,"kana":"は","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12},"notation":{"source":"booklet","page":12,"readFrom":"list"}},
       "kimariji": {"kana":"ちは","sound":"ちは"}
     },
     {
@@ -312,7 +390,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"住の江のー岸に寄る波ーよるさへーやー","lower":"夢のー通ひ路ー人目よくーらむ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15}},
+      "furigana": [{"phrase":0,"at":3,"length":1,"reading":"え"},{"phrase":1,"at":0,"length":2,"reading":"きし"},{"phrase":1,"at":3,"length":1,"reading":"よ"},{"phrase":1,"at":5,"length":2,"reading":"なみ"},{"phrase":2,"at":3,"length":1,"reading":"え"},{"phrase":3,"at":0,"length":2,"reading":"ゆめ"},{"phrase":3,"at":5,"length":1,"reading":"い"},{"phrase":3,"at":6,"length":1,"reading":"じ"},{"phrase":4,"at":0,"length":4,"reading":"ひとめよ"},{"phrase":4,"at":6,"length":1,"reading":"ん"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15},"notation":{"source":"booklet","page":15,"readFrom":"list"}},
       "kimariji": {"kana":"す","sound":"す"}
     },
     {
@@ -327,7 +409,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"難波潟ー短き葦のーふしの間ーもー","lower":"逢はでーこの世をー過ぐしてよーとや"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "furigana": [{"phrase":0,"at":0,"length":5,"reading":"なにわがた"},{"phrase":1,"at":0,"length":3,"reading":"みじか"},{"phrase":1,"at":4,"length":2,"reading":"あし"},{"phrase":2,"at":3,"length":1,"reading":"ま"},{"phrase":3,"at":0,"length":1,"reading":"あ"},{"phrase":3,"at":1,"length":1,"reading":"わ"},{"phrase":3,"at":5,"length":1,"reading":"よ"},{"phrase":4,"at":0,"length":1,"reading":"す"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6},"notation":{"source":"booklet","page":6,"readFrom":"list"}},
       "kimariji": {"kana":"なにはが","sound":"なにわが"}
     },
     {
@@ -342,7 +428,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"わびぬればー今はた同じー難波ーなるー","lower":"身をーつくしてもー逢はむとぞー思ふ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":1,"at":2,"kana":"は","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "furigana": [{"phrase":2,"at":0,"length":3,"reading":"なにわ"},{"phrase":4,"at":1,"length":1,"reading":"わ"},{"phrase":4,"at":2,"length":1,"reading":"ん"},{"phrase":4,"at":5,"length":2,"reading":"おも"}],
+      "notes": [{"phrase":4,"at":7,"length":1,"reading":"お"}],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":8},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":1,"at":2,"kana":"は","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8},"notation":{"source":"booklet","page":8,"readFrom":"list"}},
       "kimariji": {"kana":"わび","sound":"わび"}
     },
     {
@@ -357,7 +447,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":8},{"phrase":4,"after":6}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":8},{"phrase":4,"after":6}],
       "marked": {"upper":"今来むとーいひしばかりにー長月ーのー","lower":"有明のー月をー待ち出でつるーかな"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "furigana": [{"phrase":0,"at":2,"length":1,"reading":"こ"},{"phrase":0,"at":3,"length":1,"reading":"ん"},{"phrase":1,"at":1,"length":1,"reading":"ー"},{"phrase":2,"at":0,"length":4,"reading":"ながつき"},{"phrase":3,"at":5,"length":2,"reading":"つき"},{"phrase":4,"at":0,"length":1,"reading":"ま"},{"phrase":4,"at":2,"length":1,"reading":"い"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":8},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12},"notation":{"source":"booklet","page":12,"readFrom":"list"}},
       "kimariji": {"kana":"いまこ","sound":"いまこ"}
     },
     {
@@ -372,7 +466,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":6}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":6}],
       "marked": {"upper":"吹くからにー秋の草木のーしをるれーばー","lower":"むべー山風をー嵐といふーらむ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15}},
+      "furigana": [{"phrase":0,"at":0,"length":1,"reading":"ふ"},{"phrase":1,"at":0,"length":2,"reading":"あき"},{"phrase":1,"at":3,"length":3,"reading":"くさき"},{"phrase":3,"at":2,"length":4,"reading":"やまかぜ"},{"phrase":4,"at":0,"length":3,"reading":"あらし"},{"phrase":4,"at":4,"length":1,"reading":"ゆ"},{"phrase":4,"at":5,"length":1,"reading":"ー"},{"phrase":4,"at":7,"length":1,"reading":"ん"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":8},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15},"notation":{"source":"booklet","page":15,"readFrom":"list"}},
       "kimariji": {"kana":"ふ","sound":"ふ"}
     },
     {
@@ -387,7 +485,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":6}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":6}],
       "marked": {"upper":"月見ればー千々にものこそー悲しけーれー","lower":"わが身ーひとつのー秋にはあらーねど"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":3,"kana":"ひ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "furigana": [{"phrase":0,"at":0,"length":3,"reading":"つきみ"},{"phrase":1,"at":1,"length":1,"reading":"じ"},{"phrase":1,"at":3,"length":2,"reading":"もの"},{"phrase":2,"at":0,"length":2,"reading":"かな"},{"phrase":3,"at":2,"length":1,"reading":"み"},{"phrase":4,"at":0,"length":2,"reading":"あき"},{"phrase":4,"at":3,"length":1,"reading":"わ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":8},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":3,"kana":"ひ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14},"notation":{"source":"booklet","page":14,"readFrom":"list"}},
       "kimariji": {"kana":"つき","sound":"つき"}
     },
     {
@@ -402,7 +504,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"このたびはー幣もとりあへずー手向ー山ー","lower":"紅葉のー錦ー神のまにーまに"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":1,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "furigana": [{"phrase":0,"at":4,"length":1,"reading":"わ"},{"phrase":1,"at":6,"length":1,"reading":"え"},{"phrase":2,"at":0,"length":3,"reading":"たむけ"},{"phrase":2,"at":3,"length":2,"reading":"やま"},{"phrase":3,"at":2,"length":1,"reading":"じ"},{"phrase":4,"at":0,"length":2,"reading":"かみ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":1,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9},"notation":{"source":"booklet","page":9,"readFrom":"list"}},
       "kimariji": {"kana":"この","sound":"この"}
     },
     {
@@ -417,7 +523,11 @@
       "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
       "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":4}],
       "marked": {"upper":"名にし負はばー逢坂山のーさねかづーらー","lower":"人にー知られでーくるよしーもがな"},
-      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"さねかずら","to":"さねかづら","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "furigana": [{"phrase":0,"at":4,"length":1,"reading":"わ"},{"phrase":1,"at":0,"length":6,"reading":"おーさかやま"},{"phrase":2,"at":3,"length":1,"reading":"ず"},{"phrase":3,"at":0,"length":2,"reading":"ひと"},{"phrase":3,"at":3,"length":1,"reading":"し"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"さねかずら","to":"さねかづら","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6},"notation":{"source":"booklet","page":6,"readFrom":"list"}},
       "kimariji": {"kana":"なにし","sound":"なにし"}
     },
     {
@@ -432,7 +542,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"小倉山ー峰のもみぢ葉ー心あらーばー","lower":"今ーひとたびのーみゆき待たーなむ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":2,"kana":"ひ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "furigana": [{"phrase":0,"at":0,"length":5,"reading":"おぐらやま"},{"phrase":1,"at":0,"length":2,"reading":"みね"},{"phrase":1,"at":5,"length":1,"reading":"じ"},{"phrase":1,"at":6,"length":1,"reading":"ば"},{"phrase":2,"at":0,"length":3,"reading":"こころ"},{"phrase":4,"at":3,"length":1,"reading":"ま"},{"phrase":4,"at":6,"length":1,"reading":"ん"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":2,"kana":"ひ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8},"notation":{"source":"booklet","page":8,"readFrom":"list"}},
       "kimariji": {"kana":"をぐ","sound":"おぐ"}
     },
     {
@@ -447,7 +561,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"みかの原ーわきて流るるー泉ー川ー","lower":"いつ見きーとてかー恋しかるーらむ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "furigana": [{"phrase":0,"at":3,"length":2,"reading":"はら"},{"phrase":1,"at":3,"length":2,"reading":"なが"},{"phrase":2,"at":1,"length":1,"reading":"ず"},{"phrase":2,"at":3,"length":2,"reading":"がわ"},{"phrase":3,"at":2,"length":1,"reading":"み"},{"phrase":4,"at":0,"length":2,"reading":"こい"},{"phrase":4,"at":6,"length":1,"reading":"ん"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10},"notation":{"source":"booklet","page":10,"readFrom":"list"}},
       "kimariji": {"kana":"みかの","sound":"みかの"}
     },
     {
@@ -462,7 +580,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":6}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":6}],
       "marked": {"upper":"山里はー冬ぞ寂しさーまさりーけるー","lower":"人目もー草もーかれぬと思ーへば"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "furigana": [{"phrase":0,"at":0,"length":4,"reading":"やまざと"},{"phrase":0,"at":4,"length":1,"reading":"わ"},{"phrase":1,"at":0,"length":2,"reading":"ふゆ"},{"phrase":3,"at":0,"length":2,"reading":"ひと"},{"phrase":3,"at":4,"length":2,"reading":"くさ"},{"phrase":4,"at":4,"length":2,"reading":"おも"},{"phrase":4,"at":6,"length":1,"reading":"え"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":8},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11},"notation":{"source":"booklet","page":11,"readFrom":"list"}},
       "kimariji": {"kana":"やまざ","sound":"やまざ"}
     },
     {
@@ -477,7 +599,11 @@
       "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"心あてにー折らばや折らむー初霜ーのー","lower":"置きーまどはせるー白菊のー花"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "furigana": [{"phrase":0,"at":0,"length":3,"reading":"こころ"},{"phrase":1,"at":0,"length":1,"reading":"お"},{"phrase":1,"at":4,"length":1,"reading":"お"},{"phrase":1,"at":6,"length":1,"reading":"ん"},{"phrase":2,"at":0,"length":4,"reading":"はつしも"},{"phrase":3,"at":4,"length":1,"reading":"わ"},{"phrase":4,"at":0,"length":4,"reading":"しらぎく"},{"phrase":4,"at":5,"length":2,"reading":"はな"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9},"notation":{"source":"booklet","page":9,"readFrom":"list"}},
       "kimariji": {"kana":"こころあ","sound":"こころあ"}
     },
     {
@@ -492,7 +618,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"有明のーつれなく見えしー別れーよりー","lower":"暁ーばかりー憂きものはーなし"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "furigana": [{"phrase":0,"at":0,"length":4,"reading":"ありあけ"},{"phrase":1,"at":4,"length":1,"reading":"み"},{"phrase":2,"at":0,"length":2,"reading":"わか"},{"phrase":4,"at":0,"length":1,"reading":"う"},{"phrase":4,"at":4,"length":1,"reading":"わ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6},"notation":{"source":"booklet","page":6,"readFrom":"list"}},
       "kimariji": {"kana":"ありあ","sound":"ありあ"}
     },
     {
@@ -507,7 +637,11 @@
       "ruleStretches": [{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"朝ぼらけ有明の月とー見るまでーにー","lower":"吉野のー里にー降れる白ー雪"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"あさ"},{"phrase":1,"at":0,"length":4,"reading":"ありあけ"},{"phrase":1,"at":5,"length":2,"reading":"つき"},{"phrase":2,"at":0,"length":1,"reading":"み"},{"phrase":3,"at":0,"length":3,"reading":"よしの"},{"phrase":3,"at":4,"length":2,"reading":"さと"},{"phrase":4,"at":0,"length":1,"reading":"ふ"},{"phrase":4,"at":3,"length":2,"reading":"しら"},{"phrase":4,"at":5,"length":2,"reading":"ゆき"}],
+      "notes": [],
+      "alternatives": [{"phrases":[0,1],"marked":"あさぼらけありあけのーつきとー","stretches":[{"phrase":1,"after":5},{"phrase":1,"after":8}]}],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6},"notation":{"source":"booklet","page":6,"readFrom":"list"}},
       "kimariji": {"kana":"あさぼらけあ","sound":"あさぼらけあ"}
     },
     {
@@ -522,7 +656,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"山川にー風のかけたるーしがらみーはー","lower":"流れもーあへぬー紅葉なりーけり"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "furigana": [{"phrase":0,"at":0,"length":4,"reading":"やまがわ"},{"phrase":1,"at":0,"length":2,"reading":"かぜ"},{"phrase":2,"at":4,"length":1,"reading":"わ"},{"phrase":3,"at":0,"length":2,"reading":"なが"},{"phrase":3,"at":5,"length":1,"reading":"え"},{"phrase":4,"at":2,"length":1,"reading":"じ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11},"notation":{"source":"booklet","page":11,"readFrom":"list"}},
       "kimariji": {"kana":"やまが","sound":"やまが"}
     },
     {
@@ -537,7 +675,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"ひさかたのー光のどけきー春の日ーにー","lower":"しづ心ーなくー花の散るーらむ"},
-      "origin": {"text":{"source":"csv","fixes":[{"field":"仮名","from":"しづこころ","to":"しづごころ","why":"読み方一覧の形に合わせた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "furigana": [{"phrase":1,"at":0,"length":3,"reading":"ひかり"},{"phrase":2,"at":0,"length":2,"reading":"はる"},{"phrase":2,"at":3,"length":1,"reading":"ひ"},{"phrase":3,"at":1,"length":1,"reading":"ず"},{"phrase":3,"at":2,"length":3,"reading":"ごころ"},{"phrase":4,"at":0,"length":2,"reading":"はな"},{"phrase":4,"at":3,"length":1,"reading":"ち"},{"phrase":4,"at":6,"length":1,"reading":"ん"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"仮名","from":"しづこころ","to":"しづごころ","why":"読み方一覧の形に合わせた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13},"notation":{"source":"booklet","page":13,"readFrom":"list"}},
       "kimariji": {"kana":"ひさ","sound":"ひさ"}
     },
     {
@@ -552,7 +694,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":4}],
       "marked": {"upper":"誰をかもー知る人にせむー高砂ーのー","lower":"松もー昔のー友ならーなくに"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"たれ"},{"phrase":1,"at":0,"length":1,"reading":"し"},{"phrase":1,"at":2,"length":2,"reading":"ひと"},{"phrase":1,"at":6,"length":1,"reading":"ん"},{"phrase":2,"at":0,"length":4,"reading":"たかさご"},{"phrase":3,"at":0,"length":2,"reading":"まつ"},{"phrase":3,"at":3,"length":3,"reading":"むかし"},{"phrase":4,"at":0,"length":2,"reading":"とも"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9},"notation":{"source":"booklet","page":9,"readFrom":"list"}},
       "kimariji": {"kana":"たれ","sound":"たれ"}
     },
     {
@@ -567,7 +713,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"人はいさー心も知らずーふるさとーはー","lower":"花ぞー昔のー香に匂ひーける"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"ひと"},{"phrase":0,"at":2,"length":1,"reading":"わ"},{"phrase":1,"at":0,"length":3,"reading":"こころ"},{"phrase":2,"at":4,"length":1,"reading":"わ"},{"phrase":3,"at":0,"length":2,"reading":"はな"},{"phrase":3,"at":3,"length":3,"reading":"むかし"},{"phrase":4,"at":0,"length":1,"reading":"か"},{"phrase":4,"at":3,"length":1,"reading":"お"},{"phrase":4,"at":4,"length":1,"reading":"い"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13},"notation":{"source":"booklet","page":13,"readFrom":"list"}},
       "kimariji": {"kana":"ひとは","sound":"ひとわ"}
     },
     {
@@ -582,7 +732,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"夏の夜はーまだ宵ながらー明けぬるーをー","lower":"雲のーいづこにー月宿るーらむ"},
-      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"いずこ","to":"いづこ","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"なつ"},{"phrase":0,"at":3,"length":1,"reading":"よ"},{"phrase":0,"at":4,"length":1,"reading":"わ"},{"phrase":1,"at":2,"length":2,"reading":"よい"},{"phrase":2,"at":0,"length":1,"reading":"あ"},{"phrase":3,"at":0,"length":2,"reading":"くも"},{"phrase":3,"at":4,"length":1,"reading":"ず"},{"phrase":4,"at":0,"length":4,"reading":"つきやど"},{"phrase":4,"at":6,"length":1,"reading":"ん"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"いずこ","to":"いづこ","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7},"notation":{"source":"booklet","page":7,"readFrom":"list"}},
       "kimariji": {"kana":"なつ","sound":"なつ"}
     },
     {
@@ -597,7 +751,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"白露にー風の吹きしくー秋の野ーはー","lower":"つらぬきーとめぬー玉ぞ散りーける"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "furigana": [{"phrase":0,"at":0,"length":4,"reading":"しらつゆ"},{"phrase":1,"at":0,"length":2,"reading":"かぜ"},{"phrase":1,"at":3,"length":1,"reading":"ふ"},{"phrase":2,"at":0,"length":2,"reading":"あき"},{"phrase":2,"at":3,"length":1,"reading":"の"},{"phrase":2,"at":4,"length":1,"reading":"わ"},{"phrase":4,"at":0,"length":2,"reading":"たま"},{"phrase":4,"at":3,"length":1,"reading":"ち"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14},"notation":{"source":"booklet","page":14,"readFrom":"list"}},
       "kimariji": {"kana":"しら","sound":"しら"}
     },
     {
@@ -612,7 +770,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":6}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":6}],
       "marked": {"upper":"忘らるるー身をば思はずー誓ひてーしー","lower":"人のー命のー惜しくもあるーかな"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"わす"},{"phrase":1,"at":0,"length":1,"reading":"み"},{"phrase":1,"at":3,"length":2,"reading":"おも"},{"phrase":1,"at":5,"length":1,"reading":"わ"},{"phrase":2,"at":2,"length":1,"reading":"い"},{"phrase":3,"at":0,"length":2,"reading":"ひと"},{"phrase":3,"at":3,"length":3,"reading":"いのち"},{"phrase":4,"at":0,"length":1,"reading":"お"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":8},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8},"notation":{"source":"booklet","page":8,"readFrom":"list"}},
       "kimariji": {"kana":"わすら","sound":"わすら"}
     },
     {
@@ -627,7 +789,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"浅茅生のー小野の篠原ー忍ぶれーどー","lower":"あまりてーなどかー人の恋ーしき"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":1,"at":5,"kana":"は","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "furigana": [{"phrase":0,"at":0,"length":3,"reading":"あさじ"},{"phrase":1,"at":0,"length":2,"reading":"おの"},{"phrase":1,"at":3,"length":4,"reading":"しのはら"},{"phrase":4,"at":0,"length":2,"reading":"ひと"},{"phrase":4,"at":3,"length":2,"reading":"こい"}],
+      "notes": [{"phrase":0,"at":3,"length":1,"reading":"う"}],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":1,"at":5,"kana":"は","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6},"notation":{"source":"booklet","page":6,"readFrom":"list"}},
       "kimariji": {"kana":"あさぢ","sound":"あさじ"}
     },
     {
@@ -642,7 +808,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"忍ぶれどー色に出でにけりーわが恋ーはー","lower":"ものやー思ふとー人の問ふーまで"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "furigana": [{"phrase":1,"at":0,"length":2,"reading":"いろ"},{"phrase":1,"at":3,"length":1,"reading":"い"},{"phrase":2,"at":2,"length":2,"reading":"こい"},{"phrase":2,"at":4,"length":1,"reading":"わ"},{"phrase":3,"at":0,"length":2,"reading":"もの"},{"phrase":3,"at":3,"length":2,"reading":"おも"},{"phrase":3,"at":5,"length":1,"reading":"ー"},{"phrase":4,"at":0,"length":2,"reading":"ひと"},{"phrase":4,"at":4,"length":1,"reading":"ー"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14},"notation":{"source":"booklet","page":14,"readFrom":"list"}},
       "kimariji": {"kana":"しの","sound":"しの"}
     },
     {
@@ -657,7 +827,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"恋すてふーわが名はまだきー立ちにーけりー","lower":"人ー知れずこそー思ひそめーしか"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"こい"},{"phrase":0,"at":3,"length":2,"reading":"ちょー"},{"phrase":1,"at":2,"length":1,"reading":"な"},{"phrase":1,"at":3,"length":1,"reading":"わ"},{"phrase":2,"at":0,"length":1,"reading":"た"},{"phrase":3,"at":0,"length":2,"reading":"ひと"},{"phrase":4,"at":0,"length":2,"reading":"おも"},{"phrase":4,"at":2,"length":1,"reading":"い"}],
+      "notes": [],
+      "alternatives": [{"phrases":[3,3],"marked":"ひとしれずーこそー","stretches":[{"phrase":3,"after":5},{"phrase":3,"after":7}]}],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9},"notation":{"source":"booklet","page":9,"readFrom":"list"}},
       "kimariji": {"kana":"こひ","sound":"こい"}
     },
     {
@@ -672,7 +846,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"契りきなーかたみに袖をーしぼりーつつー","lower":"末のー松山ー波越さじーとは"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"ちぎ"},{"phrase":1,"at":4,"length":2,"reading":"そで"},{"phrase":3,"at":0,"length":2,"reading":"すえ"},{"phrase":3,"at":3,"length":4,"reading":"まつやま"},{"phrase":4,"at":0,"length":2,"reading":"なみ"},{"phrase":4,"at":6,"length":1,"reading":"わ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12},"notation":{"source":"booklet","page":12,"readFrom":"list"}},
       "kimariji": {"kana":"ちぎりき","sound":"ちぎりき"}
     },
     {
@@ -687,7 +865,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"逢ひ見てのー後の心にーくらぶれーばー","lower":"昔はーものをー思はざりーけり"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "furigana": [{"phrase":0,"at":1,"length":1,"reading":"い"},{"phrase":1,"at":0,"length":2,"reading":"のち"},{"phrase":1,"at":3,"length":3,"reading":"こころ"},{"phrase":3,"at":0,"length":3,"reading":"むかし"},{"phrase":3,"at":3,"length":1,"reading":"わ"},{"phrase":3,"at":4,"length":2,"reading":"もの"},{"phrase":4,"at":0,"length":2,"reading":"おも"},{"phrase":4,"at":2,"length":1,"reading":"わ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6},"notation":{"source":"booklet","page":6,"readFrom":"list"}},
       "kimariji": {"kana":"あひ","sound":"あい"}
     },
     {
@@ -702,7 +884,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"逢ふことのー絶えてしなくばーなかなかーにー","lower":"人をもー身をもー恨みざらーまし"},
-      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"なくは","to":"なくば","why":"読み方一覧の形に合わせた"},{"field":"仮名","from":"なくは","to":"なくば","why":"読み方一覧の形に合わせた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "furigana": [{"phrase":0,"at":0,"length":1,"reading":"お"},{"phrase":3,"at":0,"length":2,"reading":"ひと"},{"phrase":3,"at":4,"length":1,"reading":"み"},{"phrase":4,"at":0,"length":2,"reading":"うら"}],
+      "notes": [{"phrase":0,"at":1,"length":1,"reading":"お"}],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"なくは","to":"なくば","why":"読み方一覧の形に合わせた"},{"field":"仮名","from":"なくは","to":"なくば","why":"読み方一覧の形に合わせた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7},"notation":{"source":"booklet","page":7,"readFrom":"list"}},
       "kimariji": {"kana":"あふこ","sound":"おおこ"}
     },
     {
@@ -717,7 +903,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"あはれともーいふべき人はー思ほえーでー","lower":"身のーいたづらにーなりぬべきーかな"},
-      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"いたずら","to":"いたづら","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "furigana": [{"phrase":0,"at":1,"length":1,"reading":"わ"},{"phrase":1,"at":0,"length":1,"reading":"ゆ"},{"phrase":1,"at":1,"length":1,"reading":"ー"},{"phrase":1,"at":4,"length":2,"reading":"ひと"},{"phrase":1,"at":6,"length":1,"reading":"わ"},{"phrase":2,"at":0,"length":2,"reading":"おも"},{"phrase":3,"at":0,"length":1,"reading":"み"},{"phrase":3,"at":4,"length":1,"reading":"ず"}],
+      "notes": [{"phrase":2,"at":2,"length":1,"reading":"お"}],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"いたずら","to":"いたづら","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5},"notation":{"source":"booklet","page":5,"readFrom":"list"}},
       "kimariji": {"kana":"あはれ","sound":"あわれ"}
     },
     {
@@ -732,7 +922,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"由良の戸をー渡る舟人ーかぢをーたえー","lower":"ゆくへもー知らぬー恋の道ーかな"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"ゆら"},{"phrase":1,"at":3,"length":4,"reading":"ふなびと"},{"phrase":2,"at":1,"length":1,"reading":"じ"},{"phrase":3,"at":2,"length":1,"reading":"え"},{"phrase":4,"at":0,"length":2,"reading":"こい"},{"phrase":4,"at":3,"length":2,"reading":"みち"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14},"notation":{"source":"booklet","page":14,"readFrom":"list"}},
       "kimariji": {"kana":"ゆら","sound":"ゆら"}
     },
     {
@@ -747,7 +941,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"八重むぐらー茂れる宿のーさびしきーにー","lower":"人こそー見えねー秋は来にーけり"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":0,"at":2,"kana":"む","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "furigana": [{"phrase":0,"at":0,"length":5,"reading":"やえむぐら"},{"phrase":1,"at":4,"length":2,"reading":"やど"},{"phrase":3,"at":0,"length":2,"reading":"ひと"},{"phrase":3,"at":4,"length":1,"reading":"み"},{"phrase":4,"at":0,"length":2,"reading":"あき"},{"phrase":4,"at":2,"length":1,"reading":"わ"},{"phrase":4,"at":3,"length":1,"reading":"き"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":0,"at":2,"kana":"む","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11},"notation":{"source":"booklet","page":11,"readFrom":"list"}},
       "kimariji": {"kana":"やへ","sound":"やえ"}
     },
     {
@@ -762,7 +960,11 @@
       "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"風をいたみー岩うつ波のーおのれーのみー","lower":"くだけてーものをー思ふころーかな"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"かぜ"},{"phrase":1,"at":0,"length":2,"reading":"いわ"},{"phrase":1,"at":4,"length":2,"reading":"なみ"},{"phrase":3,"at":4,"length":2,"reading":"もの"},{"phrase":4,"at":0,"length":2,"reading":"おも"},{"phrase":4,"at":2,"length":1,"reading":"ー"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12},"notation":{"source":"booklet","page":12,"readFrom":"list"}},
       "kimariji": {"kana":"かぜを","sound":"かぜお"}
     },
     {
@@ -777,7 +979,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"御垣守ー衛士のたく火のー夜はー燃えー","lower":"昼はー消えつつーものをこそー思へ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "furigana": [{"phrase":1,"at":0,"length":2,"reading":"えじ"},{"phrase":1,"at":5,"length":1,"reading":"ひ"},{"phrase":2,"at":0,"length":2,"reading":"よる"},{"phrase":2,"at":2,"length":1,"reading":"わ"},{"phrase":3,"at":0,"length":2,"reading":"ひる"},{"phrase":3,"at":2,"length":1,"reading":"わ"},{"phrase":3,"at":3,"length":1,"reading":"き"},{"phrase":4,"at":0,"length":2,"reading":"もの"},{"phrase":4,"at":5,"length":2,"reading":"おも"},{"phrase":4,"at":7,"length":1,"reading":"え"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":8},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10},"notation":{"source":"booklet","page":10,"readFrom":"list"}},
       "kimariji": {"kana":"みかき","sound":"みかき"}
     },
     {
@@ -792,7 +998,11 @@
       "ruleStretches": [{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"君がため惜しからざりしー命ーさへー","lower":"長くーもがなとー思ひけるーかな"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"きみ"},{"phrase":1,"at":0,"length":1,"reading":"お"},{"phrase":2,"at":0,"length":3,"reading":"いのち"},{"phrase":2,"at":4,"length":1,"reading":"え"},{"phrase":3,"at":0,"length":2,"reading":"なが"},{"phrase":4,"at":0,"length":2,"reading":"おも"},{"phrase":4,"at":2,"length":1,"reading":"い"}],
+      "notes": [],
+      "alternatives": [{"phrases":[0,1],"marked":"きみがためおしからーざりしー","stretches":[{"phrase":1,"after":4},{"phrase":1,"after":7}]}],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13},"notation":{"source":"booklet","page":13,"readFrom":"list"}},
       "kimariji": {"kana":"きみがためを","sound":"きみがためお"}
     },
     {
@@ -807,7 +1017,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"かくとだにーえやはいぶきのーさしもー草ー","lower":"さしもー知らじなー燃ゆる思ーひを"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "furigana": [{"phrase":1,"at":2,"length":1,"reading":"わ"},{"phrase":2,"at":3,"length":2,"reading":"ぐさ"},{"phrase":4,"at":3,"length":2,"reading":"おも"},{"phrase":4,"at":5,"length":1,"reading":"い"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12},"notation":{"source":"booklet","page":12,"readFrom":"list"}},
       "kimariji": {"kana":"かく","sound":"かく"}
     },
     {
@@ -822,7 +1036,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"明けぬればー暮るるものとはー知りながーらー","lower":"なほー恨めしきー朝ぼらけーかな"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "furigana": [{"phrase":0,"at":0,"length":1,"reading":"あ"},{"phrase":1,"at":0,"length":1,"reading":"く"},{"phrase":1,"at":6,"length":1,"reading":"わ"},{"phrase":2,"at":0,"length":1,"reading":"し"},{"phrase":3,"at":1,"length":1,"reading":"お"},{"phrase":3,"at":2,"length":2,"reading":"うら"},{"phrase":4,"at":0,"length":2,"reading":"あさ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6},"notation":{"source":"booklet","page":6,"readFrom":"list"}},
       "kimariji": {"kana":"あけ","sound":"あけ"}
     },
     {
@@ -837,7 +1055,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"嘆きつつーひとり寝る夜のー明くる間ーはー","lower":"いかにー久しきーものとかはー知る"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"なげ"},{"phrase":1,"at":5,"length":1,"reading":"よ"},{"phrase":2,"at":0,"length":1,"reading":"あ"},{"phrase":2,"at":4,"length":1,"reading":"わ"},{"phrase":3,"at":3,"length":2,"reading":"ひさ"},{"phrase":4,"at":4,"length":1,"reading":"わ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7},"notation":{"source":"booklet","page":7,"readFrom":"list"}},
       "kimariji": {"kana":"なげき","sound":"なげき"}
     },
     {
@@ -852,7 +1074,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":4}],
       "marked": {"upper":"忘れじのー行く末まではーかたけれーばー","lower":"今日をーかぎりのー命とーもがな"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"わす"},{"phrase":1,"at":3,"length":1,"reading":"え"},{"phrase":1,"at":6,"length":1,"reading":"わ"},{"phrase":3,"at":0,"length":2,"reading":"きょー"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8},"notation":{"source":"booklet","page":8,"readFrom":"list"}},
       "kimariji": {"kana":"わすれ","sound":"わすれ"}
     },
     {
@@ -867,7 +1093,11 @@
       "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"滝の音はー絶えて久しくーなりぬれーどー","lower":"名こそー流れてーなほ聞こえーけれ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"たき"},{"phrase":0,"at":3,"length":2,"reading":"おと"},{"phrase":0,"at":5,"length":1,"reading":"わ"},{"phrase":1,"at":3,"length":2,"reading":"ひさ"},{"phrase":3,"at":0,"length":1,"reading":"な"},{"phrase":3,"at":3,"length":2,"reading":"なが"},{"phrase":4,"at":1,"length":1,"reading":"お"},{"phrase":4,"at":2,"length":1,"reading":"き"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9},"notation":{"source":"booklet","page":9,"readFrom":"list"}},
       "kimariji": {"kana":"たき","sound":"たき"}
     },
     {
@@ -882,7 +1112,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":4}],
       "marked": {"upper":"あらざらむーこの世のほかのー思ひ出ーにー","lower":"今ーひとたびのー逢ふことーもがな"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":1,"at":4,"kana":"ほ","why":"語の頭"},{"phrase":3,"at":2,"kana":"ひ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "furigana": [{"phrase":0,"at":4,"length":1,"reading":"ん"},{"phrase":1,"at":2,"length":1,"reading":"よ"},{"phrase":2,"at":0,"length":2,"reading":"おも"},{"phrase":2,"at":2,"length":1,"reading":"い"},{"phrase":2,"at":3,"length":1,"reading":"で"},{"phrase":3,"at":0,"length":2,"reading":"いま"},{"phrase":4,"at":0,"length":1,"reading":"お"},{"phrase":4,"at":1,"length":1,"reading":"ー"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":1,"at":4,"kana":"ほ","why":"語の頭"},{"phrase":3,"at":2,"kana":"ひ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5},"notation":{"source":"booklet","page":5,"readFrom":"list"}},
       "kimariji": {"kana":"あらざ","sound":"あらざ"}
     },
     {
@@ -897,7 +1131,11 @@
       "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"めぐり逢ひてー見しやそれともー分かぬ間ーにー","lower":"雲隠れーにしー夜半の月ーかな"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15}},
+      "furigana": [{"phrase":0,"at":4,"length":1,"reading":"い"},{"phrase":1,"at":0,"length":1,"reading":"み"},{"phrase":3,"at":0,"length":2,"reading":"くも"},{"phrase":4,"at":0,"length":2,"reading":"よわ"},{"phrase":4,"at":3,"length":2,"reading":"つき"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15},"notation":{"source":"booklet","page":15,"readFrom":"list"}},
       "kimariji": {"kana":"め","sound":"め"}
     },
     {
@@ -912,7 +1150,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"有馬山ー猪名の笹原ー風吹けーばー","lower":"いでそよー人をー忘れやはーする"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":1,"at":5,"kana":"は","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "furigana": [{"phrase":0,"at":3,"length":2,"reading":"やま"},{"phrase":1,"at":0,"length":1,"reading":"い"},{"phrase":1,"at":3,"length":4,"reading":"ささはら"},{"phrase":2,"at":0,"length":3,"reading":"かぜふ"},{"phrase":3,"at":4,"length":2,"reading":"ひと"},{"phrase":4,"at":0,"length":2,"reading":"わす"},{"phrase":4,"at":4,"length":1,"reading":"わ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":1,"at":5,"kana":"は","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6},"notation":{"source":"booklet","page":6,"readFrom":"list"}},
       "kimariji": {"kana":"ありま","sound":"ありま"}
     },
     {
@@ -927,7 +1169,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"やすらはでー寝なましものをー小夜更けーてー","lower":"かたぶくーまでのー月を見しーかな"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "furigana": [{"phrase":0,"at":3,"length":1,"reading":"わ"},{"phrase":1,"at":0,"length":1,"reading":"ね"},{"phrase":2,"at":1,"length":1,"reading":"よ"},{"phrase":4,"at":0,"length":2,"reading":"つき"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11},"notation":{"source":"booklet","page":11,"readFrom":"list"}},
       "kimariji": {"kana":"やす","sound":"やす"}
     },
     {
@@ -942,7 +1188,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"大江山ーいく野の道のー遠けれーばー","lower":"まだーふみも見ずー天の橋ー立"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":2,"kana":"ふ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "furigana": [{"phrase":0,"at":0,"length":1,"reading":"お"},{"phrase":0,"at":2,"length":3,"reading":"えやま"},{"phrase":1,"at":2,"length":1,"reading":"の"},{"phrase":1,"at":4,"length":2,"reading":"みち"},{"phrase":2,"at":0,"length":2,"reading":"とー"},{"phrase":3,"at":5,"length":1,"reading":"み"},{"phrase":4,"at":0,"length":2,"reading":"あま"},{"phrase":4,"at":3,"length":2,"reading":"はし"},{"phrase":4,"at":5,"length":2,"reading":"だて"}],
+      "notes": [{"phrase":0,"at":1,"length":1,"reading":"お"}],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":2,"kana":"ふ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7},"notation":{"source":"booklet","page":7,"readFrom":"list"}},
       "kimariji": {"kana":"おほえ","sound":"おおえ"}
     },
     {
@@ -957,7 +1207,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"いにしへのー奈良の都のー八重ざくーらー","lower":"けふー九重にー匂ひぬるーかな"},
-      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"八重桜","to":"八重ざくら","why":"漢字1字の読みの途中で伸ばすので、仮名で書いた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "furigana": [{"phrase":0,"at":3,"length":1,"reading":"え"},{"phrase":1,"at":0,"length":2,"reading":"なら"},{"phrase":1,"at":3,"length":3,"reading":"みやこ"},{"phrase":2,"at":0,"length":2,"reading":"やえ"},{"phrase":3,"at":0,"length":2,"reading":"きょー"},{"phrase":3,"at":2,"length":4,"reading":"ここのえ"},{"phrase":4,"at":1,"length":1,"reading":"お"},{"phrase":4,"at":2,"length":1,"reading":"い"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"八重桜","to":"八重ざくら","why":"漢字1字の読みの途中で伸ばすので、仮名で書いた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12},"notation":{"source":"booklet","page":12,"readFrom":"list"}},
       "kimariji": {"kana":"いに","sound":"いに"}
     },
     {
@@ -972,7 +1226,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"夜をこめてー鳥のそら音はーはかるーともー","lower":"よにー逢坂のー関はゆるーさじ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "furigana": [{"phrase":0,"at":0,"length":1,"reading":"よ"},{"phrase":1,"at":0,"length":2,"reading":"とり"},{"phrase":1,"at":6,"length":1,"reading":"わ"},{"phrase":3,"at":2,"length":4,"reading":"おーさか"},{"phrase":4,"at":0,"length":2,"reading":"せき"},{"phrase":4,"at":2,"length":1,"reading":"わ"}],
+      "notes": [{"phrase":0,"at":1,"length":1,"reading":"お"}],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11},"notation":{"source":"booklet","page":11,"readFrom":"list"}},
       "kimariji": {"kana":"よを","sound":"よお"}
     },
     {
@@ -987,7 +1245,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
       "stretches": [{"phrase":0,"after":5},{"phrase":2,"after":1},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":4}],
       "marked": {"upper":"今はただー思ひ絶えなむとーばかりーをー","lower":"人づてーならでーいふよしーもがな"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "furigana": [{"phrase":0,"at":2,"length":1,"reading":"わ"},{"phrase":1,"at":0,"length":2,"reading":"おも"},{"phrase":1,"at":2,"length":1,"reading":"い"},{"phrase":1,"at":3,"length":1,"reading":"た"},{"phrase":1,"at":6,"length":1,"reading":"ん"},{"phrase":3,"at":0,"length":2,"reading":"ひと"},{"phrase":3,"at":2,"length":1,"reading":"ず"},{"phrase":4,"at":0,"length":1,"reading":"ゆ"},{"phrase":4,"at":1,"length":1,"reading":"ー"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12},"notation":{"source":"booklet","page":12,"readFrom":"list"}},
       "kimariji": {"kana":"いまは","sound":"いまわ"}
     },
     {
@@ -1002,7 +1264,11 @@
       "ruleStretches": [{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"朝ぼらけ宇治の川霧ーたえだえーにー","lower":"あらはれーわたるー瀬々のあじーろ木"},
-      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"網代木","to":"あじろ木","why":"漢字1字の読みの途中で伸ばすので、仮名で書いた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"あさ"},{"phrase":1,"at":0,"length":2,"reading":"うじ"},{"phrase":1,"at":3,"length":4,"reading":"かわぎり"},{"phrase":2,"at":0,"length":1,"reading":"た"},{"phrase":2,"at":2,"length":1,"reading":"だ"},{"phrase":3,"at":2,"length":1,"reading":"わ"},{"phrase":4,"at":0,"length":2,"reading":"せぜ"},{"phrase":4,"at":6,"length":1,"reading":"ぎ"}],
+      "notes": [],
+      "alternatives": [{"phrases":[0,1],"marked":"あさぼらけうじのーかわぎりー","stretches":[{"phrase":1,"after":3},{"phrase":1,"after":7}]}],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"網代木","to":"あじろ木","why":"漢字1字の読みの途中で伸ばすので、仮名で書いた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6},"notation":{"source":"booklet","page":6,"readFrom":"list"}},
       "kimariji": {"kana":"あさぼらけう","sound":"あさぼらけう"}
     },
     {
@@ -1017,7 +1283,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"恨みわびー干さぬ袖だにーあるものーをー","lower":"恋にー朽ちなむー名こそ惜しーけれ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"うら"},{"phrase":1,"at":3,"length":2,"reading":"そで"},{"phrase":3,"at":0,"length":2,"reading":"こい"},{"phrase":3,"at":3,"length":1,"reading":"く"},{"phrase":3,"at":6,"length":1,"reading":"ん"},{"phrase":4,"at":0,"length":1,"reading":"な"},{"phrase":4,"at":3,"length":1,"reading":"お"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13},"notation":{"source":"booklet","page":13,"readFrom":"list"}},
       "kimariji": {"kana":"うら","sound":"うら"}
     },
     {
@@ -1032,7 +1302,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"もろともにーあはれと思へー山ざくーらー","lower":"花よりーほかにー知る人もーなし"},
-      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"思え","to":"思へ","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"},{"field":"本文","from":"山桜","to":"山ざくら","why":"漢字1字の読みの途中で伸ばすので、仮名で書いた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":4,"kana":"ほ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "furigana": [{"phrase":1,"at":1,"length":1,"reading":"わ"},{"phrase":1,"at":4,"length":2,"reading":"おも"},{"phrase":1,"at":6,"length":1,"reading":"え"},{"phrase":2,"at":0,"length":2,"reading":"やま"},{"phrase":3,"at":0,"length":2,"reading":"はな"},{"phrase":4,"at":2,"length":2,"reading":"ひと"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"思え","to":"思へ","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"},{"field":"本文","from":"山桜","to":"山ざくら","why":"漢字1字の読みの途中で伸ばすので、仮名で書いた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":4,"kana":"ほ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14},"notation":{"source":"booklet","page":14,"readFrom":"list"}},
       "kimariji": {"kana":"もろ","sound":"もろ"}
     },
     {
@@ -1047,7 +1321,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"春の夜のー夢ばかりなるー手枕ーにー","lower":"かひなくー立たむー名こそ惜しーけれ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"はる"},{"phrase":0,"at":3,"length":1,"reading":"よ"},{"phrase":2,"at":0,"length":4,"reading":"たまくら"},{"phrase":3,"at":1,"length":1,"reading":"い"},{"phrase":3,"at":6,"length":1,"reading":"ん"},{"phrase":4,"at":0,"length":1,"reading":"な"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10},"notation":{"source":"booklet","page":10,"readFrom":"list"}},
       "kimariji": {"kana":"はるの","sound":"はるの"}
     },
     {
@@ -1062,7 +1340,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"心にもーあらで憂き世にーながらへーばー","lower":"恋しかるーべきー夜半の月ーかな"},
-      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"憂き夜","to":"憂き世","why":"データの漢字の誤りである"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "furigana": [{"phrase":0,"at":0,"length":3,"reading":"こころ"},{"phrase":1,"at":5,"length":1,"reading":"よ"},{"phrase":2,"at":3,"length":1,"reading":"え"},{"phrase":3,"at":0,"length":2,"reading":"こい"},{"phrase":4,"at":0,"length":2,"reading":"よわ"},{"phrase":4,"at":3,"length":2,"reading":"つき"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"憂き夜","to":"憂き世","why":"データの漢字の誤りである"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9},"notation":{"source":"booklet","page":9,"readFrom":"list"}},
       "kimariji": {"kana":"こころに","sound":"こころに"}
     },
     {
@@ -1077,7 +1359,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"嵐ふくー三室の山のーもみぢ葉ーはー","lower":"竜田のー川のー錦なりーけり"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":0,"at":3,"kana":"ふ","why":"語の頭"},{"phrase":1,"at":1,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "furigana": [{"phrase":0,"at":3,"length":1,"reading":"ふ"},{"phrase":1,"at":0,"length":3,"reading":"みむろ"},{"phrase":1,"at":4,"length":2,"reading":"やま"},{"phrase":2,"at":2,"length":1,"reading":"じ"},{"phrase":2,"at":3,"length":1,"reading":"ば"},{"phrase":2,"at":4,"length":1,"reading":"わ"},{"phrase":3,"at":0,"length":3,"reading":"たつた"},{"phrase":3,"at":4,"length":2,"reading":"かわ"},{"phrase":4,"at":0,"length":3,"reading":"にしき"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":0,"at":3,"kana":"ふ","why":"語の頭"},{"phrase":1,"at":1,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5},"notation":{"source":"booklet","page":5,"readFrom":"list"}},
       "kimariji": {"kana":"あらし","sound":"あらし"}
     },
     {
@@ -1092,7 +1378,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"寂しさにー宿を立ち出でてーながむれーばー","lower":"いづこもー同じー秋の夕ー暮れ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":2,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15}},
+      "furigana": [{"phrase":1,"at":0,"length":2,"reading":"やど"},{"phrase":1,"at":5,"length":1,"reading":"い"},{"phrase":3,"at":1,"length":1,"reading":"ず"},{"phrase":4,"at":0,"length":2,"reading":"あき"},{"phrase":4,"at":3,"length":2,"reading":"ゆー"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":2,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15},"notation":{"source":"booklet","page":15,"readFrom":"list"}},
       "kimariji": {"kana":"さ","sound":"さ"}
     },
     {
@@ -1107,7 +1397,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"夕さればー門田の稲葉ーおとづれーてー","lower":"葦のーまろやにー秋風ぞー吹く"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "furigana": [{"phrase":0,"at":0,"length":1,"reading":"ゆ"},{"phrase":1,"at":0,"length":3,"reading":"かどた"},{"phrase":1,"at":4,"length":3,"reading":"いなば"},{"phrase":2,"at":2,"length":1,"reading":"ず"},{"phrase":3,"at":0,"length":2,"reading":"あし"},{"phrase":4,"at":0,"length":4,"reading":"あきかぜ"},{"phrase":4,"at":5,"length":1,"reading":"ふ"}],
+      "notes": [{"phrase":0,"at":1,"length":1,"reading":"う"}],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14},"notation":{"source":"booklet","page":14,"readFrom":"list"}},
       "kimariji": {"kana":"ゆふ","sound":"ゆう"}
     },
     {
@@ -1122,7 +1416,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"音に聞くー高師の浜のーあだ波ーはー","lower":"かけじやー袖のーぬれもこそーすれ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"おと"},{"phrase":1,"at":4,"length":2,"reading":"はま"},{"phrase":2,"at":2,"length":2,"reading":"なみ"},{"phrase":2,"at":4,"length":1,"reading":"わ"},{"phrase":3,"at":4,"length":2,"reading":"そで"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7},"notation":{"source":"booklet","page":7,"readFrom":"list"}},
       "kimariji": {"kana":"おと","sound":"おと"}
     },
     {
@@ -1137,7 +1435,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":6}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":6}],
       "marked": {"upper":"高砂のー尾上の桜ー咲きにーけりー","lower":"外山のー霞ー立たずもあらーなむ"},
-      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"尾の上","to":"尾上","why":"1つの語として「上」を語の頭から外した"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "furigana": [{"phrase":0,"at":0,"length":4,"reading":"たかさご"},{"phrase":1,"at":0,"length":3,"reading":"おのえ"},{"phrase":1,"at":4,"length":3,"reading":"さくら"},{"phrase":2,"at":0,"length":1,"reading":"さ"},{"phrase":3,"at":0,"length":3,"reading":"とやま"},{"phrase":3,"at":4,"length":3,"reading":"かすみ"},{"phrase":4,"at":7,"length":1,"reading":"ん"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":8},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"尾の上","to":"尾上","why":"1つの語として「上」を語の頭から外した"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8},"notation":{"source":"booklet","page":8,"readFrom":"list"}},
       "kimariji": {"kana":"たか","sound":"たか"}
     },
     {
@@ -1152,7 +1454,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
       "marked": {"upper":"憂かりけるー人を初瀬のー山おろーしー","lower":"はげしかれーとはー祈らぬーものを"},
-      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"山おろしよ","to":"山おろし","why":"読み方一覧の形に合わせた"},{"field":"仮名","from":"やまおろしよ","to":"やまおろし","why":"読み方一覧の形に合わせた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "furigana": [{"phrase":0,"at":0,"length":1,"reading":"う"},{"phrase":1,"at":0,"length":2,"reading":"ひと"},{"phrase":1,"at":3,"length":3,"reading":"はつせ"},{"phrase":2,"at":0,"length":2,"reading":"やま"},{"phrase":3,"at":6,"length":1,"reading":"わ"},{"phrase":4,"at":0,"length":2,"reading":"いの"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"山おろしよ","to":"山おろし","why":"読み方一覧の形に合わせた"},{"field":"仮名","from":"やまおろしよ","to":"やまおろし","why":"読み方一覧の形に合わせた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13},"notation":{"source":"booklet","page":13,"readFrom":"list"}},
       "kimariji": {"kana":"うか","sound":"うか"}
     },
     {
@@ -1167,7 +1473,11 @@
       "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"契りおきしーさせもが露をー命にーてー","lower":"あはれー今年のー秋もいぬーめり"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"ちぎ"},{"phrase":1,"at":4,"length":2,"reading":"つゆ"},{"phrase":3,"at":1,"length":1,"reading":"わ"},{"phrase":3,"at":3,"length":3,"reading":"ことし"},{"phrase":4,"at":0,"length":2,"reading":"あき"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12},"notation":{"source":"booklet","page":12,"readFrom":"list"}},
       "kimariji": {"kana":"ちぎりお","sound":"ちぎりお"}
     },
     {
@@ -1182,7 +1492,11 @@
       "ruleStretches": [{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"わたの原漕ぎ出でて見ればーひさかたーのー","lower":"雲居にーまがふー沖つ白ー波"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "furigana": [{"phrase":0,"at":3,"length":2,"reading":"はら"},{"phrase":1,"at":0,"length":1,"reading":"こ"},{"phrase":1,"at":2,"length":1,"reading":"い"},{"phrase":1,"at":5,"length":1,"reading":"み"},{"phrase":2,"at":0,"length":4,"reading":"ひさかた"},{"phrase":3,"at":0,"length":2,"reading":"くも"},{"phrase":3,"at":2,"length":1,"reading":"い"},{"phrase":3,"at":5,"length":1,"reading":"ご"},{"phrase":3,"at":6,"length":1,"reading":"ー"},{"phrase":4,"at":0,"length":2,"reading":"おき"},{"phrase":4,"at":3,"length":2,"reading":"しら"},{"phrase":4,"at":5,"length":2,"reading":"なみ"}],
+      "notes": [],
+      "alternatives": [{"phrases":[0,1],"marked":"わたのはらこぎいでてーみればー","stretches":[{"phrase":1,"after":5},{"phrase":1,"after":8}]}],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8},"notation":{"source":"booklet","page":8,"readFrom":"list"}},
       "kimariji": {"kana":"わたのはらこ","sound":"わたのはらこ"}
     },
     {
@@ -1197,7 +1511,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"瀬をはやみー岩にせかるるー滝川ーのー","lower":"われてもー末にー逢はむとぞー思ふ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":0,"at":2,"kana":"は","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15}},
+      "furigana": [{"phrase":0,"at":0,"length":1,"reading":"せ"},{"phrase":1,"at":0,"length":2,"reading":"いわ"},{"phrase":2,"at":0,"length":4,"reading":"たきがわ"},{"phrase":3,"at":4,"length":2,"reading":"すえ"},{"phrase":4,"at":1,"length":1,"reading":"わ"},{"phrase":4,"at":2,"length":1,"reading":"ん"},{"phrase":4,"at":5,"length":2,"reading":"おも"}],
+      "notes": [{"phrase":4,"at":7,"length":1,"reading":"お"}],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":8},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":0,"at":2,"kana":"は","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15},"notation":{"source":"booklet","page":15,"readFrom":"list"}},
       "kimariji": {"kana":"せ","sound":"せ"}
     },
     {
@@ -1212,7 +1530,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"淡路島ー通ふ千鳥のー鳴く声ーにー","lower":"いく夜ー寝覚めぬー須磨の関ー守"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "furigana": [{"phrase":0,"at":0,"length":5,"reading":"あわじしま"},{"phrase":1,"at":2,"length":1,"reading":"ー"},{"phrase":1,"at":3,"length":3,"reading":"ちどり"},{"phrase":2,"at":0,"length":1,"reading":"な"},{"phrase":2,"at":2,"length":2,"reading":"こえ"},{"phrase":3,"at":0,"length":3,"reading":"いくよ"},{"phrase":4,"at":0,"length":2,"reading":"すま"},{"phrase":4,"at":3,"length":2,"reading":"せき"},{"phrase":4,"at":5,"length":2,"reading":"もり"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5},"notation":{"source":"booklet","page":5,"readFrom":"list"}},
       "kimariji": {"kana":"あはぢ","sound":"あわじ"}
     },
     {
@@ -1227,7 +1549,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":8},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":8},{"phrase":4,"after":5}],
       "marked": {"upper":"秋風にーたなびく雲のーたえ間ーよりー","lower":"もれ出づるー月のー影のさやーけさ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "furigana": [{"phrase":0,"at":0,"length":4,"reading":"あきかぜ"},{"phrase":1,"at":4,"length":2,"reading":"くも"},{"phrase":2,"at":2,"length":1,"reading":"ま"},{"phrase":3,"at":2,"length":1,"reading":"い"},{"phrase":3,"at":3,"length":1,"reading":"ず"},{"phrase":3,"at":5,"length":2,"reading":"つき"},{"phrase":4,"at":0,"length":2,"reading":"かげ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5},"notation":{"source":"booklet","page":5,"readFrom":"list"}},
       "kimariji": {"kana":"あきか","sound":"あきか"}
     },
     {
@@ -1242,7 +1568,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"ながからむー心も知らずー黒髪ーのー","lower":"乱れてーけさはーものをこそー思へ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"なが"},{"phrase":0,"at":4,"length":1,"reading":"ん"},{"phrase":1,"at":0,"length":3,"reading":"こころ"},{"phrase":2,"at":0,"length":4,"reading":"くろかみ"},{"phrase":3,"at":4,"length":2,"reading":"けさ"},{"phrase":3,"at":6,"length":1,"reading":"わ"},{"phrase":4,"at":0,"length":2,"reading":"もの"},{"phrase":4,"at":5,"length":2,"reading":"おも"},{"phrase":4,"at":7,"length":1,"reading":"え"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":8},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7},"notation":{"source":"booklet","page":7,"readFrom":"list"}},
       "kimariji": {"kana":"ながか","sound":"ながか"}
     },
     {
@@ -1257,7 +1587,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"ほととぎすー鳴きつる方をーながむれーばー","lower":"ただー有明のー月ぞ残ーれる"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":2,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15}},
+      "furigana": [{"phrase":1,"at":0,"length":1,"reading":"な"},{"phrase":1,"at":4,"length":2,"reading":"かた"},{"phrase":4,"at":0,"length":2,"reading":"つき"},{"phrase":4,"at":3,"length":2,"reading":"のこ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":2,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15},"notation":{"source":"booklet","page":15,"readFrom":"list"}},
       "kimariji": {"kana":"ほ","sound":"ほ"}
     },
     {
@@ -1272,7 +1606,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"思ひわびーさても命はーあるものーをー","lower":"憂きにー堪へぬはー涙なりーけり"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"おも"},{"phrase":0,"at":2,"length":1,"reading":"い"},{"phrase":1,"at":3,"length":3,"reading":"いのち"},{"phrase":1,"at":6,"length":1,"reading":"わ"},{"phrase":3,"at":0,"length":1,"reading":"う"},{"phrase":3,"at":4,"length":1,"reading":"え"},{"phrase":3,"at":6,"length":1,"reading":"わ"},{"phrase":4,"at":0,"length":3,"reading":"なみだ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7},"notation":{"source":"booklet","page":7,"readFrom":"list"}},
       "kimariji": {"kana":"おも","sound":"おも"}
     },
     {
@@ -1287,7 +1625,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"世の中よー道こそなけれー思ひー入るー","lower":"山のー奥にもー鹿ぞ鳴くーなる"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "furigana": [{"phrase":0,"at":0,"length":1,"reading":"よ"},{"phrase":0,"at":2,"length":2,"reading":"なか"},{"phrase":1,"at":0,"length":2,"reading":"みち"},{"phrase":2,"at":0,"length":2,"reading":"おも"},{"phrase":2,"at":2,"length":1,"reading":"い"},{"phrase":2,"at":3,"length":1,"reading":"い"},{"phrase":3,"at":0,"length":2,"reading":"やま"},{"phrase":3,"at":3,"length":2,"reading":"おく"},{"phrase":4,"at":0,"length":2,"reading":"しか"},{"phrase":4,"at":3,"length":1,"reading":"な"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11},"notation":{"source":"booklet","page":11,"readFrom":"list"}},
       "kimariji": {"kana":"よのなかよ","sound":"よのなかよ"}
     },
     {
@@ -1302,7 +1644,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"ながらへばーまたこのごろやーしのばれーむー","lower":"憂しとー見し世ぞー今は恋ーしき"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "furigana": [{"phrase":0,"at":3,"length":1,"reading":"え"},{"phrase":2,"at":4,"length":1,"reading":"ん"},{"phrase":3,"at":0,"length":1,"reading":"う"},{"phrase":3,"at":3,"length":1,"reading":"み"},{"phrase":3,"at":5,"length":1,"reading":"よ"},{"phrase":4,"at":0,"length":2,"reading":"いま"},{"phrase":4,"at":2,"length":1,"reading":"わ"},{"phrase":4,"at":3,"length":2,"reading":"こい"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7},"notation":{"source":"booklet","page":7,"readFrom":"list"}},
       "kimariji": {"kana":"ながら","sound":"ながら"}
     },
     {
@@ -1317,7 +1663,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"夜もすがらーもの思ふころはー明けやらーでー","lower":"ねやのーひまさへーつれなかりーけり"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":3,"kana":"ひ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "furigana": [{"phrase":0,"at":0,"length":1,"reading":"よ"},{"phrase":1,"at":0,"length":4,"reading":"ものおも"},{"phrase":1,"at":4,"length":1,"reading":"ー"},{"phrase":1,"at":7,"length":1,"reading":"わ"},{"phrase":2,"at":0,"length":1,"reading":"あ"},{"phrase":3,"at":0,"length":2,"reading":"ねや"},{"phrase":3,"at":6,"length":1,"reading":"え"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":3,"kana":"ひ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11},"notation":{"source":"booklet","page":11,"readFrom":"list"}},
       "kimariji": {"kana":"よも","sound":"よも"}
     },
     {
@@ -1332,7 +1682,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"嘆けとてー月やはものをー思はーするー","lower":"かこち顔ーなるーわが涙ーかな"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"なげ"},{"phrase":1,"at":0,"length":2,"reading":"つき"},{"phrase":1,"at":3,"length":1,"reading":"わ"},{"phrase":1,"at":4,"length":2,"reading":"もの"},{"phrase":2,"at":0,"length":2,"reading":"おも"},{"phrase":2,"at":2,"length":1,"reading":"わ"},{"phrase":3,"at":3,"length":2,"reading":"がお"},{"phrase":4,"at":2,"length":3,"reading":"なみだ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7},"notation":{"source":"booklet","page":7,"readFrom":"list"}},
       "kimariji": {"kana":"なげけ","sound":"なげけ"}
     },
     {
@@ -1347,7 +1701,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"村雨のー露もまだ干ぬーまきの葉ーにー","lower":"霧ー立ちのぼるー秋の夕ー暮"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15}},
+      "furigana": [{"phrase":0,"at":0,"length":4,"reading":"むらさめ"},{"phrase":1,"at":0,"length":2,"reading":"つゆ"},{"phrase":1,"at":5,"length":1,"reading":"ひ"},{"phrase":2,"at":3,"length":1,"reading":"は"},{"phrase":3,"at":0,"length":2,"reading":"きり"},{"phrase":4,"at":0,"length":2,"reading":"あき"},{"phrase":4,"at":3,"length":2,"reading":"ゆー"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15},"notation":{"source":"booklet","page":15,"readFrom":"list"}},
       "kimariji": {"kana":"む","sound":"む"}
     },
     {
@@ -1362,7 +1720,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"難波江のー葦のかりねのーひとよーゆゑー","lower":"身をーつくしてやー恋ひわたるーべき"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "furigana": [{"phrase":0,"at":0,"length":4,"reading":"なにわえ"},{"phrase":1,"at":0,"length":2,"reading":"あし"},{"phrase":2,"at":4,"length":1,"reading":"え"},{"phrase":4,"at":0,"length":1,"reading":"こ"},{"phrase":4,"at":1,"length":1,"reading":"い"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6},"notation":{"source":"booklet","page":6,"readFrom":"list"}},
       "kimariji": {"kana":"なにはえ","sound":"なにわえ"}
     },
     {
@@ -1377,7 +1739,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"玉の緒よー絶えなば絶えねーながらへーばー","lower":"忍ぶるーことのー弱りもぞーする"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"たま"},{"phrase":2,"at":3,"length":1,"reading":"え"},{"phrase":3,"at":0,"length":2,"reading":"しの"},{"phrase":4,"at":0,"length":2,"reading":"よわ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9},"notation":{"source":"booklet","page":9,"readFrom":"list"}},
       "kimariji": {"kana":"たま","sound":"たま"}
     },
     {
@@ -1392,7 +1758,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"見せばやなー雄島の海人のー袖だにーもー","lower":"濡れにぞー濡れしー色は変はーらず"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "furigana": [{"phrase":0,"at":0,"length":1,"reading":"み"},{"phrase":1,"at":0,"length":3,"reading":"おじま"},{"phrase":2,"at":0,"length":2,"reading":"そで"},{"phrase":4,"at":0,"length":2,"reading":"いろ"},{"phrase":4,"at":2,"length":1,"reading":"わ"},{"phrase":4,"at":4,"length":1,"reading":"わ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10},"notation":{"source":"booklet","page":10,"readFrom":"list"}},
       "kimariji": {"kana":"みせ","sound":"みせ"}
     },
     {
@@ -1407,7 +1777,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"きりぎりすー鳴くや霜夜のーさむしろーにー","lower":"衣ーかたしきーひとりかもー寝む"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":1,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "furigana": [{"phrase":1,"at":0,"length":1,"reading":"な"},{"phrase":1,"at":3,"length":3,"reading":"しもよ"},{"phrase":3,"at":0,"length":3,"reading":"ころも"},{"phrase":4,"at":5,"length":1,"reading":"ね"},{"phrase":4,"at":6,"length":1,"reading":"ん"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":1,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13},"notation":{"source":"booklet","page":13,"readFrom":"list"}},
       "kimariji": {"kana":"きり","sound":"きり"}
     },
     {
@@ -1422,7 +1796,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"わが袖はー潮干に見えぬー沖の石ーのー","lower":"人こそー知らねーかわく間もーなし"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "furigana": [{"phrase":0,"at":2,"length":2,"reading":"そで"},{"phrase":0,"at":4,"length":1,"reading":"わ"},{"phrase":1,"at":0,"length":3,"reading":"しおひ"},{"phrase":2,"at":0,"length":2,"reading":"おき"},{"phrase":2,"at":3,"length":2,"reading":"いし"},{"phrase":3,"at":0,"length":2,"reading":"ひと"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8},"notation":{"source":"booklet","page":8,"readFrom":"list"}},
       "kimariji": {"kana":"わがそ","sound":"わがそ"}
     },
     {
@@ -1437,7 +1815,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"世の中はー常にもがもなー渚ー漕ぐー","lower":"海人のー小舟のー綱手かなーしも"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "furigana": [{"phrase":0,"at":0,"length":1,"reading":"よ"},{"phrase":0,"at":2,"length":2,"reading":"なか"},{"phrase":0,"at":4,"length":1,"reading":"わ"},{"phrase":2,"at":3,"length":1,"reading":"こ"},{"phrase":3,"at":3,"length":3,"reading":"おぶね"},{"phrase":4,"at":0,"length":3,"reading":"つなで"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11},"notation":{"source":"booklet","page":11,"readFrom":"list"}},
       "kimariji": {"kana":"よのなかは","sound":"よのなかわ"}
     },
     {
@@ -1452,7 +1834,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"み吉野のー山の秋風ー小夜更けーてー","lower":"ふるさとー寒くー衣うつーなり"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":5,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "furigana": [{"phrase":0,"at":1,"length":3,"reading":"よしの"},{"phrase":1,"at":0,"length":2,"reading":"やま"},{"phrase":1,"at":3,"length":4,"reading":"あきかぜ"},{"phrase":2,"at":1,"length":1,"reading":"よ"},{"phrase":3,"at":4,"length":2,"reading":"さむ"},{"phrase":4,"at":0,"length":3,"reading":"ころも"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":5,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10},"notation":{"source":"booklet","page":10,"readFrom":"list"}},
       "kimariji": {"kana":"みよ","sound":"みよ"}
     },
     {
@@ -1467,7 +1853,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"おほけなくー憂き世の民にーおほふーかなー","lower":"わがー立つ杣にーすみ染のー袖"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "furigana": [{"phrase":1,"at":2,"length":1,"reading":"よ"},{"phrase":1,"at":4,"length":2,"reading":"たみ"},{"phrase":3,"at":2,"length":1,"reading":"た"},{"phrase":3,"at":4,"length":2,"reading":"そま"},{"phrase":4,"at":0,"length":4,"reading":"すみぞめ"},{"phrase":4,"at":5,"length":2,"reading":"そで"}],
+      "notes": [{"phrase":0,"at":1,"length":1,"reading":"お"},{"phrase":2,"at":1,"length":1,"reading":"お"},{"phrase":2,"at":2,"length":1,"reading":"お"}],
+      "alternatives": [{"phrases":[3,3],"marked":"わがたつーそまにー","stretches":[{"phrase":3,"after":4},{"phrase":3,"after":7}]}],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7},"notation":{"source":"booklet","page":7,"readFrom":"list"}},
       "kimariji": {"kana":"おほけ","sound":"おおけ"}
     },
     {
@@ -1482,7 +1872,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"花さそふー嵐の庭のー雪ならーでー","lower":"ふりゆくーものはーわが身なりーけり"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"はな"},{"phrase":0,"at":4,"length":1,"reading":"ー"},{"phrase":1,"at":0,"length":3,"reading":"あらし"},{"phrase":1,"at":4,"length":2,"reading":"にわ"},{"phrase":2,"at":0,"length":2,"reading":"ゆき"},{"phrase":3,"at":6,"length":1,"reading":"わ"},{"phrase":4,"at":2,"length":1,"reading":"み"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10},"notation":{"source":"booklet","page":10,"readFrom":"list"}},
       "kimariji": {"kana":"はなさ","sound":"はなさ"}
     },
     {
@@ -1497,7 +1891,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"来ぬ人をー松帆の浦のー夕なぎーにー","lower":"焼くやー藻塩のー身もこがれーつつ"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "furigana": [{"phrase":0,"at":0,"length":1,"reading":"こ"},{"phrase":0,"at":2,"length":2,"reading":"ひと"},{"phrase":1,"at":4,"length":2,"reading":"うら"},{"phrase":2,"at":0,"length":2,"reading":"ゆー"},{"phrase":3,"at":0,"length":1,"reading":"や"},{"phrase":3,"at":5,"length":1,"reading":"お"},{"phrase":4,"at":0,"length":1,"reading":"み"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9},"notation":{"source":"booklet","page":9,"readFrom":"list"}},
       "kimariji": {"kana":"こぬ","sound":"こぬ"}
     },
     {
@@ -1512,7 +1910,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"風そよぐー楢の小川のー夕暮ーはー","lower":"みそぎぞー夏のーしるしなりーける"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"かぜ"},{"phrase":1,"at":3,"length":3,"reading":"おがわ"},{"phrase":2,"at":0,"length":2,"reading":"ゆー"},{"phrase":2,"at":4,"length":1,"reading":"わ"},{"phrase":3,"at":4,"length":2,"reading":"なつ"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11},"notation":{"source":"booklet","page":11,"readFrom":"list"}},
       "kimariji": {"kana":"かぜそ","sound":"かぜそ"}
     },
     {
@@ -1527,7 +1929,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":8},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":8},{"phrase":4,"after":5}],
       "marked": {"upper":"人もをしー人もうらめしーあぢきなーくー","lower":"世をー思ふゆゑにーもの思ふー身は"},
-      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"あじきなく","to":"あぢきなく","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "furigana": [{"phrase":0,"at":0,"length":2,"reading":"ひと"},{"phrase":1,"at":0,"length":2,"reading":"ひと"},{"phrase":2,"at":1,"length":1,"reading":"じ"},{"phrase":3,"at":0,"length":1,"reading":"よ"},{"phrase":3,"at":2,"length":2,"reading":"おも"},{"phrase":3,"at":4,"length":1,"reading":"ー"},{"phrase":3,"at":6,"length":1,"reading":"え"},{"phrase":4,"at":0,"length":4,"reading":"ものおも"},{"phrase":4,"at":4,"length":1,"reading":"ー"},{"phrase":4,"at":5,"length":1,"reading":"み"},{"phrase":4,"at":6,"length":1,"reading":"わ"}],
+      "notes": [],
+      "alternatives": [{"phrases":[3,3],"marked":"よをおもーゆえにー","stretches":[{"phrase":3,"after":5},{"phrase":3,"after":8}]}],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"あじきなく","to":"あぢきなく","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13},"notation":{"source":"booklet","page":13,"readFrom":"list"}},
       "kimariji": {"kana":"ひとも","sound":"ひとも"}
     },
     {
@@ -1542,7 +1948,11 @@
       "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
       "marked": {"upper":"百敷やー古き軒端のーしのぶにーもー","lower":"なほーあまりあるー昔なりーけり"},
-      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "furigana": [{"phrase":1,"at":0,"length":2,"reading":"ふる"},{"phrase":1,"at":3,"length":3,"reading":"のきば"},{"phrase":3,"at":1,"length":1,"reading":"お"},{"phrase":4,"at":0,"length":3,"reading":"むかし"}],
+      "notes": [],
+      "alternatives": [],
+      "yoin": {"phrase":4,"after":7},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14},"notation":{"source":"booklet","page":14,"readFrom":"list"}},
       "kimariji": {"kana":"もも","sound":"もも"}
     }
   ]
