@@ -2,6 +2,49 @@
 
 あとの作業に影響する技術と設計の判断を、新しいものを上にして書く。理由と、採らなかった案も残す。結論を改めるときは、元の項目を消さずに、改めた日付と理由を足す。
 
+## 2026-11-03 平日の昼に自走を順に進める
+
+- 決めたこと：
+  - `auto.yml` を cron で、日本時間の平日 9:00〜18:30 に30分ごとに起こす。cron は UTC で `*/30 0-9 * * 1-5` と書く。日本の祝日は見分けない。
+  - `work` が成功したら、`next` の job が `auto.yml` を `workflow_dispatch` で起こす。番号は渡さない。平日の 9:00〜18:30 の外と、失敗のあとは起こさない。
+  - どの実行も、起動のきっかけによらず、`auto-target.sh` がいまの状態から対象を選ぶ。順は、渡された PR、修正を待つ PR、Issue である。修正を待つ PR は、Claude の開いた PR で、最新の `review-gate` が赤で、`needs-human` がなく、レビューの回数が `review-gate.sh` の `MAX_ROUNDS` を超えていないものとする。
+  - 日本時間の1日に始める Issue を5件までにする。`work` が付ける `in-progress` の、今日の回数を数える。`in-progress` を付けたあとに失敗した実行は数え、準備の段階（checkout、依存の導入）で落ちた実行と PR の修正は数えない。
+  - 本文の `Depends:` を含む行の `#番号` を、行の数によらずすべて依存として読む。1つでも開いていれば飛ばす。
+  - Claude の action に、`additional_permissions` で contents、pull_requests、issues の3つを書いて求める。すべての Workflow の Claude の step が、GITHUB_TOKEN か、この3つだけを求めたトークンを使うことを `checks.test.sh` で確かめる。
+- 理由：
+  - ユーザーが手を動かさなくても、平日の昼に Issue から PR まで続けて進むようにする。
+  - `concurrency` の保留は1本で、新しい起動が来ると前の保留は取り消される。ラベルをまとめて付けると途中の起動が消える。Issue の実行の途中に `review-gate` が起こした修正の実行も、その実行の終わりに起こす次の実行や cron に押し出される。起動に意味を持たせず毎回状態から選べば、押し出されても次の実行が同じものを拾う。
+  - 公開の `GET /apps/claude` を読むと、Claude の App は `workflows: write` を求めていた。action の FAQ の「Workflow の書き込みの権限がない」と食い違う。action は `additional_permissions` を書いたときだけ、求める権限を交換のサーバーへ送る。書かないときの範囲はサーバーが決める。
+- 判断：
+  - cron は朝の始まりと、失敗や押し出しのあとの拾い直しの役である。間隔は、止まった流れが動き出すまでの待ちの上限になるので、30分にした。実行の途中に来た cron は保留になり、次の実行として動く。
+  - 失敗のあとは次を起こさない。鍵の期限切れのような原因では、残りの Issue を次々に `needs-human` にしてしまう。30分ごとの cron と1日の上限で抑える。
+  - 平日の昼の外では次を起こさない。夜にラベルを付けた実行は動くが、続きは翌朝の cron に任せる。夜にユーザーと手元で作業する分と、Claude の利用枠を取り合わないためである。
+  - 上限の5件は仮の値で、`auto.yml` の `DAILY_LIMIT` で変える。PR の修正はレビューの3回で止まるので、1日の実行は最大で15本ほどになる。
+  - 件数は `issues/events` を新しい順に読み、ページが今日の分で埋まっているときだけ次のページを読む。読めないときと、新しい順に並んでいないときは始めない。並びが違うと今日の分を読み落とし、上限が黙って外れるからである。
+  - 修正を待つ PR はレビューの回数でも絞る。`needs-human` を付けられずに赤で終わった PR や、人が `needs-human` を外した PR を、回数が残っていなければ拾わない。回数が残っている PR は、人が `needs-human` を外すと自走が修正に戻る。
+  - `Depends:` は広く読む。読み落とすと依存より先に実装が始まり、余分に読んでも待つだけで済む。
+- 採らなかった案：
+  - 次の実行を起こす前に、保留の実行があるかを `gh run list` で見る案。cron とラベルの起動による押し出しは防げず、保留の実行が API でどう見えるかも手元で確かめられない。
+  - cron の実行を別の group に置き、空いているときだけ起こす案。ラベルの起動による押し出しが残り、job も増える。
+  - 修正の実行に別の group を使う案。Issue と修正の Claude が同時に動き、1本ずつの前提が崩れる。
+  - 件数を Claude の開いた PR で数える案。PR を開けずに失敗した実行を数えない。
+  - 件数を `work` の動いた実行で数える案。実行ごとに job を読むので、API の呼び出しが増える。
+  - App の権限を `GET /apps/claude` で確かめ、`workflows` があれば止める案。今の App は `workflows: write` を求めているので、いつも止まる。
+- 限界：
+  - GitHub Actions ではまだ動かしていない。cron、`next` の起動、`statusCheckRollup` を読む権限（`checks: read`、`statuses: read`）、`issues/events` の並びは、実物で確かめる。
+  - 交換のサーバーが、求めた権限でトークンを発行するかは手元で確かめられない。検査は Workflow の書き方を見るだけで、インストールの権限は見ない。実物では、自走の実行で `.github/workflows/` を変える push が拒まれるのを見て確かめる。
+  - `work` の job は `id-token: write` を持つ。Claude の Bash から OIDC の要求の環境変数が見えると、Claude が権限を書かずに交換のサーバーへ送り、App の全範囲（`workflows: write` を含む）のトークンを取れる見込みがある。上の push の確かめ方は渡されたトークンしか試さないので、この経路は分からない。試運転で、Claude の Bash から `ACTIONS_ID_TOKEN_REQUEST_URL` と `ACTIONS_ID_TOKEN_REQUEST_TOKEN` が見えるかを、値を出さずに有無だけ確かめる。トークンによらずに `.github/workflows/` への push を拒む手段（ruleset のパスの制限など）は、非公開のプランで使えるかを確かめていない。
+  - `additional_permissions` の扱いの読みは、action の `d535f51` のものである。action の SHA を上げたら読み直す。
+  - 時間帯は cron（UTC）と `auto-next.sh`（日本時間）の2か所にある。変えるときは両方を直す。
+  - 日本の祝日も動く。止めたい日は `stop` を付ける。cron は GitHub の混み具合で遅れることがある。
+  - 非公開の間は、何も選ばずに終わる cron の実行も Actions の分数を使う。1回を1分とすると、何もない日は20分である。
+  - 修正を待つ PR の見分けは、`review-gate` が人に渡すときに `needs-human` を付けることと、レビューの回数に頼る。`needs-human` を付けるのに失敗した PR は、回数が残っている間だけ修正の対象として選ばれる。
+  - 準備の段階の失敗（npm や apt の障害）が続くと、30分ごとに Issue を1件ずつ人に渡し、1日の上限にかからない。Claude の利用枠は使わない。
+  - `gh issue list --limit 200` に入らない開いた Issue は、`Depends` の相手でも閉じたものとして扱う。
+- 根拠（確認日 2026-11-03）：
+  - `GET https://api.github.com/apps/claude` の `permissions`
+  - claude-code-action `d535f51` の `src/github/token.ts`、`docs/configuration.md` の「Additional Permissions」、`docs/security.md` の「GitHub App Permissions」、`docs/faq.md`
+
 ## 2026-11-03 提出までリポジトリを非公開にする
 
 - 決めたこと：`ko1ynnky/yomimasu` は提出まで非公開にし、提出の前にユーザーが公開に戻す。公開に戻す操作はユーザーが行い、セッションと自走からは行わない。
@@ -76,6 +119,7 @@
 
 - 決めたこと：
   - `auto.yml` は Issue にラベルが付いたとき、手動の起動、`review-gate.sh` の修正の起動だけで動く。平日の cron と、終わったら次の Issue を起こす処理は入れない。
+    - 改めた点（2026-11-03）：平日の昼の cron と、1件を終えたら次を起こす処理を入れた。「平日の昼に自走を順に進める」を見る。
   - 選ぶのは、作者がユーザーで `go:merge` か `go:pr` が付き、`night`、`needs-human`、`in-progress` のない Issue である。開いている Issue に `stop` があれば、実行も自動マージも始めない。
   - 実行は1本ずつにする。`work` の job が始まったあとの失敗、取り消し、成果がない終わり方は、`needs-human` を付けて人に渡す。成果は、Issue なら開いた PR、PR の修正なら head の変化で確かめる。
   - `review.yml` は `claude[bot]` の PR だけをレビューする。Claude は書き込みの権限のない job で、読み取りの `github.token` を渡して動かす。結果を使う処理は `review-gate` の job に分ける。
@@ -94,7 +138,9 @@
   - `work` の job は書き込みの権限のまま、Claude のあとの step を動かす。要約のスクリプトは Claude の前に写すが、job を分けるまでは任意のコマンドから守れない。
   - `Bash(git push origin auto/*)` は `auto/x:production` も通す見込みである。`production` を作るときに保護する。
   - 修正の起動は保留が1本なので、別の実行に押し出されることがある。`stop` の間に起こした修正は動き直さない。`pick` の失敗は人に渡らない。どれも Issue を1本ずつ試す間は起きにくいので、試運転のあとに直す。
+    - 改めた点（2026-11-03）：順に進めると押し出しがほぼ毎回起きるので、どの実行も状態から修正を待つ PR を拾う形にした。`stop` を外したあとの修正も、これで拾い直す。`pick` の失敗は今も人に渡らない。
   - GitHub の FAQ は、Claude の GitHub App に Workflow の書き込みの権限がないと書く。実物では試運転で確かめる。
+    - 改めた点（2026-11-03）：App は `workflows: write` を求めていた。`additional_permissions` で求める権限を書く形にした。「平日の昼に自走を順に進める」を見る。
   - `gh pr merge --auto` は必須の検査がないとすぐマージするので、自動マージは `main` の保護を設定してから使う。
   - `go:merge` の自動マージは `GITHUB_TOKEN` で有効にするので、マージの push では `ci.yml` が動かない見込みである。スカッシュのメッセージの検査はこの経路では動かない。
     - 改めた点（2026-11-03）：PR #6 で見込みのとおりになり、Issue も閉じなかった。`after-merge` の job で `ci.yml` を起こし、Issue を閉じる形にした。「自動マージの後始末を Workflow の中で行う」を見る。
@@ -146,6 +192,7 @@
 - 採らなかった案：`pull_request_target` で base の Workflow を動かす案。secret を持つ Workflow が PR の内容を扱う形は、外部の入力を閉じる考え方と合わない。`deny-names` は PR の本文を読むので、PR のコードを実行しない形なら作れるが、下の限界の前提が崩れるまでは使わない。
 - 限界：
   - `pull_request` の実行は PR 側の `ci.yml` を使う。同じリポジトリへ push でき、Workflow も書き換えられる人は、secret に届き、`risk-gate` も外せる。fork の PR には secret は渡らない。自動の実行のトークンに `workflows` の権限を渡さないことを前提にし、`auto.yml` を書くときに確かめる。
+    - 改めた点（2026-11-03）：`auto.yml` は Claude のトークンに contents、pull_requests、issues だけを求め、`checks.test.sh` がそれを確かめる。交換のサーバーが求めたとおりに発行するかは、実物で確かめる。
   - 導入の PR がマージされるまでは、取り出した版の `deny-names.sh` が secret を読む。導入の PR は人が読むので、そこで止める。
   - `no-audio`、`no-secrets`、`deny-names` の本文の検査は、今の版のファイルだけを見る。PR の途中のコミットで足して消したものは見つけない。
   - PR のタイトルと本文は検査しない。タイトルから作るスカッシュのメッセージは、`main` への push で見つける。
