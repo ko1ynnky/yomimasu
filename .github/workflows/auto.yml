@@ -1,9 +1,12 @@
 name: auto
 
-# 平日の cron と、終わったら次の Issue を起こす処理は、試運転が通るまで入れない。
 on:
   issues:
     types: [labeled]
+  # 日本時間の平日 9:00〜18:30 に30分ごとに起こす。cron は UTC で書く。日本の祝日は見分けず、平日として動く。
+  # 時間帯を変えるときは auto-next.sh も合わせる。
+  schedule:
+    - cron: '*/30 0-9 * * 1-5'
   workflow_dispatch:
     inputs:
       pr:
@@ -15,12 +18,12 @@ permissions:
 
 # 保留は1本だけなので、関係のないラベルの実行が修正の実行を押し出さないよう、別の group へ逃がす。
 concurrency:
-  group: ${{ (github.event_name == 'workflow_dispatch' || startsWith(github.event.label.name, 'go:')) && 'auto' || format('auto-ignored-{0}', github.run_id) }}
+  group: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || startsWith(github.event.label.name, 'go:')) && 'auto' || format('auto-ignored-{0}', github.run_id) }}
   cancel-in-progress: false
 
 jobs:
   pick:
-    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.sender.login == github.repository_owner && (github.event.label.name == 'go:merge' || github.event.label.name == 'go:pr')) }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || (github.event.sender.login == github.repository_owner && (github.event.label.name == 'go:merge' || github.event.label.name == 'go:pr')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     # PR の修正を待つかどうかを review-gate の検査の結果で見るので、checks と statuses も読む。
@@ -157,3 +160,21 @@ jobs:
           else
             gh pr edit "$PR" --add-label needs-human
           fi
+
+  # 次の実行は、この実行が終わるまで保留になる。
+  # 失敗のあとは起こさない。鍵の期限切れのような原因では、残りの Issue を次々に人へ渡すことになるので、30分ごとの cron に任せる。
+  next:
+    needs: work
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: 次の実行を起こす
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/auto-next.sh

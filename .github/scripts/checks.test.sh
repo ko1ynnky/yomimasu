@@ -559,6 +559,41 @@ auto_target
 expect_target 'auto-target: 拾い終えたら何も選ばない' ''
 unset AUTO_LIMIT
 
+# 引数：日本時間の曜日（1 が月曜）と時刻を続けた NOW。NEXT_FAIL を付けると起動に失敗させる。
+next_run() {
+  local dir
+  dir=$(mktemp -d "$work/next.XXXXXX")
+  : >"$dir/gh.log"
+  [[ -n ${NEXT_FAIL:-} ]] && : >"$dir/fail-dispatch"
+  next_exit=0
+  PATH="$auto_gh:$PATH" GH_LOG="$dir/gh.log" GH_FIXTURES="$dir" NOW="$1" bash "$scripts/auto-next.sh" >/dev/null 2>&1 || next_exit=$?
+  next_log=$(cat "$dir/gh.log")
+}
+
+expect_next() {
+  local what=$1 want=$2 want_exit=${3:-0}
+  if [[ $next_log != "$want" || $next_exit != "$want_exit" ]]; then
+    ng "$what（期待 '$want' exit $want_exit、結果 '$next_log' exit $next_exit）"
+  fi
+}
+
+next_run 31200
+expect_next 'auto-next: 平日の昼なら次の実行を起こす' 'workflow run auto.yml'
+next_run 10900
+expect_next 'auto-next: 9:00 から起こす' 'workflow run auto.yml'
+next_run 51830
+expect_next 'auto-next: 18:30 まで起こす' 'workflow run auto.yml'
+next_run 10859
+expect_next 'auto-next: 9:00 より前は起こさない' ''
+next_run 51831
+expect_next 'auto-next: 18:30 を過ぎたら起こさない' ''
+next_run 61200
+expect_next 'auto-next: 土曜は起こさない' ''
+next_run 71200
+expect_next 'auto-next: 日曜は起こさない' ''
+NEXT_FAIL=1 next_run 31200
+expect_next 'auto-next: 起こせなければ失敗で終わる' 'workflow run auto.yml' 1
+
 if ((failures > 0)); then
   printf '%s 件失敗\n' "$failures"
   exit 1
