@@ -100,6 +100,12 @@ jobs:
           bot_id: '209825114'
           bot_name: claude[bot]
           allowed_bots: claude[bot],github-actions[bot]
+          # Claude の App は workflows: write を持つ。権限を書かないと、トークンの範囲は Anthropic の交換のサーバーが決める。
+          # 書いた権限だけを求め、.github/workflows/ を書き換える push を GitHub に拒ませる。workflows は足さない。
+          additional_permissions: |
+            contents: write
+            pull_requests: write
+            issues: write
           prompt: |
             ${{ needs.pick.outputs.issue != '' && format('Issue #{0} を実装する。', needs.pick.outputs.issue) || format('PR #{0} のレビューの指摘に答える。', needs.pick.outputs.pr) }}
 

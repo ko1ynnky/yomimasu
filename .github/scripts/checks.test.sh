@@ -594,6 +594,49 @@ expect_next 'auto-next: 日曜は起こさない' ''
 NEXT_FAIL=1 next_run 31200
 expect_next 'auto-next: 起こせなければ失敗で終わる' 'workflow run auto.yml' 1
 
+# Claude のトークンが workflows の権限を持たず、.github/workflows/ を書き換える push を GitHub が拒むことを、
+# Workflow の書き方で確かめる。GITHUB_TOKEN は workflows を持てない。Claude の App は workflows: write を求めているので、
+# App のトークンは additional_permissions で権限を書いて求めたときだけ、範囲が Workflow から決まる。
+# Claude の step ごとに、GITHUB_TOKEN を渡していれば github_token の値を、App のトークンなら求めた権限を1行で出す。
+claude_tokens() {
+  awk '
+    function indent_of(line) { match(line, /^ */); return RLENGTH }
+    function flush() {
+      if (!inside) return
+      print (token != "") ? token : "app:" perms
+      inside = 0
+    }
+    /^[[:space:]]*$/ { next }
+    {
+      current = indent_of($0)
+      if (block && current > block_indent) {
+        line = $0
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "", line)
+        perms = (perms == "") ? line : perms "," line
+        next
+      }
+      block = 0
+      if (inside && current <= step_indent) flush()
+    }
+    /uses: anthropics\/claude-code-action@/ { inside = 1; step_indent = current; token = ""; perms = ""; next }
+    inside && /^[[:space:]]*additional_permissions:[[:space:]]*\|/ { block = 1; block_indent = current; next }
+    inside && /^[[:space:]]*github_token:/ { token = $0; sub(/^[[:space:]]*github_token:[[:space:]]*/, "", token); next }
+    END { flush() }
+  ' "$1"
+}
+
+app_token='app:contents: write,pull_requests: write,issues: write'
+for workflow in "$scripts"/../workflows/*.yml; do
+  tokens=$(claude_tokens "$workflow")
+  if [[ $(grep -c 'uses: anthropics/claude-code-action@' "$workflow") != $(grep -c . <<<"$tokens") ]]; then
+    ng "token: $(basename "$workflow") の Claude の step をすべて読めない（結果 $tokens）"
+  fi
+  while IFS= read -r token; do
+    [[ -z $token || $token == '${{ github.token }}' || $token == "$app_token" ]] && continue
+    ng "token: $(basename "$workflow") の Claude には、GITHUB_TOKEN か、contents、pull_requests、issues だけを求めたトークンを渡す（結果 $token）"
+  done <<<"$tokens"
+done
+
 if ((failures > 0)); then
   printf '%s 件失敗\n' "$failures"
   exit 1
