@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import type { Phrase } from '../../.claude/skills/yomimasu/scripts/cards.ts';
-import { alternativeOnLine, notationOnLine } from '../../scripts/cards/assemble.ts';
+import type { Card, Phrase } from '../../.claude/skills/yomimasu/scripts/cards.ts';
+import { alternativeOnLine, compareWithList, notationOnLine } from '../../scripts/cards/assemble.ts';
+import type { ListCard, ListLine } from '../../scripts/cards/list.ts';
 import { applyDiffs, soundDiffs } from '../../scripts/cards/sound.ts';
 
 const phrase = (kana: string, heads = [0]): Phrase => {
@@ -129,4 +130,50 @@ test('別の読みが伸ばしの印のあとに字を残すときは止まる',
 
 test('別の読みの字が行の読みと合わないときは止まる', () => {
   assert.throws(() => alternativeOnLine(lower99, 3, 'よをおもーゆえにものおもーみわ', 'よのおもーゆえにー'), /合わない/);
+});
+
+test('照合で4列を移せない行は、止まらずに不一致として数え、一覧の本文の字を出さない', () => {
+  const phrases = [phrase('あはれとも'), phrase('いふべきひとは', [0, 4]), phrase('おもほえで'), phrase('けふをかぎりの'), phrase('いのちともがな')];
+  const card: Card = {
+    no: 45,
+    phrases,
+    kimariji: null,
+    ruleStretches: [],
+    stretches: [],
+    marked: { upper: '', lower: '' },
+    furigana: [],
+    notes: [],
+    alternatives: [],
+    yoin: { phrase: 4, after: 7 },
+    origin: {
+      text: { source: 'csv', fixes: [] },
+      sound: { basis: 'rules', checkedWith: 'list', kept: [] },
+      ruleStretches: { source: 'rules' },
+      stretches: { source: 'list', page: 5 },
+      notation: { source: 'booklet', page: 5, readFrom: 'list' },
+    },
+  };
+  const line = (plain: string, reading: string, extra: Partial<ListLine> = {}): ListLine => ({
+    plain,
+    marked: plain,
+    reading,
+    marks: [],
+    rubies: [],
+    alternative: null,
+    ...extra,
+  });
+  const list: ListCard = {
+    no: 45,
+    page: 5,
+    upper: line('あはれともいふべき犬を思ほえで', 'あわれともゆうべきひとわおもおえで', {
+      rubies: [{ start: 9, text: 'ひとわ', base: '犬を' }],
+      alternative: 'あわれともーゆー',
+    }),
+    lower: line('けふをかぎりのいのちともがな', 'きょうおかぎりのいのちともがな', { rubies: [{ start: 0, text: 'き', base: 'け' }] }),
+    yoin: true,
+  };
+  const result = compareWithList([card], [list]);
+  assert.deepEqual(result.notationMismatches.furigana, ['45 番の上の句', '45 番の下の句']);
+  assert.deepEqual(result.notationMismatches.alternatives, ['45 番の上の句']);
+  assert.doesNotMatch(JSON.stringify(result), /犬/);
 });

@@ -167,8 +167,8 @@ function unitBoundaries(kana: string, base: string): number[] {
   const pattern = (kanji: string) => new RegExp(`^${units.map((unit) => (KANJI_RUN.test(unit) ? kanji : `(${unit})`)).join('')}$`, 'u');
   const shortest = kana.match(pattern('(.+?)'));
   const longest = kana.match(pattern('(.+)'));
-  if (!shortest || !longest) throw new Error(`本文「${base}」がふりがなの範囲の仮名「${kana}」と合わない`);
-  if (shortest.join() !== longest.join()) throw new Error(`本文「${base}」の漢字の読みの範囲が「${kana}」から決まらない`);
+  if (!shortest || !longest) throw new Error(`一覧の本文の字が、ふりがなの範囲の仮名「${kana}」と合わない`);
+  if (shortest.join() !== longest.join()) throw new Error(`一覧の本文の漢字の読みの範囲が「${kana}」から決まらない`);
   let at = 0;
   return shortest.slice(1, -1).map((piece) => (at += piece.length));
 }
@@ -230,11 +230,11 @@ export function alternativeOnLine(phrases: Phrase[], offset: number, reading: st
 
 type Notation = Pick<Card, 'furigana' | 'notes' | 'alternatives'>;
 
+const alternativesOfLine = (phrases: Phrase[], offset: number, line: ListLine): AltReading[] =>
+  line.alternative === null ? [] : [alternativeOnLine(phrases, offset, line.reading, line.alternative)];
+
 function notationOfLine(phrases: Phrase[], offset: number, line: ListLine): Notation {
-  return {
-    ...notationOnLine(phrases, offset, line.rubies),
-    alternatives: line.alternative === null ? [] : [alternativeOnLine(phrases, offset, line.reading, line.alternative)],
-  };
+  return { ...notationOnLine(phrases, offset, line.rubies), alternatives: alternativesOfLine(phrases, offset, line) };
 }
 
 const yoinOf = (phrases: Phrase[], list: ListCard): Stretch | null => (list.yoin ? { phrase: 4, after: phrases[4].kana.length } : null);
@@ -305,6 +305,15 @@ export type Comparison = {
   notation: Record<keyof Notation | 'yoin', number>;
 };
 
+// 照合では例外で止めずに、不一致として数える。例外の文には一覧の字が入ることがあり、照合は件数と札の番号だけを出すからである。
+function attempt<T>(compute: () => T): T | null {
+  try {
+    return compute();
+  } catch {
+    return null;
+  }
+}
+
 // 一覧の本文の漢字は、読みが分からないものとして扱い、仮名の字だけを見る。
 const matchesKana = (plain: string, kana: string) =>
   new RegExp(`^${[...plain].map((char) => (KANJI_RUN.test(char) ? '.+?' : char)).join('')}$`, 'u').test(kana);
@@ -338,13 +347,14 @@ export function compareWithList(cards: readonly Card[], list: readonly ListCard[
         continue;
       }
       const onSide = (s: { phrase: number }) => (first === 0 ? s.phrase <= 2 : s.phrase >= 3);
-      const expected = stretchesOnLine(phrases, first, line.marks);
-      if (JSON.stringify(expected) !== JSON.stringify(card.stretches.filter(onSide))) result.stretchMismatches.push(label);
-      const notation = notationOfLine(phrases, first, line);
+      const expected = attempt(() => stretchesOnLine(phrases, first, line.marks));
+      if (expected === null || JSON.stringify(expected) !== JSON.stringify(card.stretches.filter(onSide))) result.stretchMismatches.push(label);
+      const placed = attempt(() => notationOnLine(phrases, first, line.rubies));
+      const notation = { furigana: placed?.furigana ?? null, notes: placed?.notes ?? null, alternatives: attempt(() => alternativesOfLine(phrases, first, line)) };
       for (const key of ['furigana', 'notes', 'alternatives'] as const) {
-        result.notation[key] += notation[key].length;
+        result.notation[key] += notation[key]?.length ?? 0;
         const actual = key === 'alternatives' ? card.alternatives.filter((a) => onSide({ phrase: a.phrases[0] })) : card[key].filter(onSide);
-        if (JSON.stringify(notation[key]) !== JSON.stringify(actual)) result.notationMismatches[key].push(label);
+        if (notation[key] === null || JSON.stringify(notation[key]) !== JSON.stringify(actual)) result.notationMismatches[key].push(label);
       }
     }
   }
