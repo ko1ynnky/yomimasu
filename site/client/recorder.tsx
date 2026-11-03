@@ -73,4 +73,5 @@ function Recorder() {
 
 export function mountRecorder(element: HTMLElement) {
   render(<Recorder />, element);
+  return () => render(null, element);
 }

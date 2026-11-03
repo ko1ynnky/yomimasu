@@ -37,7 +37,7 @@ const page = { title: '総論', bodyHtml: '<p>本文です。</p>', scriptPath: 
 test('HTML には本文が入るので、JS なしで読める', () => {
   const html = renderDocument(page);
   assert.match(html, /<html lang="ja">/);
-  assert.match(html, /<div class="screen"><p>本文です。<\/p><\/div>/);
+  assert.match(html, /<div class="screen"><p>本文です。<\/p><section class="ask">/);
   assert.match(html, /<script type="module" src="\/assets\/main.js">/);
 });
 
@@ -53,16 +53,23 @@ test('上の帯から入口へ戻れる', () => {
 
 test('コマンドのあるページは、実行の行と読んだファイルの行を本文の上に出す', () => {
   const html = renderDocument({ ...page, command: '総論を学ぶ', readName: '総論.md' });
-  assert.match(html, /<div class="run"><div><span class="gt">&gt;<\/span> \/yomimasu 総論を学ぶ<\/div><div class="read">● Read 総論.md<\/div><\/div><div class="screen">/);
+  assert.match(html, /<div class="screen"><div class="run"><div><span class="gt">&gt;<\/span> \/yomimasu 総論を学ぶ<\/div><div class="read">● Read 総論.md<\/div><\/div><p>本文です。<\/p>/);
 });
 
 test('入口には実行の行がない', () => {
   assert.doesNotMatch(renderDocument(page), /class="run"/);
 });
 
-test('道具の画面は、入力の行を出さずに1画面に収める', () => {
+test('道具の画面は、入力の行を出さず、間を詰めて1画面に収める', () => {
   assert.match(renderDocument(page), /<div class="ask-line">/);
-  assert.doesNotMatch(renderDocument({ ...page, command: '読む 77番 29番', tool: true }), /class="ask-line"/);
+  const tool = renderDocument({ ...page, command: '読む 77番 29番', tool: true });
+  assert.doesNotMatch(tool, /class="ask-line"/);
+  assert.match(tool, /<div class="screen screen--stage">/);
+});
+
+test('本文の <!-- ask --> から後ろは、入力の行の下に次の操作として置く', () => {
+  const html = renderDocument({ ...page, bodyHtml: '<p>本文</p>\n<!-- ask -->\n<p><a href="/read/">まず1回読む</a></p>' });
+  assert.match(html, /<p>本文<\/p>\n<section class="ask"><div class="ask-line">.*<\/div>\n<p><a href="\/read\/">まず1回読む<\/a><\/p><\/section><\/div>/);
 });
 
 test('タイトルとコマンドの記号は HTML として解釈させない', () => {

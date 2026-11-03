@@ -26,7 +26,18 @@ test('帯は 5・3・1・6 の順に区間の名前と秒数を出し、単位�
 for (const [width, height] of [
   [360, 560],
   [393, 659],
+  [1280, 720],
 ]) {
+  test(`読む画面の歌詞は ${width}×${height} で歌詞の面からはみ出さない`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto('/read/rec/');
+    const lyrics = await page.getByTestId('lyrics').boundingBox();
+    const face = await page.locator('.lyric').boundingBox();
+    if (!lyrics || !face) throw new Error('歌詞の面がない');
+    expect(lyrics.y).toBeGreaterThanOrEqual(face.y);
+    expect(lyrics.y + lyrics.height).toBeLessThanOrEqual(face.y + face.height);
+  });
+
   test(`読む画面の帯の文字は ${width}×${height} で区間から切れない`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     await page.goto('/read/rec/');

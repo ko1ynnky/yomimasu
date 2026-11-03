@@ -1,6 +1,7 @@
 import './ui/base.css';
 
-type Mount = (element: HTMLElement) => void;
+// 返す関数は要素が外れたときに呼ぶ。本文を入れ替えたときに、画面の木とマイクを残さないためである。
+type Mount = (element: HTMLElement) => () => void;
 
 // 画面ごとの処理は、その画面の要素があるときだけ読み込む。各 Issue は自分の行のファイルだけを触る。
 const ELEMENTS: Record<string, () => Promise<Mount>> = {
@@ -15,8 +16,16 @@ for (const [name, load] of Object.entries(ELEMENTS)) {
   customElements.define(
     name,
     class extends HTMLElement {
+      #unmount?: () => void;
+
       async connectedCallback() {
-        (await load())(this);
+        const mount = await load();
+        if (this.isConnected) this.#unmount = mount(this);
+      }
+
+      disconnectedCallback() {
+        this.#unmount?.();
+        this.#unmount = undefined;
       }
     },
   );

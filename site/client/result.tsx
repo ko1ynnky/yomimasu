@@ -15,4 +15,5 @@ function Result() {
 
 export function mountResult(element: HTMLElement) {
   render(<Result />, element);
+  return () => render(null, element);
 }

@@ -43,6 +43,15 @@ function runLines(command: string | undefined, readName: string | undefined): st
 // 入力の行は飾りで、自由入力の欄は作らない。押せるのは本文の中のリンクとボタンだけである。
 const ASK_LINE = '<div class="ask-line"><span class="gt">&gt;</span> /yomimasu <span class="caret"></span></div>';
 
+// Markdown では本文の並びしか書けないので、入力の行の下に置く次の操作や一覧は印で分ける。
+const ASK_MARK = '<!-- ask -->';
+
+function screenHtml(bodyHtml: string, tool: boolean | undefined): string {
+  const at = bodyHtml.indexOf(ASK_MARK);
+  const [main, next] = at === -1 ? [bodyHtml, ''] : [bodyHtml.slice(0, at), bodyHtml.slice(at + ASK_MARK.length)];
+  return tool ? main + next : `${main}<section class="ask">${ASK_LINE}${next}</section>`;
+}
+
 export function renderDocument({ title, bodyHtml, scriptPath, stylePaths, command, readName, tool }: DocumentParts): string {
   return `<!doctype html>
 <html lang="ja">
@@ -56,7 +65,7 @@ ${stylePaths.map((path) => `<link rel="stylesheet" href="${path}">`).join('\n')}
 <body>
 <div class="app">
 <header class="bar"><a href="/">/yomimasu</a><span class="step"></span></header>
-<main>${runLines(command, readName)}<div class="screen">${bodyHtml}</div>${tool ? '' : ASK_LINE}</main>
+<main><div class="${tool ? 'screen screen--stage' : 'screen'}">${runLines(command, readName)}${screenHtml(bodyHtml, tool)}</div></main>
 </div>
 <script type="module" src="${scriptPath}"></script>
 </body>

@@ -3,25 +3,10 @@ import deck from '../../../.claude/skills/yomimasu/assets/cards.json' with { typ
 import type { Card } from '../../../.claude/skills/yomimasu/scripts/cards.ts';
 import { pairLines, type PairLines } from '../lyrics.ts';
 import { pairFromSearch, segmentsOf, type Segment } from '../pair.ts';
+import { Band } from './band.tsx';
 import './stage.css';
 
 const cards = deck.cards as unknown as Card[];
-
-export function Band({ segments, fixed = false }: { segments: readonly Segment[]; fixed?: boolean }) {
-  return (
-    <div class={fixed ? 'band band--static' : 'band'} role="img" aria-label={segments.map((s) => `${s.name} ${s.sec}秒`).join('、')}>
-      {segments.map((s) => (
-        <div class="seg" data-seg={s.key} style={{ flex: `${s.sec} 1 0` }} aria-hidden="true">
-          <i />
-          <span>
-            {s.name}
-            <small>{s.sec}</small>
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 const Line = ({ text, first }: { text: string; first?: boolean }) => (
   <div class={first ? 'ln break' : 'ln'}>{[...text].map((ch) => (ch === 'ー' ? <span class="nobi">ー</span> : ch))}</div>
@@ -62,4 +47,5 @@ export function Stage({ segments, lines }: { segments: readonly Segment[]; lines
 export function mountStage(element: HTMLElement) {
   const pair = pairFromSearch(location.search);
   render(<Stage segments={segmentsOf(pair)} lines={pairLines(cards, pair)} />, element);
+  return () => render(null, element);
 }
