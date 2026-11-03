@@ -221,6 +221,7 @@ export function alternativeOnLine(phrases: Phrase[], offset: number, reading: st
       throw new Error(`別の読み「${marked}」が行の読みと合わない`);
     }
   }
+  if (!marked.endsWith('ー')) throw new Error(`別の読み「${marked}」が伸ばしの印で終わらない`);
   const stretches = stretchesOnLine(phrases, offset, marks);
   const last = stretches.at(-1);
   if (!last || last.after !== phrases[last.phrase - offset].kana.length) throw new Error(`別の読み「${marked}」が句の終わりで終わらない`);
