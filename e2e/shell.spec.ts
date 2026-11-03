@@ -30,7 +30,7 @@ for (const width of [360, 393]) {
 
 test('道具の画面は実行の行だけを出し、入力の行を出さない', async ({ page }) => {
   await page.goto('/read/rec/');
-  await expect(page.locator('.run')).toContainText('/yomimasu 読む 77番 29番');
+  await expect(page.locator('.run')).toContainText('/yomimasu 読む ほ あはれ');
   await expect(page.locator('.ask-line')).toHaveCount(0);
 });
 

@@ -7,6 +7,8 @@ export type Take = {
   readingStartSec: number;
   assisted: boolean;
   pair: Pair;
+  // 余韻の入りをタップした位置（帯の時計の秒）。補助ありで押したときだけ持つ。測るのは音なので、測定には使わない。
+  yoinTapSec?: number;
 };
 
 // 録音は端末の外へ出さず、ページを開き直せば消える。保存して残すのは C8 で決める。
