@@ -1,8 +1,15 @@
 import { type Card, type Phrase } from '../../.claude/skills/yomimasu/scripts/cards.ts';
 import type { Pair } from './pair.ts';
 
-// ruby は実際の発音で、札の読みの表の sound から作る。表の sound は「思ふ」を「おもう」としており、
-// ガイドは「おもお」と振ると決めている。表を直す作業はこの画面の範囲の外なので、表のまま振る。
+// ruby は実際の発音で、札の読みの表の sound から作る。表の sound は「思ふ」を「おもう」としているが、
+// ガイドは「お段に続く語中・語尾の「ふ」は「お」」と決めている（77番の思ふ→おもお）。表を直すのはこの画面の範囲の外なので、
+// 振るときにだけ直す。表の sound は測定とスキルも使うので、ここからは書き換えない。表が直ったら toO は要らなくなる。
+// 対象は1字の「ふ」が「う」になる読み替えに限る。いふ→ゆう、てふ→ちょう は表のとおりに振る。
+// あふ→おう（10番の逢坂など）は、仮名では「あ」に続くので、ガイドの決まりに当たるか読めない。ユーザーが決めるまで表のとおりに振る。
+const O_ROW = new Set('おこそとのほもよろをごぞどぼぽ');
+const toO = (phrase: Phrase, at: number, diff: Phrase['diffs'][number]) =>
+  diff.kana === 'ふ' && diff.sound === 'う' && at > 0 && O_ROW.has(soundOf(phrase, at - 1, at).at(-1)!) ? 'お' : diff.sound;
+
 export type Token = { text: string; ruby?: string; nobi?: true };
 export type Line = Token[];
 export type PairLines = { shimo: Line[]; kami: Line[] };
@@ -27,7 +34,7 @@ function soundOf(phrase: Phrase, from: number, to: number): string {
       sound += diff.sound;
       at = diff.at + diff.kana.length;
     } else {
-      sound += diff ? diff.sound[at - diff.at] : phrase.kana[at];
+      sound += !diff ? phrase.kana[at] : diff.kana.length === 1 ? toO(phrase, at, diff) : diff.sound[at - diff.at];
       at += 1;
     }
   }

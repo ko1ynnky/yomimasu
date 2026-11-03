@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import deck from '../../.claude/skills/yomimasu/assets/cards.json' with { type: 'json' };
 import type { Card } from '../../.claude/skills/yomimasu/scripts/cards.ts';
-import { lineText, pairLines, secondShimoLineAt, tapCharOf, type Line } from '../../site/client/lyrics.ts';
+import { lineText, pairLines, secondShimoLineAt, tapCharOf, type Line, type Token } from '../../site/client/lyrics.ts';
 
 const cards = deck.cards as unknown as Card[];
 
@@ -47,8 +47,21 @@ test('行をつなぐと、札の表の伸ばす印を置いた本文と同じ�
   }
 });
 
-test('伸ばす印を除いて読みと仮名をつなぐと、札の表の実際の発音と同じになる', () => {
-  const heard = (line: Line) => line.filter((token) => !token.nobi).map((token) => token.ruby ?? token.text).join('');
+test('お段に続く語中・語尾の「ふ」には、「う」ではなく「お」を振る', () => {
+  // docs/ui-guide.md の「ふりがな」の行で、77番の「思ふ」は「おもお」と振ると決めている。札の表の sound は「おもう」のままである。
+  const lines = pairLines(cards, { shimo: 77, kami: 29 });
+  assert.equal(withRuby(lines.shimo[1]), '{逢|あ}{は|わ}{む|ん}とぞー{思|おも}{ふ|お}');
+  // 単独の「ふ」に限る。い段に続く「いふ」や、字数の違う「てふ」は表のとおりに振る。
+  assert.equal(withRuby(pairLines(cards, { shimo: 81, kami: 45 }).kami[1]), '{い|ゆ}{ふ|う}べき{人|ひと}{は|わ}ー');
+  assert.equal(withRuby(pairLines(cards, { shimo: 2, kami: 1 }).shimo[0]), '{衣|ころも}ー{干|ほ}す{てふ|ちょう}ー');
+  // 10番の「逢坂」（あふ→おう）は仮名では「あ」に続くので、ユーザーが決めるまで表のとおりに振る。
+  assert.match(withRuby(pairLines(cards, { shimo: 10, kami: 1 }).shimo[1]), /おうさか/u);
+});
+
+test('伸ばす印を除いて読みと仮名をつなぐと、札の表の実際の発音と同じになる（お段に続く「ふ」を除く）', () => {
+  // 表の sound に戻して比べる。お段に続く「ふ」だけが表と違うことを確かめる。
+  const asTable = (token: Token) => (token.text === 'ふ' && token.ruby === 'お' ? 'う' : (token.ruby ?? token.text));
+  const heard = (line: Line) => line.filter((token) => !token.nobi).map(asTable).join('');
   for (const card of cards.filter((c) => c.no !== 0)) {
     const other = card.no === 1 ? 2 : 1;
     const { shimo } = pairLines(cards, { shimo: card.no, kami: other });
