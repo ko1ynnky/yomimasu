@@ -1,6 +1,6 @@
 # 札の読みの表
 
-Web とスキルが共通に使うための、序歌と100首の表の説明である。表の本体は `.claude/skills/yomimasu/assets/cards.json`、型と計算は同じスキルの `scripts/cards.ts` にある。今この表を読むのは `scripts/cards/` とテストだけで、画面と測定はまだ読んでいない。
+Web とスキルが共通に使うための、序歌と100首の表の説明である。表の本体は `.claude/skills/yomimasu/assets/cards.json`、型と計算は同じスキルの `scripts/cards.ts` にある。今この表を読むのは `scripts/cards/`、テスト、画面の歌詞の部品（`site/client/lyrics.ts`）で、測定はまだ読んでいない。
 
 ## 持っているもの
 

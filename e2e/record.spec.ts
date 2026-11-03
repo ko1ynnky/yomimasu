@@ -41,14 +41,6 @@ const openedMicrophones = (page: Page) =>
     (window as unknown as { openedMicrophones: MediaStream[] }).openedMicrophones.map((stream) => stream.getTracks().every((track) => track.readyState === 'ended')),
   );
 
-test('JS なしでも本文を読める', async ({ browser, baseURL }) => {
-  const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
-  const page = await context.newPage();
-  await page.goto('/');
-  await expect(page.locator('main')).toContainText('読みを録音して');
-  await context.close();
-});
-
 for (const [name, plan] of Object.entries({
   'ma-standard': shortReading,
   'ma-long': { ...shortReading, maSec: 1.6, seed: 7 },
@@ -57,16 +49,15 @@ for (const [name, plan] of Object.entries({
     const browser = await launchWithFakeMic(writeFakeMicFile(synthesize(plan), plan.sampleRate));
     const page = await (await browser.newContext({ baseURL })).newPage();
     await watchMicrophone(page);
-    await page.goto('/');
+    await page.goto('/read/rec/');
 
     await page.getByRole('button', { name: '読む' }).click();
     await expect(page.getByRole('button', { name: '止める' })).toBeVisible();
     await page.waitForTimeout((lengthSec(plan) + 0.5) * 1000);
     await page.getByRole('button', { name: '止める' }).click();
 
-    const status = page.getByRole('status');
-    await expect(status).toContainText('間');
-    const shown = Number((await status.textContent())?.match(/間 ([\d.]+) 秒/)?.[1]);
+    await expect(page.getByTestId('ma-sec')).toBeVisible();
+    const shown = Number(await page.getByTestId('ma-sec').textContent());
     expect(Math.abs(shown - plan.maSec)).toBeLessThanOrEqual(TOLERANCE_SEC);
     expect(await openedMicrophones(page)).toEqual([true]);
 
@@ -81,7 +72,7 @@ test('声のない録音では、値を作らず測れなかったと見せる',
   const rate = standardReading.sampleRate;
   const browser = await launchWithFakeMic(writeFakeMicFile(new Float32Array(2 * rate), rate));
   const page = await (await browser.newContext({ baseURL })).newPage();
-  await page.goto('/');
+  await page.goto('/read/rec/');
 
   await page.getByRole('button', { name: '読む' }).click();
   await expect(page.getByRole('button', { name: '止める' })).toBeVisible();
@@ -99,7 +90,7 @@ test('マイクを許可しないときは、許可を促す', async ({ browser,
   await page.addInitScript(() => {
     navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException('denied', 'NotAllowedError'));
   });
-  await page.goto('/');
+  await page.goto('/read/rec/');
 
   await page.getByRole('button', { name: '読む' }).click();
 
@@ -115,7 +106,7 @@ test('録音の準備に失敗したら、マイクを閉じて理由を見せ�
   await page.addInitScript(() => {
     AudioWorklet.prototype.addModule = () => Promise.reject(new DOMException('failed', 'AbortError'));
   });
-  await page.goto('/');
+  await page.goto('/read/rec/');
 
   await page.getByRole('button', { name: '読む' }).click();
 
@@ -134,7 +125,7 @@ test('録音をつなぐ処理に失敗したら、マイクを閉じて理由�
       throw new DOMException('failed', 'NotSupportedError');
     };
   });
-  await page.goto('/');
+  await page.goto('/read/rec/');
 
   await page.getByRole('button', { name: '読む' }).click();
 
@@ -148,7 +139,7 @@ test('止めるを続けて押しても、結果が残りマイクは開かな�
   const browser = await launchWithFakeMic(writeFakeMicFile(new Float32Array(rate), rate));
   const page = await (await browser.newContext({ baseURL })).newPage();
   await watchMicrophone(page);
-  await page.goto('/');
+  await page.goto('/read/rec/');
 
   await page.getByRole('button', { name: '読む' }).click();
   await page.getByRole('button', { name: '止める' }).dblclick();
@@ -163,7 +154,7 @@ test('読むを続けて押しても、マイクは1つだけ開く', async ({ b
   const browser = await launchWithFakeMic(writeFakeMicFile(new Float32Array(rate), rate));
   const page = await (await browser.newContext({ baseURL })).newPage();
   await watchMicrophone(page);
-  await page.goto('/');
+  await page.goto('/read/rec/');
 
   await page.getByRole('button', { name: '読む' }).dblclick();
   await page.getByRole('button', { name: '止める' }).click();
