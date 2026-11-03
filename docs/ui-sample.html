@@ -128,7 +128,7 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
 .tate .ln { white-space: nowrap; }
 .tate .ln.break { margin-block-start: 0.7em; }
 .nobi { color: var(--shu); }
-.kimari { color: var(--shu-deep); font-weight: 700; }
+.kimari { color: var(--shu-deep); }
 .poem { display: grid; grid-template-columns: minmax(0, 1fr) 72px; gap: 8px; padding: 16px 14px; }
 .poem .tate { justify-self: center; --lyric: clamp(22px, 6.4vw, 28px); }
 .poem aside { display: flex; flex-direction: column; justify-content: space-between; text-align: right; }
@@ -225,7 +225,7 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
       <a href="#/trap/"><span>/トラップを知る</span><small>知らないと踏む点</small></a>
       <a href="#/karuta/"><span>/1首ずつ学ぶ</span><small>100首と序歌</small></a>
       <a href="#/saitei/"><span>/最低限これだけ</span><small>急に頼まれたら</small></a>
-      <a href="#/practice/"><span>/練習モード</span><small>読んで、アプリが採点</small></a>
+      <a href="#/practice/"><span>/練習モード</span><small>読んで、秒数を測る</small></a>
     </nav>
   </section>
   <p class="fine footnote">個人の制作物です。協会の公認ではなく、Anthropic の製品でもありません。Claude Code で作りました。</p>
@@ -325,7 +325,7 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
 
 <template id="t-practice">
   <h2 class="head">どの組を読みますか。</h2>
-  <p class="fine">練習モードでは、お手本を聞かずに読み始められます。読むとアプリが採点します。</p>
+  <p class="fine">練習モードでは、お手本を聞かずに読み始められます。読むと、間などの秒数を測ります。</p>
   <div class="card rows more">
     <div><span class="prio prio--hi">おすすめ</span><a href="#/read/rec/" data-cmd="読む 77番 29番">77番の下の句 → 29番の上の句</a></div>
     <div><a href="#/karuta/">ほかの組は1首のページから選ぶ</a></div>
@@ -452,12 +452,12 @@ const PAIR_SEC = SEGMENTS.reduce((sum, s) => sum + s.sec, 0);
 // 札の読みの表にふりがなと余韻の印の列がまだないので、見本にも入れない。
 // [文字, 重み] の重みは読みの長さの仮の値で、C3 の本物の時刻ではない。
 const CARDS = {
-  53: { kim: 'なげき', kami: ['嘆きつつー', 'ひとりぬる夜のー', '明くるまーはー'], shimo: ['いかにー久しきー', 'ものとかはーしる'],
+  53: { kim: 'なげき', kami: ['嘆きつつー', 'ひとり寝る夜のー', '明くる間ーはー'], shimo: ['いかにー久しきー', 'ものとかはー知る'],
     care: [['優先 高', '3字目まで、はっきり', 'なげけとて（86番）と3字目で分かれるので、なげき まで明瞭に読みます。']], head: 2 },
 };
 const LYRICS = [
   { at: 0, to: 2.3, chars: [['わ'], ['れ'], ['て'], ['も'], ['ー', 2], ['末', 2], ['に'], ['ー', 2]] },
-  { at: 2.3, to: 5, chars: [['あ'], ['は'], ['む'], ['と'], ['ぞ'], ['ー', 2], ['思', 2], ['ふ']] },
+  { at: 2.3, to: 5, chars: [['逢'], ['は'], ['む'], ['と'], ['ぞ'], ['ー', 2], ['思', 2], ['ふ']] },
   { at: 9, to: 10.6, brk: true, chars: [['心', 3], ['あ'], ['て'], ['に'], ['ー', 2]] },
   { at: 10.6, to: 12.6, chars: [['折'], ['ら'], ['ば'], ['や'], ['折'], ['ら'], ['む'], ['ー', 2]] },
   { at: 12.6, to: 15, chars: [['初', 2], ['霜', 2], ['ー', 2], ['の'], ['ー', 2]] },
@@ -590,7 +590,7 @@ function mountSoron(el) {
 }
 
 const LIMIT_SEC = 25;
-const KAMI_START_SEC = 9;
+const KAMI_START_SEC = PAIR_SEC - SEGMENTS.at(-1).sec;
 const COUNT_FROM = 3;
 const COUNT_BEAT_MS = 800;
 
@@ -623,6 +623,7 @@ function mountRec(el) {
     };
     assistOn.addEventListener('click', () => setAssist(true));
     assistOff.addEventListener('click', () => setAssist(false));
+    setAssist(stage.dataset.assist !== 'off');
     controls.querySelector('[data-start]').addEventListener('click', toCount);
     tools.hidden = false;
   }
