@@ -4,9 +4,11 @@
 # ユーザーの GitHub の名前を第1引数で受ける。
 set -euo pipefail
 
+# Depends は Issue の本文に「Depends: #12」の形で1行ずつ書く。読み落とすと先に進んでしまうので、
+# Depends: を含む行の番号はすべて依存として扱う。
 jq -r --arg owner "$1" '
   def names: [.labels[].name];
-  def depends: [.body | scan("Depends: #([0-9]+)") | .[0] | tonumber];
+  def depends: [.body | splits("\n") | select(contains("Depends:")) | scan("#([0-9]+)") | .[0] | tonumber];
   (map(.number)) as $open
   | if any(.[]; names | index("stop")) then empty else
       map(select(
