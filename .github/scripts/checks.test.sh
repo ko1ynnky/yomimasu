@@ -398,6 +398,12 @@ expect fail 'risk-gate: 依存の宣言は止める' '' gate package.json
 expect fail 'risk-gate: ロックファイルは止める' '' gate package-lock.json
 expect fail 'risk-gate: 1件でも外があれば止める' '' gate README.md wrangler.jsonc
 
+# 平日の昼に順に進める自走の検査。上の auto-pick の補助を使う。
+picked 1 'auto-pick: Depends の行がすべて閉じていれば進める' "$(issues "$(issue 1 go:merge owner $'Depends: #8\nDepends: #9')")"
+picked 2 'auto-pick: Depends の行を全部読み、どれか1つでも開いていれば飛ばす' "$(issues "$(issue 1 go:merge owner $'Depends: #8\n本文\nDepends: #3')" "$(issue 2 go:merge)" "$(issue 3 night)")"
+picked 2 'auto-pick: 改行が CRLF でも Depends を読む' "$(issues "$(issue 1 go:merge owner $'Depends: #8\r\nDepends: #3\r\n')" "$(issue 2 go:merge)" "$(issue 3 night)")"
+picked 2 'auto-pick: Depends の1行に並べた番号もすべて読む' "$(issues "$(issue 1 go:merge owner 'Depends: #8, #3')" "$(issue 2 go:merge)" "$(issue 3 night)")"
+
 if ((failures > 0)); then
   printf '%s 件失敗\n' "$failures"
   exit 1
