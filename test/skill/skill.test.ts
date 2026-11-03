@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 
@@ -33,6 +33,13 @@ for (const [name, file] of [
     for (const link of links) assert.ok(existsSync(join(dirname(file), link)), link);
   });
 }
+
+test('知識のファイルは、どれも入口の一覧の表に載っている', () => {
+  const readme = readFileSync(join(SKILL_DIR, 'references/README.md'), 'utf8');
+  const listed = new Set([...readme.matchAll(/^\| \[[^\]]+\]\(([^)]+\.md)\) \|/gm)].map((match) => match[1]));
+  const files = readdirSync(join(SKILL_DIR, 'references')).filter((name) => name.endsWith('.md') && name !== 'README.md');
+  for (const file of files) assert.ok(listed.has(file), file);
+});
 
 test('SKILL.md は入口の知識の本文へつなぐ', () => {
   assert.match(skill, /\(references\/README\.md\)/);
