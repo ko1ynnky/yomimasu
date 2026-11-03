@@ -10,7 +10,7 @@
 | 知識の文章 | `content/`、スキル `yomimasu` の `references/` | 権利を留保します。読むことと、個人の練習で使うことだけを認めます |
 | 札の文字のデータ | `.claude/skills/yomimasu/assets/cards.json` の本文の列 | 再利用を認めません。元のデータの権利は[外部のデータ](#外部のデータ)のとおりです |
 | そのほかのデータ | 置くときにここへ書きます | 再利用を認めません。出典と権利は、置くときにここへ書きます |
-| 札ごとの読みの表 | `.claude/skills/yomimasu/assets/cards.json`。同じ値を含む `scripts/cards/corrections.ts`、`.claude/skills/yomimasu/scripts/cards.ts` の札の番号、`test/cards/` の期待値 | 再利用を認めません。伸ばす箇所は全日本かるた協会の回答の範囲で使っています |
+| 札ごとの読みの表 | `.claude/skills/yomimasu/assets/cards.json`。同じ値を含む `scripts/cards/corrections.ts`、`.claude/skills/yomimasu/scripts/cards.ts` の札の番号、`test/cards/` の期待値、`docs/ui-sample.html` の見本の3首と100首の決まり字 | 再利用を認めません。伸ばす箇所は全日本かるた協会の回答の範囲で使っています |
 | ロゴ、図、画像 | 置くときにここへ書きます | 再利用を認めません |
 | 音声 | リポジトリには置きません | 録音した人の権利のままです。再利用を認めません。出典は[音声](#音声)に書きます |
 

@@ -86,6 +86,7 @@ t-wada 式の TDD で書く。測定と次の1点のライブラリでは必須�
 - その Issue の中で閉じる判断と実装の経過は、Issue と PR のコメントに書く。
 - 日ごとの記録の書き方は [docs/claude-log/README.md](docs/claude-log/README.md) にある。
 - 測定の定義の置き場は `docs/measure.md` の1つだけで、Web とスキルはここに合わせる。
+- 画面の基準は [docs/ui-guide.md](docs/ui-guide.md) と見本の `docs/ui-sample.html` にある。画面に触る作業はここから始める。
 - 知識の文章は `content/` か、スキル `yomimasu` の `references/` に入れる。どちらも MIT License の範囲外である。
 - データ、図、画像を足す PR では、[NOTICE.md](NOTICE.md) の表に場所と出典も足す。
 - 音声ファイルは Git に入れず、リポジトリの外から読む。テストに使う音は実行時に作る。
