@@ -1,0 +1,1549 @@
+{
+  "sources": {
+    "csv": {
+      "title": "Ogura_Hyakunin_Isshu.csv",
+      "url": "https://github.com/nyoronjp/Ogura_Hyakunin_Isshu.csv",
+      "commit": "42cfd44d6c055488223661dad238e9c8a2b6df3e",
+      "file": "小倉百人一首.csv",
+      "license": "Unlicense",
+      "sha256": "f99510dcd54838a2be3bc8cd2e96d2063d799705248615906a939b4dcaeaf34b",
+      "use": "歌の本文の漢字の列と仮名の列"
+    },
+    "joka": {
+      "title": "序歌「難波津に」",
+      "pages": "5",
+      "use": "公開の本文データにないので、読み方一覧の本文の形で手で入れた。競技かるたで読む形で、一般の形とは四句の頭が違う"
+    },
+    "list": {
+      "title": "小倉百人一首 競技かるた読手テキスト HP掲載用抜粋版 読み方一覧",
+      "edition": "令和7年4月1日改訂版",
+      "url": "https://www.karuta.or.jp/karuta/reading/",
+      "pages": "5-15",
+      "sha256": "ae619e9a8a75e1702014f0c41d53b7ae8c32d3015926985090ad8a4c6c182a77",
+      "use": "本文の列の伸ばしの印の位置を、全日本かるた協会の回答の範囲で使う。33、44、74番の本文もこの形に合わせた。一覧のふりがなの字は表に持たず、発音の列と比べて語の切れ目を見つけるのに使った"
+    },
+    "rules": {
+      "title": "小倉百人一首 競技かるた読手テキスト HP掲載用抜粋版 読唱上の決まり",
+      "edition": "令和7年4月1日改訂版",
+      "pages": "3-4",
+      "use": "規則から出る伸ばす位置。上の句の終わりの手前の位置は、札の番号を読み方一覧の印で決めた"
+    }
+  },
+  "cards": [
+    {
+      "no": 0,
+      "phrases": [
+        {"text":"難波津に","kana":"なにはづに","sound":"なにわずに","parts":[["難波津","なにはづ"],["に","に"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"},{"at":3,"kana":"づ","sound":"ず","rule":"四つ仮名"}]},
+        {"text":"咲くやこの花","kana":"さくやこのはな","sound":"さくやこのはな","parts":[["咲","さ"],["くやこの","くやこの"],["花","はな"]],"diffs":[]},
+        {"text":"冬ごもり","kana":"ふゆごもり","sound":"ふゆごもり","parts":[["冬","ふゆ"],["ごもり","ごもり"]],"diffs":[]},
+        {"text":"今を春べと","kana":"いまをはるべと","sound":"いまおはるべと","parts":[["今","いま"],["を","を"],["春","はる"],["べと","べと"]],"diffs":[{"at":2,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"咲くやこの花","kana":"さくやこのはな","sound":"さくやこのはな","parts":[["咲","さ"],["くやこの","くやこの"],["花","はな"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"難波津にー咲くやこの花ー冬ごもーりー","lower":"今をー春べとー咲くやこのー花"},
+      "origin": {"text":{"source":"joka","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "kimariji": null
+    },
+    {
+      "no": 1,
+      "phrases": [
+        {"text":"秋の田の","kana":"あきのたの","sound":"あきのたの","parts":[["秋","あき"],["の","の"],["田","た"],["の","の"]],"diffs":[]},
+        {"text":"かりほの庵の","kana":"かりほのいほの","sound":"かりおのいおの","parts":[["かりほの","かりほの"],["庵","いほ"],["の","の"]],"diffs":[{"at":2,"kana":"ほ","sound":"お","rule":"語中のハ行"},{"at":5,"kana":"ほ","sound":"お","rule":"語中のハ行"}]},
+        {"text":"苫をあらみ","kana":"とまをあらみ","sound":"とまおあらみ","parts":[["苫","とま"],["をあらみ","をあらみ"]],"diffs":[{"at":2,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"わが衣手は","kana":"わがころもでは","sound":"わがころもでわ","parts":[["わが","わが"],["衣手","ころもで"],["は","は"]],"diffs":[{"at":6,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"露にぬれつつ","kana":"つゆにぬれつつ","sound":"つゆにぬれつつ","parts":[["露","つゆ"],["にぬれつつ","にぬれつつ"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"秋の田のーかりほの庵のー苫をあらーみー","lower":"わがー衣手はー露にぬれーつつ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "kimariji": {"kana":"あきの","sound":"あきの"}
+    },
+    {
+      "no": 2,
+      "phrases": [
+        {"text":"春過ぎて","kana":"はるすぎて","sound":"はるすぎて","parts":[["春","はる"],["過","す"],["ぎて","ぎて"]],"diffs":[]},
+        {"text":"夏来にけらし","kana":"なつきにけらし","sound":"なつきにけらし","parts":[["夏","なつ"],["来","き"],["にけらし","にけらし"]],"diffs":[]},
+        {"text":"白妙の","kana":"しろたへの","sound":"しろたえの","parts":[["白妙","しろたへ"],["の","の"]],"diffs":[{"at":3,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"衣干すてふ","kana":"ころもほすてふ","sound":"ころもほすちょう","parts":[["衣","ころも"],["干","ほ"],["すてふ","すてふ"]],"diffs":[{"at":5,"kana":"てふ","sound":"ちょう","rule":"長音"}]},
+        {"text":"天の香具山","kana":"あまのかぐやま","sound":"あまのかぐやま","parts":[["天","あま"],["の","の"],["香具","かぐ"],["山","やま"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"春過ぎてー夏来にけらしー白妙ーのー","lower":"衣ー干すてふー天の香具ー山"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "kimariji": {"kana":"はるす","sound":"はるす"}
+    },
+    {
+      "no": 3,
+      "phrases": [
+        {"text":"あしびきの","kana":"あしびきの","sound":"あしびきの","parts":[["あしびきの","あしびきの"]],"diffs":[]},
+        {"text":"山鳥の尾の","kana":"やまどりのをの","sound":"やまどりのおの","parts":[["山鳥","やまどり"],["の","の"],["尾","を"],["の","の"]],"diffs":[{"at":5,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"しだり尾の","kana":"しだりをの","sound":"しだりおの","parts":[["しだり","しだり"],["尾","を"],["の","の"]],"diffs":[{"at":3,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"ながながし夜を","kana":"ながながしよを","sound":"ながながしよお","parts":[["ながながし","ながながし"],["夜","よ"],["を","を"]],"diffs":[{"at":6,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"ひとりかも寝む","kana":"ひとりかもねむ","sound":"ひとりかもねん","parts":[["ひとりかも","ひとりかも"],["寝","ね"],["む","む"]],"diffs":[{"at":6,"kana":"む","sound":"ん","rule":"む"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"あしびきのー山鳥の尾のーしだり尾ーのー","lower":"ながながしー夜をーひとりかもー寝む"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "kimariji": {"kana":"あし","sound":"あし"}
+    },
+    {
+      "no": 4,
+      "phrases": [
+        {"text":"田子の浦に","kana":"たごのうらに","sound":"たごのうらに","parts":[["田子","たご"],["の","の"],["浦","うら"],["に","に"]],"diffs":[]},
+        {"text":"うち出でてみれば","kana":"うちいでてみれば","sound":"うちいでてみれば","parts":[["うち","うち"],["出","い"],["でてみれば","でてみれば"]],"diffs":[]},
+        {"text":"白妙の","kana":"しろたへの","sound":"しろたえの","parts":[["白妙","しろたへ"],["の","の"]],"diffs":[{"at":3,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"富士の高嶺に","kana":"ふじのたかねに","sound":"ふじのたかねに","parts":[["富士","ふじ"],["の","の"],["高嶺","たかね"],["に","に"]],"diffs":[]},
+        {"text":"雪は降りつつ","kana":"ゆきはふりつつ","sound":"ゆきわふりつつ","parts":[["雪","ゆき"],["は","は"],["降","ふ"],["りつつ","りつつ"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"田子の浦にーうち出でてみればー白妙ーのー","lower":"富士のー高嶺にー雪は降りーつつ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "kimariji": {"kana":"たご","sound":"たご"}
+    },
+    {
+      "no": 5,
+      "phrases": [
+        {"text":"奥山に","kana":"おくやまに","sound":"おくやまに","parts":[["奥山","おくやま"],["に","に"]],"diffs":[]},
+        {"text":"紅葉踏み分け","kana":"もみぢふみわけ","sound":"もみじふみわけ","parts":[["紅葉","もみぢ"],["踏","ふ"],["み","み"],["分","わ"],["け","け"]],"diffs":[{"at":2,"kana":"ぢ","sound":"じ","rule":"四つ仮名"}]},
+        {"text":"鳴く鹿の","kana":"なくしかの","sound":"なくしかの","parts":[["鳴","な"],["く","く"],["鹿","しか"],["の","の"]],"diffs":[]},
+        {"text":"声聞く時ぞ","kana":"こゑきくときぞ","sound":"こえきくときぞ","parts":[["声","こゑ"],["聞","き"],["く","く"],["時","とき"],["ぞ","ぞ"]],"diffs":[{"at":1,"kana":"ゑ","sound":"え","rule":"ワ行"}]},
+        {"text":"秋は悲しき","kana":"あきはかなしき","sound":"あきわかなしき","parts":[["秋","あき"],["は","は"],["悲","かな"],["しき","しき"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"奥山にー紅葉踏み分けー鳴く鹿ーのー","lower":"声ー聞く時ぞー秋は悲ーしき"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "kimariji": {"kana":"おく","sound":"おく"}
+    },
+    {
+      "no": 6,
+      "phrases": [
+        {"text":"かささぎの","kana":"かささぎの","sound":"かささぎの","parts":[["かささぎの","かささぎの"]],"diffs":[]},
+        {"text":"渡せる橋に","kana":"わたせるはしに","sound":"わたせるはしに","parts":[["渡","わた"],["せる","せる"],["橋","はし"],["に","に"]],"diffs":[]},
+        {"text":"置く霜の","kana":"おくしもの","sound":"おくしもの","parts":[["置","お"],["く","く"],["霜","しも"],["の","の"]],"diffs":[]},
+        {"text":"白きを見れば","kana":"しろきをみれば","sound":"しろきおみれば","parts":[["白","しろ"],["きを","きを"],["見","み"],["れば","れば"]],"diffs":[{"at":3,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"夜ぞ更けにける","kana":"よぞふけにける","sound":"よぞふけにける","parts":[["夜","よ"],["ぞ","ぞ"],["更","ふ"],["けにける","けにける"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"かささぎのー渡せる橋にー置く霜ーのー","lower":"白きをー見ればー夜ぞ更けにーける"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "kimariji": {"kana":"かさ","sound":"かさ"}
+    },
+    {
+      "no": 7,
+      "phrases": [
+        {"text":"天の原","kana":"あまのはら","sound":"あまのはら","parts":[["天","あま"],["の","の"],["原","はら"]],"diffs":[]},
+        {"text":"ふりさけみれば","kana":"ふりさけみれば","sound":"ふりさけみれば","parts":[["ふりさけみれば","ふりさけみれば"]],"diffs":[]},
+        {"text":"春日なる","kana":"かすがなる","sound":"かすがなる","parts":[["春日","かすが"],["なる","なる"]],"diffs":[]},
+        {"text":"三笠の山に","kana":"みかさのやまに","sound":"みかさのやまに","parts":[["三笠","みかさ"],["の","の"],["山","やま"],["に","に"]],"diffs":[]},
+        {"text":"出でし月かも","kana":"いでしつきかも","sound":"いでしつきかも","parts":[["出","い"],["でし","でし"],["月","つき"],["かも","かも"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"天の原ーふりさけみればー春日ーなるー","lower":"三笠のー山にー出でし月ーかも"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "kimariji": {"kana":"あまの","sound":"あまの"}
+    },
+    {
+      "no": 8,
+      "phrases": [
+        {"text":"わが庵は","kana":"わがいほは","sound":"わがいおわ","parts":[["わが","わが"],["庵","いほ"],["は","は"]],"diffs":[{"at":3,"kana":"ほ","sound":"お","rule":"語中のハ行"},{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"都の辰巳","kana":"みやこのたつみ","sound":"みやこのたつみ","parts":[["都","みやこ"],["の","の"],["辰巳","たつみ"]],"diffs":[]},
+        {"text":"しかぞ住む","kana":"しかぞすむ","sound":"しかぞすむ","parts":[["しかぞ","しかぞ"],["住","す"],["む","む"]],"diffs":[]},
+        {"text":"世をうぢ山と","kana":"よをうぢやまと","sound":"よおうじやまと","parts":[["世","よ"],["をうぢ","をうぢ"],["山","やま"],["と","と"]],"diffs":[{"at":1,"kana":"を","sound":"お","rule":"ワ行"},{"at":3,"kana":"ぢ","sound":"じ","rule":"四つ仮名"}]},
+        {"text":"人はいふなり","kana":"ひとはいふなり","sound":"ひとわゆうなり","parts":[["人","ひと"],["はいふなり","はいふなり"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"},{"at":3,"kana":"いふ","sound":"ゆう","rule":"長音"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"わが庵はー都の辰巳ーしかぞー住むー","lower":"世をーうぢ山とー人はいふーなり"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":4,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "kimariji": {"kana":"わがい","sound":"わがい"}
+    },
+    {
+      "no": 9,
+      "phrases": [
+        {"text":"花の色は","kana":"はなのいろは","sound":"はなのいろわ","parts":[["花","はな"],["の","の"],["色","いろ"],["は","は"]],"diffs":[{"at":5,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"移りにけりな","kana":"うつりにけりな","sound":"うつりにけりな","parts":[["移","うつ"],["りにけりな","りにけりな"]],"diffs":[]},
+        {"text":"いたづらに","kana":"いたづらに","sound":"いたずらに","parts":[["いたづらに","いたづらに"]],"diffs":[{"at":2,"kana":"づ","sound":"ず","rule":"四つ仮名"}]},
+        {"text":"わが身世にふる","kana":"わがみよにふる","sound":"わがみよにふる","parts":[["わが","わが"],["身","み"],["世","よ"],["にふる","にふる"]],"diffs":[]},
+        {"text":"ながめせしまに","kana":"ながめせしまに","sound":"ながめせしまに","parts":[["ながめせしまに","ながめせしまに"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"花の色はー移りにけりなーいたづらーにー","lower":"わが身ー世にふるーながめせしーまに"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":5,"kana":"ふ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "kimariji": {"kana":"はなの","sound":"はなの"}
+    },
+    {
+      "no": 10,
+      "phrases": [
+        {"text":"これやこの","kana":"これやこの","sound":"これやこの","parts":[["これやこの","これやこの"]],"diffs":[]},
+        {"text":"行くも帰るも","kana":"ゆくもかへるも","sound":"ゆくもかえるも","parts":[["行","ゆ"],["くも","くも"],["帰","かへ"],["るも","るも"]],"diffs":[{"at":4,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"別れては","kana":"わかれては","sound":"わかれてわ","parts":[["別","わか"],["れては","れては"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"知るも知らぬも","kana":"しるもしらぬも","sound":"しるもしらぬも","parts":[["知","し"],["るも","るも"],["知","し"],["らぬも","らぬも"]],"diffs":[]},
+        {"text":"逢坂の関","kana":"あふさかのせき","sound":"おうさかのせき","parts":[["逢坂","あふさか"],["の","の"],["関","せき"]],"diffs":[{"at":0,"kana":"あふ","sound":"おう","rule":"長音"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"これやこのー行くも帰るもー別れてーはー","lower":"知るもー知らぬもー逢坂のー関"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "kimariji": {"kana":"これ","sound":"これ"}
+    },
+    {
+      "no": 11,
+      "phrases": [
+        {"text":"わたの原","kana":"わたのはら","sound":"わたのはら","parts":[["わたの","わたの"],["原","はら"]],"diffs":[]},
+        {"text":"八十島かけて","kana":"やそしまかけて","sound":"やそしまかけて","parts":[["八十島","やそしま"],["かけて","かけて"]],"diffs":[]},
+        {"text":"漕ぎ出でぬと","kana":"こぎいでぬと","sound":"こぎいでぬと","parts":[["漕","こ"],["ぎ","ぎ"],["出","い"],["でぬと","でぬと"]],"diffs":[]},
+        {"text":"人にはつげよ","kana":"ひとにはつげよ","sound":"ひとにわつげよ","parts":[["人","ひと"],["にはつげよ","にはつげよ"]],"diffs":[{"at":3,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"海人の釣船","kana":"あまのつりぶね","sound":"あまのつりぶね","parts":[["海人","あま"],["の","の"],["釣","つり"],["船","ぶね"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"わたの原八十島かけてー漕ぎ出でぬーとー","lower":"人にはーつげよー海人の釣ー船"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "kimariji": {"kana":"わたのはらや","sound":"わたのはらや"}
+    },
+    {
+      "no": 12,
+      "phrases": [
+        {"text":"天つ風","kana":"あまつかぜ","sound":"あまつかぜ","parts":[["天","あま"],["つ","つ"],["風","かぜ"]],"diffs":[]},
+        {"text":"雲の通ひ路","kana":"くものかよひぢ","sound":"くものかよいじ","parts":[["雲","くも"],["の","の"],["通","かよ"],["ひ","ひ"],["路","ぢ"]],"diffs":[{"at":5,"kana":"ひ","sound":"い","rule":"語中のハ行"},{"at":6,"kana":"ぢ","sound":"じ","rule":"四つ仮名"}]},
+        {"text":"吹きとぢよ","kana":"ふきとぢよ","sound":"ふきとじよ","parts":[["吹","ふ"],["きとぢよ","きとぢよ"]],"diffs":[{"at":3,"kana":"ぢ","sound":"じ","rule":"四つ仮名"}]},
+        {"text":"乙女の姿","kana":"をとめのすがた","sound":"おとめのすがた","parts":[["乙女","をとめ"],["の","の"],["姿","すがた"]],"diffs":[{"at":0,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"しばしとどめむ","kana":"しばしとどめむ","sound":"しばしとどめん","parts":[["しばしとどめむ","しばしとどめむ"]],"diffs":[{"at":6,"kana":"む","sound":"ん","rule":"む"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"天つ風ー雲の通ひ路ー吹きとぢーよー","lower":"乙女のー姿ーしばしとどーめむ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "kimariji": {"kana":"あまつ","sound":"あまつ"}
+    },
+    {
+      "no": 13,
+      "phrases": [
+        {"text":"筑波嶺の","kana":"つくばねの","sound":"つくばねの","parts":[["筑波嶺","つくばね"],["の","の"]],"diffs":[]},
+        {"text":"峰より落つる","kana":"みねよりおつる","sound":"みねよりおつる","parts":[["峰","みね"],["より","より"],["落","お"],["つる","つる"]],"diffs":[]},
+        {"text":"みなの川","kana":"みなのがは","sound":"みなのがわ","parts":[["みなの","みなの"],["川","がは"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"恋ぞつもりて","kana":"こひぞつもりて","sound":"こいぞつもりて","parts":[["恋","こひ"],["ぞつもりて","ぞつもりて"]],"diffs":[{"at":1,"kana":"ひ","sound":"い","rule":"語中のハ行"}]},
+        {"text":"淵となりぬる","kana":"ふちとなりぬる","sound":"ふちとなりぬる","parts":[["淵","ふち"],["となりぬる","となりぬる"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"筑波嶺のー峰より落つるーみなのー川ー","lower":"恋ぞーつもりてー淵となりーぬる"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "kimariji": {"kana":"つく","sound":"つく"}
+    },
+    {
+      "no": 14,
+      "phrases": [
+        {"text":"陸奥の","kana":"みちのくの","sound":"みちのくの","parts":[["陸奥","みちのく"],["の","の"]],"diffs":[]},
+        {"text":"しのぶもぢずり","kana":"しのぶもぢずり","sound":"しのぶもじずり","parts":[["しのぶもぢずり","しのぶもぢずり"]],"diffs":[{"at":4,"kana":"ぢ","sound":"じ","rule":"四つ仮名"}]},
+        {"text":"たれゆゑに","kana":"たれゆゑに","sound":"たれゆえに","parts":[["たれゆゑに","たれゆゑに"]],"diffs":[{"at":3,"kana":"ゑ","sound":"え","rule":"ワ行"}]},
+        {"text":"乱れそめにし","kana":"みだれそめにし","sound":"みだれそめにし","parts":[["乱","みだ"],["れそめにし","れそめにし"]],"diffs":[]},
+        {"text":"われならなくに","kana":"われならなくに","sound":"われならなくに","parts":[["われならなくに","われならなくに"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
+      "marked": {"upper":"陸奥のーしのぶもぢずりーたれゆゑーにー","lower":"乱れそめーにしーわれならーなくに"},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"たれゆえに","to":"たれゆゑに","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "kimariji": {"kana":"みち","sound":"みち"}
+    },
+    {
+      "no": 15,
+      "phrases": [
+        {"text":"君がため","kana":"きみがため","sound":"きみがため","parts":[["君","きみ"],["がため","がため"]],"diffs":[]},
+        {"text":"春の野に出でて","kana":"はるののにいでて","sound":"はるののにいでて","parts":[["春","はる"],["の","の"],["野","の"],["に","に"],["出","い"],["でて","でて"]],"diffs":[]},
+        {"text":"若菜摘む","kana":"わかなつむ","sound":"わかなつむ","parts":[["若菜","わかな"],["摘","つ"],["む","む"]],"diffs":[]},
+        {"text":"わが衣手に","kana":"わがころもでに","sound":"わがころもでに","parts":[["わが","わが"],["衣手","ころもで"],["に","に"]],"diffs":[]},
+        {"text":"雪は降りつつ","kana":"ゆきはふりつつ","sound":"ゆきわふりつつ","parts":[["雪","ゆき"],["は","は"],["降","ふ"],["りつつ","りつつ"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":1,"after":8},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":1,"after":8},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"君がため春の野に出でてー若菜ー摘むー","lower":"わがー衣手にー雪は降りーつつ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":4,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "kimariji": {"kana":"きみがためは","sound":"きみがためは"}
+    },
+    {
+      "no": 16,
+      "phrases": [
+        {"text":"立ち別れ","kana":"たちわかれ","sound":"たちわかれ","parts":[["立","た"],["ち","ち"],["別","わか"],["れ","れ"]],"diffs":[]},
+        {"text":"いなばの山の","kana":"いなばのやまの","sound":"いなばのやまの","parts":[["いなばの","いなばの"],["山","やま"],["の","の"]],"diffs":[]},
+        {"text":"峰に生ふる","kana":"みねにおふる","sound":"みねにおうる","parts":[["峰","みね"],["に","に"],["生","お"],["ふる","ふる"]],"diffs":[{"at":4,"kana":"ふ","sound":"う","rule":"語中のハ行"}]},
+        {"text":"まつとし聞かば","kana":"まつとしきかば","sound":"まつとしきかば","parts":[["まつとし","まつとし"],["聞","き"],["かば","かば"]],"diffs":[]},
+        {"text":"今帰り来む","kana":"いまかへりこむ","sound":"いまかえりこん","parts":[["今","いま"],["帰","かへ"],["り","り"],["来","こ"],["む","む"]],"diffs":[{"at":3,"kana":"へ","sound":"え","rule":"語中のハ行"},{"at":6,"kana":"む","sound":"ん","rule":"む"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"立ち別れーいなばの山のー峰に生ふーるー","lower":"まつとしー聞かばー今帰りー来む"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "kimariji": {"kana":"たち","sound":"たち"}
+    },
+    {
+      "no": 17,
+      "phrases": [
+        {"text":"ちはやぶる","kana":"ちはやぶる","sound":"ちはやぶる","parts":[["ちはやぶる","ちはやぶる"]],"diffs":[]},
+        {"text":"神代も聞かず","kana":"かみよもきかず","sound":"かみよもきかず","parts":[["神代","かみよ"],["も","も"],["聞","き"],["かず","かず"]],"diffs":[]},
+        {"text":"竜田川","kana":"たつたがは","sound":"たつたがわ","parts":[["竜田","たつた"],["川","がは"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"から紅に","kana":"からくれなゐに","sound":"からくれないに","parts":[["から","から"],["紅","くれなゐ"],["に","に"]],"diffs":[{"at":5,"kana":"ゐ","sound":"い","rule":"ワ行"}]},
+        {"text":"水くくるとは","kana":"みづくくるとは","sound":"みずくくるとわ","parts":[["水","みづ"],["くくるとは","くくるとは"]],"diffs":[{"at":1,"kana":"づ","sound":"ず","rule":"四つ仮名"},{"at":6,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"ちはやぶるー神代も聞かずー竜田ー川ー","lower":"からー紅にー水くくるーとは"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":0,"at":1,"kana":"は","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "kimariji": {"kana":"ちは","sound":"ちは"}
+    },
+    {
+      "no": 18,
+      "phrases": [
+        {"text":"住の江の","kana":"すみのえの","sound":"すみのえの","parts":[["住","すみ"],["の","の"],["江","え"],["の","の"]],"diffs":[]},
+        {"text":"岸に寄る波","kana":"きしによるなみ","sound":"きしによるなみ","parts":[["岸","きし"],["に","に"],["寄","よ"],["る","る"],["波","なみ"]],"diffs":[]},
+        {"text":"よるさへや","kana":"よるさへや","sound":"よるさえや","parts":[["よるさへや","よるさへや"]],"diffs":[{"at":3,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"夢の通ひ路","kana":"ゆめのかよひぢ","sound":"ゆめのかよいじ","parts":[["夢","ゆめ"],["の","の"],["通","かよ"],["ひ","ひ"],["路","ぢ"]],"diffs":[{"at":5,"kana":"ひ","sound":"い","rule":"語中のハ行"},{"at":6,"kana":"ぢ","sound":"じ","rule":"四つ仮名"}]},
+        {"text":"人目よくらむ","kana":"ひとめよくらむ","sound":"ひとめよくらん","parts":[["人目","ひとめ"],["よくらむ","よくらむ"]],"diffs":[{"at":6,"kana":"む","sound":"ん","rule":"む"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"住の江のー岸に寄る波ーよるさへーやー","lower":"夢のー通ひ路ー人目よくーらむ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15}},
+      "kimariji": {"kana":"す","sound":"す"}
+    },
+    {
+      "no": 19,
+      "phrases": [
+        {"text":"難波潟","kana":"なにはがた","sound":"なにわがた","parts":[["難波潟","なにはがた"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"短き葦の","kana":"みじかきあしの","sound":"みじかきあしの","parts":[["短","みじか"],["き","き"],["葦","あし"],["の","の"]],"diffs":[]},
+        {"text":"ふしの間も","kana":"ふしのまも","sound":"ふしのまも","parts":[["ふしの","ふしの"],["間","ま"],["も","も"]],"diffs":[]},
+        {"text":"逢はでこの世を","kana":"あはでこのよを","sound":"あわでこのよお","parts":[["逢","あ"],["はでこの","はでこの"],["世","よ"],["を","を"]],"diffs":[{"at":1,"kana":"は","sound":"わ","rule":"語中のハ行"},{"at":6,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"過ぐしてよとや","kana":"すぐしてよとや","sound":"すぐしてよとや","parts":[["過","す"],["ぐしてよとや","ぐしてよとや"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"難波潟ー短き葦のーふしの間ーもー","lower":"逢はでーこの世をー過ぐしてよーとや"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "kimariji": {"kana":"なにはが","sound":"なにわが"}
+    },
+    {
+      "no": 20,
+      "phrases": [
+        {"text":"わびぬれば","kana":"わびぬれば","sound":"わびぬれば","parts":[["わびぬれば","わびぬれば"]],"diffs":[]},
+        {"text":"今はた同じ","kana":"いまはたおなじ","sound":"いまはたおなじ","parts":[["今","いま"],["はた","はた"],["同","おな"],["じ","じ"]],"diffs":[]},
+        {"text":"難波なる","kana":"なにはなる","sound":"なにわなる","parts":[["難波","なには"],["なる","なる"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"身をつくしても","kana":"みをつくしても","sound":"みおつくしても","parts":[["身","み"],["をつくしても","をつくしても"]],"diffs":[{"at":1,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"逢はむとぞ思ふ","kana":"あはむとぞおもふ","sound":"あわんとぞおもう","parts":[["逢","あ"],["はむとぞ","はむとぞ"],["思","おも"],["ふ","ふ"]],"diffs":[{"at":1,"kana":"は","sound":"わ","rule":"語中のハ行"},{"at":2,"kana":"む","sound":"ん","rule":"む"},{"at":7,"kana":"ふ","sound":"う","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"わびぬればー今はた同じー難波ーなるー","lower":"身をーつくしてもー逢はむとぞー思ふ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":1,"at":2,"kana":"は","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "kimariji": {"kana":"わび","sound":"わび"}
+    },
+    {
+      "no": 21,
+      "phrases": [
+        {"text":"今来むと","kana":"いまこむと","sound":"いまこんと","parts":[["今","いま"],["来","こ"],["むと","むと"]],"diffs":[{"at":3,"kana":"む","sound":"ん","rule":"む"}]},
+        {"text":"いひしばかりに","kana":"いひしばかりに","sound":"いいしばかりに","parts":[["いひしばかりに","いひしばかりに"]],"diffs":[{"at":1,"kana":"ひ","sound":"い","rule":"語中のハ行"}]},
+        {"text":"長月の","kana":"ながつきの","sound":"ながつきの","parts":[["長月","ながつき"],["の","の"]],"diffs":[]},
+        {"text":"有明の月を","kana":"ありあけのつきを","sound":"ありあけのつきお","parts":[["有明","ありあけ"],["の","の"],["月","つき"],["を","を"]],"diffs":[{"at":7,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"待ち出でつるかな","kana":"まちいでつるかな","sound":"まちいでつるかな","parts":[["待","ま"],["ち","ち"],["出","い"],["でつるかな","でつるかな"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":8},{"phrase":4,"after":6}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":8},{"phrase":4,"after":6}],
+      "marked": {"upper":"今来むとーいひしばかりにー長月ーのー","lower":"有明のー月をー待ち出でつるーかな"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "kimariji": {"kana":"いまこ","sound":"いまこ"}
+    },
+    {
+      "no": 22,
+      "phrases": [
+        {"text":"吹くからに","kana":"ふくからに","sound":"ふくからに","parts":[["吹","ふ"],["くからに","くからに"]],"diffs":[]},
+        {"text":"秋の草木の","kana":"あきのくさきの","sound":"あきのくさきの","parts":[["秋","あき"],["の","の"],["草木","くさき"],["の","の"]],"diffs":[]},
+        {"text":"しをるれば","kana":"しをるれば","sound":"しおるれば","parts":[["しをるれば","しをるれば"]],"diffs":[{"at":1,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"むべ山風を","kana":"むべやまかぜを","sound":"むべやまかぜお","parts":[["むべ","むべ"],["山風","やまかぜ"],["を","を"]],"diffs":[{"at":6,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"嵐といふらむ","kana":"あらしといふらむ","sound":"あらしとゆうらん","parts":[["嵐","あらし"],["といふらむ","といふらむ"]],"diffs":[{"at":4,"kana":"いふ","sound":"ゆう","rule":"長音"},{"at":7,"kana":"む","sound":"ん","rule":"む"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":6}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":6}],
+      "marked": {"upper":"吹くからにー秋の草木のーしをるれーばー","lower":"むべー山風をー嵐といふーらむ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15}},
+      "kimariji": {"kana":"ふ","sound":"ふ"}
+    },
+    {
+      "no": 23,
+      "phrases": [
+        {"text":"月見れば","kana":"つきみれば","sound":"つきみれば","parts":[["月","つき"],["見","み"],["れば","れば"]],"diffs":[]},
+        {"text":"千々にものこそ","kana":"ちぢにものこそ","sound":"ちじにものこそ","parts":[["千々","ちぢ"],["にものこそ","にものこそ"]],"diffs":[{"at":1,"kana":"ぢ","sound":"じ","rule":"四つ仮名"}]},
+        {"text":"悲しけれ","kana":"かなしけれ","sound":"かなしけれ","parts":[["悲","かな"],["しけれ","しけれ"]],"diffs":[]},
+        {"text":"わが身ひとつの","kana":"わがみひとつの","sound":"わがみひとつの","parts":[["わが","わが"],["身","み"],["ひとつの","ひとつの"]],"diffs":[]},
+        {"text":"秋にはあらねど","kana":"あきにはあらねど","sound":"あきにわあらねど","parts":[["秋","あき"],["にはあらねど","にはあらねど"]],"diffs":[{"at":3,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":6}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":6}],
+      "marked": {"upper":"月見ればー千々にものこそー悲しけーれー","lower":"わが身ーひとつのー秋にはあらーねど"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":3,"kana":"ひ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "kimariji": {"kana":"つき","sound":"つき"}
+    },
+    {
+      "no": 24,
+      "phrases": [
+        {"text":"このたびは","kana":"このたびは","sound":"このたびわ","parts":[["このたびは","このたびは"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"幣もとりあへず","kana":"ぬさもとりあへず","sound":"ぬさもとりあえず","parts":[["幣","ぬさ"],["もとりあへず","もとりあへず"]],"diffs":[{"at":6,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"手向山","kana":"たむけやま","sound":"たむけやま","parts":[["手向","たむけ"],["山","やま"]],"diffs":[]},
+        {"text":"紅葉の錦","kana":"もみぢのにしき","sound":"もみじのにしき","parts":[["紅葉","もみぢ"],["の","の"],["錦","にしき"]],"diffs":[{"at":2,"kana":"ぢ","sound":"じ","rule":"四つ仮名"}]},
+        {"text":"神のまにまに","kana":"かみのまにまに","sound":"かみのまにまに","parts":[["神","かみ"],["のまにまに","のまにまに"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"このたびはー幣もとりあへずー手向ー山ー","lower":"紅葉のー錦ー神のまにーまに"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":1,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "kimariji": {"kana":"この","sound":"この"}
+    },
+    {
+      "no": 25,
+      "phrases": [
+        {"text":"名にし負はば","kana":"なにしおはば","sound":"なにしおわば","parts":[["名","な"],["にし","にし"],["負","お"],["はば","はば"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"逢坂山の","kana":"あふさかやまの","sound":"おうさかやまの","parts":[["逢坂山","あふさかやま"],["の","の"]],"diffs":[{"at":0,"kana":"あふ","sound":"おう","rule":"長音"}]},
+        {"text":"さねかづら","kana":"さねかづら","sound":"さねかずら","parts":[["さねかづら","さねかづら"]],"diffs":[{"at":3,"kana":"づ","sound":"ず","rule":"四つ仮名"}]},
+        {"text":"人に知られで","kana":"ひとにしられで","sound":"ひとにしられで","parts":[["人","ひと"],["に","に"],["知","し"],["られで","られで"]],"diffs":[]},
+        {"text":"くるよしもがな","kana":"くるよしもがな","sound":"くるよしもがな","parts":[["くるよしもがな","くるよしもがな"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
+      "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":4}],
+      "marked": {"upper":"名にし負はばー逢坂山のーさねかづーらー","lower":"人にー知られでーくるよしーもがな"},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"さねかずら","to":"さねかづら","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "kimariji": {"kana":"なにし","sound":"なにし"}
+    },
+    {
+      "no": 26,
+      "phrases": [
+        {"text":"小倉山","kana":"をぐらやま","sound":"おぐらやま","parts":[["小倉山","をぐらやま"]],"diffs":[{"at":0,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"峰のもみぢ葉","kana":"みねのもみぢば","sound":"みねのもみじば","parts":[["峰","みね"],["のもみぢ","のもみぢ"],["葉","ば"]],"diffs":[{"at":5,"kana":"ぢ","sound":"じ","rule":"四つ仮名"}]},
+        {"text":"心あらば","kana":"こころあらば","sound":"こころあらば","parts":[["心","こころ"],["あらば","あらば"]],"diffs":[]},
+        {"text":"今ひとたびの","kana":"いまひとたびの","sound":"いまひとたびの","parts":[["今","いま"],["ひとたびの","ひとたびの"]],"diffs":[]},
+        {"text":"みゆき待たなむ","kana":"みゆきまたなむ","sound":"みゆきまたなん","parts":[["みゆき","みゆき"],["待","ま"],["たなむ","たなむ"]],"diffs":[{"at":6,"kana":"む","sound":"ん","rule":"む"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"小倉山ー峰のもみぢ葉ー心あらーばー","lower":"今ーひとたびのーみゆき待たーなむ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":2,"kana":"ひ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "kimariji": {"kana":"をぐ","sound":"おぐ"}
+    },
+    {
+      "no": 27,
+      "phrases": [
+        {"text":"みかの原","kana":"みかのはら","sound":"みかのはら","parts":[["みかの","みかの"],["原","はら"]],"diffs":[]},
+        {"text":"わきて流るる","kana":"わきてながるる","sound":"わきてながるる","parts":[["わきて","わきて"],["流","なが"],["るる","るる"]],"diffs":[]},
+        {"text":"泉川","kana":"いづみがは","sound":"いずみがわ","parts":[["泉","いづみ"],["川","がは"]],"diffs":[{"at":1,"kana":"づ","sound":"ず","rule":"四つ仮名"},{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"いつ見きとてか","kana":"いつみきとてか","sound":"いつみきとてか","parts":[["いつ","いつ"],["見","み"],["きとてか","きとてか"]],"diffs":[]},
+        {"text":"恋しかるらむ","kana":"こひしかるらむ","sound":"こいしかるらん","parts":[["恋","こひ"],["しかるらむ","しかるらむ"]],"diffs":[{"at":1,"kana":"ひ","sound":"い","rule":"語中のハ行"},{"at":6,"kana":"む","sound":"ん","rule":"む"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"みかの原ーわきて流るるー泉ー川ー","lower":"いつ見きーとてかー恋しかるーらむ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "kimariji": {"kana":"みかの","sound":"みかの"}
+    },
+    {
+      "no": 28,
+      "phrases": [
+        {"text":"山里は","kana":"やまざとは","sound":"やまざとわ","parts":[["山里","やまざと"],["は","は"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"冬ぞ寂しさ","kana":"ふゆぞさびしさ","sound":"ふゆぞさびしさ","parts":[["冬","ふゆ"],["ぞ","ぞ"],["寂","さび"],["しさ","しさ"]],"diffs":[]},
+        {"text":"まさりける","kana":"まさりける","sound":"まさりける","parts":[["まさりける","まさりける"]],"diffs":[]},
+        {"text":"人目も草も","kana":"ひとめもくさも","sound":"ひとめもくさも","parts":[["人目","ひとめ"],["も","も"],["草","くさ"],["も","も"]],"diffs":[]},
+        {"text":"かれぬと思へば","kana":"かれぬとおもへば","sound":"かれぬとおもえば","parts":[["かれぬと","かれぬと"],["思","おも"],["へば","へば"]],"diffs":[{"at":6,"kana":"へ","sound":"え","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":6}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":6}],
+      "marked": {"upper":"山里はー冬ぞ寂しさーまさりーけるー","lower":"人目もー草もーかれぬと思ーへば"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "kimariji": {"kana":"やまざ","sound":"やまざ"}
+    },
+    {
+      "no": 29,
+      "phrases": [
+        {"text":"心あてに","kana":"こころあてに","sound":"こころあてに","parts":[["心","こころ"],["あてに","あてに"]],"diffs":[]},
+        {"text":"折らばや折らむ","kana":"をらばやをらむ","sound":"おらばやおらん","parts":[["折","を"],["らばや","らばや"],["折","を"],["らむ","らむ"]],"diffs":[{"at":0,"kana":"を","sound":"お","rule":"ワ行"},{"at":4,"kana":"を","sound":"お","rule":"ワ行"},{"at":6,"kana":"む","sound":"ん","rule":"む"}]},
+        {"text":"初霜の","kana":"はつしもの","sound":"はつしもの","parts":[["初霜","はつしも"],["の","の"]],"diffs":[]},
+        {"text":"置きまどはせる","kana":"おきまどはせる","sound":"おきまどわせる","parts":[["置","お"],["きまどはせる","きまどはせる"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"白菊の花","kana":"しらぎくのはな","sound":"しらぎくのはな","parts":[["白菊","しらぎく"],["の","の"],["花","はな"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"心あてにー折らばや折らむー初霜ーのー","lower":"置きーまどはせるー白菊のー花"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "kimariji": {"kana":"こころあ","sound":"こころあ"}
+    },
+    {
+      "no": 30,
+      "phrases": [
+        {"text":"有明の","kana":"ありあけの","sound":"ありあけの","parts":[["有明","ありあけ"],["の","の"]],"diffs":[]},
+        {"text":"つれなく見えし","kana":"つれなくみえし","sound":"つれなくみえし","parts":[["つれなく","つれなく"],["見","み"],["えし","えし"]],"diffs":[]},
+        {"text":"別れより","kana":"わかれより","sound":"わかれより","parts":[["別","わか"],["れより","れより"]],"diffs":[]},
+        {"text":"暁ばかり","kana":"あかつきばかり","sound":"あかつきばかり","parts":[["暁","あかつき"],["ばかり","ばかり"]],"diffs":[]},
+        {"text":"憂きものはなし","kana":"うきものはなし","sound":"うきものわなし","parts":[["憂","う"],["きものはなし","きものはなし"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"有明のーつれなく見えしー別れーよりー","lower":"暁ーばかりー憂きものはーなし"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "kimariji": {"kana":"ありあ","sound":"ありあ"}
+    },
+    {
+      "no": 31,
+      "phrases": [
+        {"text":"朝ぼらけ","kana":"あさぼらけ","sound":"あさぼらけ","parts":[["朝","あさ"],["ぼらけ","ぼらけ"]],"diffs":[]},
+        {"text":"有明の月と","kana":"ありあけのつきと","sound":"ありあけのつきと","parts":[["有明","ありあけ"],["の","の"],["月","つき"],["と","と"]],"diffs":[]},
+        {"text":"見るまでに","kana":"みるまでに","sound":"みるまでに","parts":[["見","み"],["るまでに","るまでに"]],"diffs":[]},
+        {"text":"吉野の里に","kana":"よしののさとに","sound":"よしののさとに","parts":[["吉野","よしの"],["の","の"],["里","さと"],["に","に"]],"diffs":[]},
+        {"text":"降れる白雪","kana":"ふれるしらゆき","sound":"ふれるしらゆき","parts":[["降","ふ"],["れる","れる"],["白","しら"],["雪","ゆき"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"朝ぼらけ有明の月とー見るまでーにー","lower":"吉野のー里にー降れる白ー雪"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "kimariji": {"kana":"あさぼらけあ","sound":"あさぼらけあ"}
+    },
+    {
+      "no": 32,
+      "phrases": [
+        {"text":"山川に","kana":"やまがはに","sound":"やまがわに","parts":[["山川","やまがは"],["に","に"]],"diffs":[{"at":3,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"風のかけたる","kana":"かぜのかけたる","sound":"かぜのかけたる","parts":[["風","かぜ"],["のかけたる","のかけたる"]],"diffs":[]},
+        {"text":"しがらみは","kana":"しがらみは","sound":"しがらみわ","parts":[["しがらみは","しがらみは"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"流れもあへぬ","kana":"ながれもあへぬ","sound":"ながれもあえぬ","parts":[["流","なが"],["れもあへぬ","れもあへぬ"]],"diffs":[{"at":5,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"紅葉なりけり","kana":"もみぢなりけり","sound":"もみじなりけり","parts":[["紅葉","もみぢ"],["なりけり","なりけり"]],"diffs":[{"at":2,"kana":"ぢ","sound":"じ","rule":"四つ仮名"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"山川にー風のかけたるーしがらみーはー","lower":"流れもーあへぬー紅葉なりーけり"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "kimariji": {"kana":"やまが","sound":"やまが"}
+    },
+    {
+      "no": 33,
+      "phrases": [
+        {"text":"ひさかたの","kana":"ひさかたの","sound":"ひさかたの","parts":[["ひさかたの","ひさかたの"]],"diffs":[]},
+        {"text":"光のどけき","kana":"ひかりのどけき","sound":"ひかりのどけき","parts":[["光","ひかり"],["のどけき","のどけき"]],"diffs":[]},
+        {"text":"春の日に","kana":"はるのひに","sound":"はるのひに","parts":[["春","はる"],["の","の"],["日","ひ"],["に","に"]],"diffs":[]},
+        {"text":"しづ心なく","kana":"しづごころなく","sound":"しずごころなく","parts":[["しづ","しづ"],["心","ごころ"],["なく","なく"]],"diffs":[{"at":1,"kana":"づ","sound":"ず","rule":"四つ仮名"}]},
+        {"text":"花の散るらむ","kana":"はなのちるらむ","sound":"はなのちるらん","parts":[["花","はな"],["の","の"],["散","ち"],["るらむ","るらむ"]],"diffs":[{"at":6,"kana":"む","sound":"ん","rule":"む"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"ひさかたのー光のどけきー春の日ーにー","lower":"しづ心ーなくー花の散るーらむ"},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"仮名","from":"しづこころ","to":"しづごころ","why":"読み方一覧の形に合わせた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "kimariji": {"kana":"ひさ","sound":"ひさ"}
+    },
+    {
+      "no": 34,
+      "phrases": [
+        {"text":"誰をかも","kana":"たれをかも","sound":"たれおかも","parts":[["誰","たれ"],["をかも","をかも"]],"diffs":[{"at":2,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"知る人にせむ","kana":"しるひとにせむ","sound":"しるひとにせん","parts":[["知","し"],["る","る"],["人","ひと"],["にせむ","にせむ"]],"diffs":[{"at":6,"kana":"む","sound":"ん","rule":"む"}]},
+        {"text":"高砂の","kana":"たかさごの","sound":"たかさごの","parts":[["高砂","たかさご"],["の","の"]],"diffs":[]},
+        {"text":"松も昔の","kana":"まつもむかしの","sound":"まつもむかしの","parts":[["松","まつ"],["も","も"],["昔","むかし"],["の","の"]],"diffs":[]},
+        {"text":"友ならなくに","kana":"ともならなくに","sound":"ともならなくに","parts":[["友","とも"],["ならなくに","ならなくに"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":4}],
+      "marked": {"upper":"誰をかもー知る人にせむー高砂ーのー","lower":"松もー昔のー友ならーなくに"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "kimariji": {"kana":"たれ","sound":"たれ"}
+    },
+    {
+      "no": 35,
+      "phrases": [
+        {"text":"人はいさ","kana":"ひとはいさ","sound":"ひとわいさ","parts":[["人","ひと"],["はいさ","はいさ"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"心も知らず","kana":"こころもしらず","sound":"こころもしらず","parts":[["心","こころ"],["も","も"],["知","し"],["らず","らず"]],"diffs":[]},
+        {"text":"ふるさとは","kana":"ふるさとは","sound":"ふるさとわ","parts":[["ふるさとは","ふるさとは"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"花ぞ昔の","kana":"はなぞむかしの","sound":"はなぞむかしの","parts":[["花","はな"],["ぞ","ぞ"],["昔","むかし"],["の","の"]],"diffs":[]},
+        {"text":"香に匂ひける","kana":"かににほひける","sound":"かににおいける","parts":[["香","か"],["に","に"],["匂","にほ"],["ひける","ひける"]],"diffs":[{"at":3,"kana":"ほ","sound":"お","rule":"語中のハ行"},{"at":4,"kana":"ひ","sound":"い","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"人はいさー心も知らずーふるさとーはー","lower":"花ぞー昔のー香に匂ひーける"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "kimariji": {"kana":"ひとは","sound":"ひとわ"}
+    },
+    {
+      "no": 36,
+      "phrases": [
+        {"text":"夏の夜は","kana":"なつのよは","sound":"なつのよわ","parts":[["夏","なつ"],["の","の"],["夜","よ"],["は","は"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"まだ宵ながら","kana":"まだよひながら","sound":"まだよいながら","parts":[["まだ","まだ"],["宵","よひ"],["ながら","ながら"]],"diffs":[{"at":3,"kana":"ひ","sound":"い","rule":"語中のハ行"}]},
+        {"text":"明けぬるを","kana":"あけぬるを","sound":"あけぬるお","parts":[["明","あ"],["けぬるを","けぬるを"]],"diffs":[{"at":4,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"雲のいづこに","kana":"くものいづこに","sound":"くものいずこに","parts":[["雲","くも"],["のいづこに","のいづこに"]],"diffs":[{"at":4,"kana":"づ","sound":"ず","rule":"四つ仮名"}]},
+        {"text":"月宿るらむ","kana":"つきやどるらむ","sound":"つきやどるらん","parts":[["月","つき"],["宿","やど"],["るらむ","るらむ"]],"diffs":[{"at":6,"kana":"む","sound":"ん","rule":"む"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"夏の夜はーまだ宵ながらー明けぬるーをー","lower":"雲のーいづこにー月宿るーらむ"},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"いずこ","to":"いづこ","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "kimariji": {"kana":"なつ","sound":"なつ"}
+    },
+    {
+      "no": 37,
+      "phrases": [
+        {"text":"白露に","kana":"しらつゆに","sound":"しらつゆに","parts":[["白露","しらつゆ"],["に","に"]],"diffs":[]},
+        {"text":"風の吹きしく","kana":"かぜのふきしく","sound":"かぜのふきしく","parts":[["風","かぜ"],["の","の"],["吹","ふ"],["きしく","きしく"]],"diffs":[]},
+        {"text":"秋の野は","kana":"あきののは","sound":"あきののわ","parts":[["秋","あき"],["の","の"],["野","の"],["は","は"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"つらぬきとめぬ","kana":"つらぬきとめぬ","sound":"つらぬきとめぬ","parts":[["つらぬきとめぬ","つらぬきとめぬ"]],"diffs":[]},
+        {"text":"玉ぞ散りける","kana":"たまぞちりける","sound":"たまぞちりける","parts":[["玉","たま"],["ぞ","ぞ"],["散","ち"],["りける","りける"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"白露にー風の吹きしくー秋の野ーはー","lower":"つらぬきーとめぬー玉ぞ散りーける"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "kimariji": {"kana":"しら","sound":"しら"}
+    },
+    {
+      "no": 38,
+      "phrases": [
+        {"text":"忘らるる","kana":"わすらるる","sound":"わすらるる","parts":[["忘","わす"],["らるる","らるる"]],"diffs":[]},
+        {"text":"身をば思はず","kana":"みをばおもはず","sound":"みおばおもわず","parts":[["身","み"],["をば","をば"],["思","おも"],["はず","はず"]],"diffs":[{"at":1,"kana":"を","sound":"お","rule":"ワ行"},{"at":5,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"誓ひてし","kana":"ちかひてし","sound":"ちかいてし","parts":[["誓","ちか"],["ひてし","ひてし"]],"diffs":[{"at":2,"kana":"ひ","sound":"い","rule":"語中のハ行"}]},
+        {"text":"人の命の","kana":"ひとのいのちの","sound":"ひとのいのちの","parts":[["人","ひと"],["の","の"],["命","いのち"],["の","の"]],"diffs":[]},
+        {"text":"惜しくもあるかな","kana":"をしくもあるかな","sound":"おしくもあるかな","parts":[["惜","を"],["しくもあるかな","しくもあるかな"]],"diffs":[{"at":0,"kana":"を","sound":"お","rule":"ワ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":6}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":6}],
+      "marked": {"upper":"忘らるるー身をば思はずー誓ひてーしー","lower":"人のー命のー惜しくもあるーかな"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "kimariji": {"kana":"わすら","sound":"わすら"}
+    },
+    {
+      "no": 39,
+      "phrases": [
+        {"text":"浅茅生の","kana":"あさぢふの","sound":"あさじうの","parts":[["浅茅生","あさぢふ"],["の","の"]],"diffs":[{"at":2,"kana":"ぢ","sound":"じ","rule":"四つ仮名"},{"at":3,"kana":"ふ","sound":"う","rule":"語中のハ行"}]},
+        {"text":"小野の篠原","kana":"をののしのはら","sound":"おののしのはら","parts":[["小野","をの"],["の","の"],["篠原","しのはら"]],"diffs":[{"at":0,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"忍ぶれど","kana":"しのぶれど","sound":"しのぶれど","parts":[["忍","しの"],["ぶれど","ぶれど"]],"diffs":[]},
+        {"text":"あまりてなどか","kana":"あまりてなどか","sound":"あまりてなどか","parts":[["あまりてなどか","あまりてなどか"]],"diffs":[]},
+        {"text":"人の恋しき","kana":"ひとのこひしき","sound":"ひとのこいしき","parts":[["人","ひと"],["の","の"],["恋","こひ"],["しき","しき"]],"diffs":[{"at":4,"kana":"ひ","sound":"い","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"浅茅生のー小野の篠原ー忍ぶれーどー","lower":"あまりてーなどかー人の恋ーしき"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":1,"at":5,"kana":"は","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "kimariji": {"kana":"あさぢ","sound":"あさじ"}
+    },
+    {
+      "no": 40,
+      "phrases": [
+        {"text":"忍ぶれど","kana":"しのぶれど","sound":"しのぶれど","parts":[["忍","しの"],["ぶれど","ぶれど"]],"diffs":[]},
+        {"text":"色に出でにけり","kana":"いろにいでにけり","sound":"いろにいでにけり","parts":[["色","いろ"],["に","に"],["出","い"],["でにけり","でにけり"]],"diffs":[]},
+        {"text":"わが恋は","kana":"わがこひは","sound":"わがこいわ","parts":[["わが","わが"],["恋","こひ"],["は","は"]],"diffs":[{"at":3,"kana":"ひ","sound":"い","rule":"語中のハ行"},{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"ものや思ふと","kana":"ものやおもふと","sound":"ものやおもうと","parts":[["ものや","ものや"],["思","おも"],["ふと","ふと"]],"diffs":[{"at":5,"kana":"ふ","sound":"う","rule":"語中のハ行"}]},
+        {"text":"人の問ふまで","kana":"ひとのとふまで","sound":"ひとのとうまで","parts":[["人","ひと"],["の","の"],["問","と"],["ふまで","ふまで"]],"diffs":[{"at":4,"kana":"ふ","sound":"う","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"忍ぶれどー色に出でにけりーわが恋ーはー","lower":"ものやー思ふとー人の問ふーまで"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "kimariji": {"kana":"しの","sound":"しの"}
+    },
+    {
+      "no": 41,
+      "phrases": [
+        {"text":"恋すてふ","kana":"こひすてふ","sound":"こいすちょう","parts":[["恋","こひ"],["すてふ","すてふ"]],"diffs":[{"at":1,"kana":"ひ","sound":"い","rule":"語中のハ行"},{"at":3,"kana":"てふ","sound":"ちょう","rule":"長音"}]},
+        {"text":"わが名はまだき","kana":"わがなはまだき","sound":"わがなわまだき","parts":[["わが","わが"],["名","な"],["はまだき","はまだき"]],"diffs":[{"at":3,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"立ちにけり","kana":"たちにけり","sound":"たちにけり","parts":[["立","た"],["ちにけり","ちにけり"]],"diffs":[]},
+        {"text":"人知れずこそ","kana":"ひとしれずこそ","sound":"ひとしれずこそ","parts":[["人","ひと"],["知","し"],["れずこそ","れずこそ"]],"diffs":[]},
+        {"text":"思ひそめしか","kana":"おもひそめしか","sound":"おもいそめしか","parts":[["思","おも"],["ひそめしか","ひそめしか"]],"diffs":[{"at":2,"kana":"ひ","sound":"い","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"恋すてふーわが名はまだきー立ちにーけりー","lower":"人ー知れずこそー思ひそめーしか"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "kimariji": {"kana":"こひ","sound":"こい"}
+    },
+    {
+      "no": 42,
+      "phrases": [
+        {"text":"契りきな","kana":"ちぎりきな","sound":"ちぎりきな","parts":[["契","ちぎ"],["りきな","りきな"]],"diffs":[]},
+        {"text":"かたみに袖を","kana":"かたみにそでを","sound":"かたみにそでお","parts":[["かたみに","かたみに"],["袖","そで"],["を","を"]],"diffs":[{"at":6,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"しぼりつつ","kana":"しぼりつつ","sound":"しぼりつつ","parts":[["しぼりつつ","しぼりつつ"]],"diffs":[]},
+        {"text":"末の松山","kana":"すゑのまつやま","sound":"すえのまつやま","parts":[["末","すゑ"],["の","の"],["松山","まつやま"]],"diffs":[{"at":1,"kana":"ゑ","sound":"え","rule":"ワ行"}]},
+        {"text":"波越さじとは","kana":"なみこさじとは","sound":"なみこさじとわ","parts":[["波","なみ"],["越","こ"],["さじとは","さじとは"]],"diffs":[{"at":6,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"契りきなーかたみに袖をーしぼりーつつー","lower":"末のー松山ー波越さじーとは"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "kimariji": {"kana":"ちぎりき","sound":"ちぎりき"}
+    },
+    {
+      "no": 43,
+      "phrases": [
+        {"text":"逢ひ見ての","kana":"あひみての","sound":"あいみての","parts":[["逢","あ"],["ひ","ひ"],["見","み"],["ての","ての"]],"diffs":[{"at":1,"kana":"ひ","sound":"い","rule":"語中のハ行"}]},
+        {"text":"後の心に","kana":"のちのこころに","sound":"のちのこころに","parts":[["後","のち"],["の","の"],["心","こころ"],["に","に"]],"diffs":[]},
+        {"text":"くらぶれば","kana":"くらぶれば","sound":"くらぶれば","parts":[["くらぶれば","くらぶれば"]],"diffs":[]},
+        {"text":"昔はものを","kana":"むかしはものを","sound":"むかしわものお","parts":[["昔","むかし"],["はものを","はものを"]],"diffs":[{"at":3,"kana":"は","sound":"わ","rule":"語中のハ行"},{"at":6,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"思はざりけり","kana":"おもはざりけり","sound":"おもわざりけり","parts":[["思","おも"],["はざりけり","はざりけり"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"逢ひ見てのー後の心にーくらぶれーばー","lower":"昔はーものをー思はざりーけり"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "kimariji": {"kana":"あひ","sound":"あい"}
+    },
+    {
+      "no": 44,
+      "phrases": [
+        {"text":"逢ふことの","kana":"あふことの","sound":"おうことの","parts":[["逢","あ"],["ふことの","ふことの"]],"diffs":[{"at":0,"kana":"あふ","sound":"おう","rule":"長音"}]},
+        {"text":"絶えてしなくば","kana":"たえてしなくば","sound":"たえてしなくば","parts":[["絶","た"],["えてしなくば","えてしなくば"]],"diffs":[]},
+        {"text":"なかなかに","kana":"なかなかに","sound":"なかなかに","parts":[["なかなかに","なかなかに"]],"diffs":[]},
+        {"text":"人をも身をも","kana":"ひとをもみをも","sound":"ひとおもみおも","parts":[["人","ひと"],["をも","をも"],["身","み"],["をも","をも"]],"diffs":[{"at":2,"kana":"を","sound":"お","rule":"ワ行"},{"at":5,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"恨みざらまし","kana":"うらみざらまし","sound":"うらみざらまし","parts":[["恨","うら"],["みざらまし","みざらまし"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"逢ふことのー絶えてしなくばーなかなかーにー","lower":"人をもー身をもー恨みざらーまし"},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"なくは","to":"なくば","why":"読み方一覧の形に合わせた"},{"field":"仮名","from":"なくは","to":"なくば","why":"読み方一覧の形に合わせた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "kimariji": {"kana":"あふこ","sound":"おおこ"}
+    },
+    {
+      "no": 45,
+      "phrases": [
+        {"text":"あはれとも","kana":"あはれとも","sound":"あわれとも","parts":[["あはれとも","あはれとも"]],"diffs":[{"at":1,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"いふべき人は","kana":"いふべきひとは","sound":"ゆうべきひとわ","parts":[["いふべき","いふべき"],["人","ひと"],["は","は"]],"diffs":[{"at":0,"kana":"いふ","sound":"ゆう","rule":"長音"},{"at":6,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"思ほえで","kana":"おもほえで","sound":"おもおえで","parts":[["思","おも"],["ほえで","ほえで"]],"diffs":[{"at":2,"kana":"ほ","sound":"お","rule":"語中のハ行"}]},
+        {"text":"身のいたづらに","kana":"みのいたづらに","sound":"みのいたずらに","parts":[["身","み"],["のいたづらに","のいたづらに"]],"diffs":[{"at":4,"kana":"づ","sound":"ず","rule":"四つ仮名"}]},
+        {"text":"なりぬべきかな","kana":"なりぬべきかな","sound":"なりぬべきかな","parts":[["なりぬべきかな","なりぬべきかな"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"あはれともーいふべき人はー思ほえーでー","lower":"身のーいたづらにーなりぬべきーかな"},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"いたずら","to":"いたづら","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "kimariji": {"kana":"あはれ","sound":"あわれ"}
+    },
+    {
+      "no": 46,
+      "phrases": [
+        {"text":"由良の戸を","kana":"ゆらのとを","sound":"ゆらのとお","parts":[["由良","ゆら"],["の","の"],["戸","と"],["を","を"]],"diffs":[{"at":4,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"渡る舟人","kana":"わたるふなびと","sound":"わたるふなびと","parts":[["渡","わた"],["る","る"],["舟人","ふなびと"]],"diffs":[]},
+        {"text":"かぢをたえ","kana":"かぢをたえ","sound":"かじおたえ","parts":[["かぢをたえ","かぢをたえ"]],"diffs":[{"at":1,"kana":"ぢ","sound":"じ","rule":"四つ仮名"},{"at":2,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"ゆくへも知らぬ","kana":"ゆくへもしらぬ","sound":"ゆくえもしらぬ","parts":[["ゆくへも","ゆくへも"],["知","し"],["らぬ","らぬ"]],"diffs":[{"at":2,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"恋の道かな","kana":"こひのみちかな","sound":"こいのみちかな","parts":[["恋","こひ"],["の","の"],["道","みち"],["かな","かな"]],"diffs":[{"at":1,"kana":"ひ","sound":"い","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"由良の戸をー渡る舟人ーかぢをーたえー","lower":"ゆくへもー知らぬー恋の道ーかな"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "kimariji": {"kana":"ゆら","sound":"ゆら"}
+    },
+    {
+      "no": 47,
+      "phrases": [
+        {"text":"八重むぐら","kana":"やへむぐら","sound":"やえむぐら","parts":[["八重","やへ"],["むぐら","むぐら"]],"diffs":[{"at":1,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"茂れる宿の","kana":"しげれるやどの","sound":"しげれるやどの","parts":[["茂","しげ"],["れる","れる"],["宿","やど"],["の","の"]],"diffs":[]},
+        {"text":"さびしきに","kana":"さびしきに","sound":"さびしきに","parts":[["さびしきに","さびしきに"]],"diffs":[]},
+        {"text":"人こそ見えね","kana":"ひとこそみえね","sound":"ひとこそみえね","parts":[["人","ひと"],["こそ","こそ"],["見","み"],["えね","えね"]],"diffs":[]},
+        {"text":"秋は来にけり","kana":"あきはきにけり","sound":"あきわきにけり","parts":[["秋","あき"],["は","は"],["来","き"],["にけり","にけり"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"八重むぐらー茂れる宿のーさびしきーにー","lower":"人こそー見えねー秋は来にーけり"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":0,"at":2,"kana":"む","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "kimariji": {"kana":"やへ","sound":"やえ"}
+    },
+    {
+      "no": 48,
+      "phrases": [
+        {"text":"風をいたみ","kana":"かぜをいたみ","sound":"かぜおいたみ","parts":[["風","かぜ"],["をいたみ","をいたみ"]],"diffs":[{"at":2,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"岩うつ波の","kana":"いはうつなみの","sound":"いわうつなみの","parts":[["岩","いは"],["うつ","うつ"],["波","なみ"],["の","の"]],"diffs":[{"at":1,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"おのれのみ","kana":"おのれのみ","sound":"おのれのみ","parts":[["おのれのみ","おのれのみ"]],"diffs":[]},
+        {"text":"くだけてものを","kana":"くだけてものを","sound":"くだけてものお","parts":[["くだけてものを","くだけてものを"]],"diffs":[{"at":6,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"思ふころかな","kana":"おもふころかな","sound":"おもうころかな","parts":[["思","おも"],["ふころかな","ふころかな"]],"diffs":[{"at":2,"kana":"ふ","sound":"う","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"風をいたみー岩うつ波のーおのれーのみー","lower":"くだけてーものをー思ふころーかな"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "kimariji": {"kana":"かぜを","sound":"かぜお"}
+    },
+    {
+      "no": 49,
+      "phrases": [
+        {"text":"御垣守","kana":"みかきもり","sound":"みかきもり","parts":[["御垣守","みかきもり"]],"diffs":[]},
+        {"text":"衛士のたく火の","kana":"ゑじのたくひの","sound":"えじのたくひの","parts":[["衛士","ゑじ"],["のたく","のたく"],["火","ひ"],["の","の"]],"diffs":[{"at":0,"kana":"ゑ","sound":"え","rule":"ワ行"}]},
+        {"text":"夜は燃え","kana":"よるはもえ","sound":"よるわもえ","parts":[["夜","よる"],["は","は"],["燃","も"],["え","え"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"昼は消えつつ","kana":"ひるはきえつつ","sound":"ひるわきえつつ","parts":[["昼","ひる"],["は","は"],["消","き"],["えつつ","えつつ"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"ものをこそ思へ","kana":"ものをこそおもへ","sound":"ものおこそおもえ","parts":[["ものをこそ","ものをこそ"],["思","おも"],["へ","へ"]],"diffs":[{"at":2,"kana":"を","sound":"お","rule":"ワ行"},{"at":7,"kana":"へ","sound":"え","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"御垣守ー衛士のたく火のー夜はー燃えー","lower":"昼はー消えつつーものをこそー思へ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "kimariji": {"kana":"みかき","sound":"みかき"}
+    },
+    {
+      "no": 50,
+      "phrases": [
+        {"text":"君がため","kana":"きみがため","sound":"きみがため","parts":[["君","きみ"],["がため","がため"]],"diffs":[]},
+        {"text":"惜しからざりし","kana":"をしからざりし","sound":"おしからざりし","parts":[["惜","を"],["しからざりし","しからざりし"]],"diffs":[{"at":0,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"命さへ","kana":"いのちさへ","sound":"いのちさえ","parts":[["命","いのち"],["さへ","さへ"]],"diffs":[{"at":4,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"長くもがなと","kana":"ながくもがなと","sound":"ながくもがなと","parts":[["長","なが"],["くもがなと","くもがなと"]],"diffs":[]},
+        {"text":"思ひけるかな","kana":"おもひけるかな","sound":"おもいけるかな","parts":[["思","おも"],["ひけるかな","ひけるかな"]],"diffs":[{"at":2,"kana":"ひ","sound":"い","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"君がため惜しからざりしー命ーさへー","lower":"長くーもがなとー思ひけるーかな"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "kimariji": {"kana":"きみがためを","sound":"きみがためお"}
+    },
+    {
+      "no": 51,
+      "phrases": [
+        {"text":"かくとだに","kana":"かくとだに","sound":"かくとだに","parts":[["かくとだに","かくとだに"]],"diffs":[]},
+        {"text":"えやはいぶきの","kana":"えやはいぶきの","sound":"えやわいぶきの","parts":[["えやはいぶきの","えやはいぶきの"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"さしも草","kana":"さしもぐさ","sound":"さしもぐさ","parts":[["さしも","さしも"],["草","ぐさ"]],"diffs":[]},
+        {"text":"さしも知らじな","kana":"さしもしらじな","sound":"さしもしらじな","parts":[["さしも","さしも"],["知","し"],["らじな","らじな"]],"diffs":[]},
+        {"text":"燃ゆる思ひを","kana":"もゆるおもひを","sound":"もゆるおもいお","parts":[["燃","も"],["ゆる","ゆる"],["思","おも"],["ひを","ひを"]],"diffs":[{"at":5,"kana":"ひ","sound":"い","rule":"語中のハ行"},{"at":6,"kana":"を","sound":"お","rule":"ワ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"かくとだにーえやはいぶきのーさしもー草ー","lower":"さしもー知らじなー燃ゆる思ーひを"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "kimariji": {"kana":"かく","sound":"かく"}
+    },
+    {
+      "no": 52,
+      "phrases": [
+        {"text":"明けぬれば","kana":"あけぬれば","sound":"あけぬれば","parts":[["明","あ"],["けぬれば","けぬれば"]],"diffs":[]},
+        {"text":"暮るるものとは","kana":"くるるものとは","sound":"くるるものとわ","parts":[["暮","く"],["るるものとは","るるものとは"]],"diffs":[{"at":6,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"知りながら","kana":"しりながら","sound":"しりながら","parts":[["知","し"],["りながら","りながら"]],"diffs":[]},
+        {"text":"なほ恨めしき","kana":"なほうらめしき","sound":"なおうらめしき","parts":[["なほ","なほ"],["恨","うら"],["めしき","めしき"]],"diffs":[{"at":1,"kana":"ほ","sound":"お","rule":"語中のハ行"}]},
+        {"text":"朝ぼらけかな","kana":"あさぼらけかな","sound":"あさぼらけかな","parts":[["朝","あさ"],["ぼらけかな","ぼらけかな"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"明けぬればー暮るるものとはー知りながーらー","lower":"なほー恨めしきー朝ぼらけーかな"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "kimariji": {"kana":"あけ","sound":"あけ"}
+    },
+    {
+      "no": 53,
+      "phrases": [
+        {"text":"嘆きつつ","kana":"なげきつつ","sound":"なげきつつ","parts":[["嘆","なげ"],["きつつ","きつつ"]],"diffs":[]},
+        {"text":"ひとり寝る夜の","kana":"ひとりぬるよの","sound":"ひとりぬるよの","parts":[["ひとり","ひとり"],["寝","ぬ"],["る","る"],["夜","よ"],["の","の"]],"diffs":[]},
+        {"text":"明くる間は","kana":"あくるまは","sound":"あくるまわ","parts":[["明","あ"],["くる","くる"],["間","ま"],["は","は"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"いかに久しき","kana":"いかにひさしき","sound":"いかにひさしき","parts":[["いかに","いかに"],["久","ひさ"],["しき","しき"]],"diffs":[]},
+        {"text":"ものとかは知る","kana":"ものとかはしる","sound":"ものとかわしる","parts":[["ものとかは","ものとかは"],["知","し"],["る","る"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"嘆きつつーひとり寝る夜のー明くる間ーはー","lower":"いかにー久しきーものとかはー知る"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "kimariji": {"kana":"なげき","sound":"なげき"}
+    },
+    {
+      "no": 54,
+      "phrases": [
+        {"text":"忘れじの","kana":"わすれじの","sound":"わすれじの","parts":[["忘","わす"],["れじの","れじの"]],"diffs":[]},
+        {"text":"行く末までは","kana":"ゆくすゑまでは","sound":"ゆくすえまでわ","parts":[["行","ゆ"],["く","く"],["末","すゑ"],["までは","までは"]],"diffs":[{"at":3,"kana":"ゑ","sound":"え","rule":"ワ行"},{"at":6,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"かたければ","kana":"かたければ","sound":"かたければ","parts":[["かたければ","かたければ"]],"diffs":[]},
+        {"text":"今日をかぎりの","kana":"けふをかぎりの","sound":"きょうおかぎりの","parts":[["今日","けふ"],["をかぎりの","をかぎりの"]],"diffs":[{"at":0,"kana":"けふ","sound":"きょう","rule":"長音"},{"at":2,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"命ともがな","kana":"いのちともがな","sound":"いのちともがな","parts":[["命","いのち"],["ともがな","ともがな"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":4}],
+      "marked": {"upper":"忘れじのー行く末まではーかたけれーばー","lower":"今日をーかぎりのー命とーもがな"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "kimariji": {"kana":"わすれ","sound":"わすれ"}
+    },
+    {
+      "no": 55,
+      "phrases": [
+        {"text":"滝の音は","kana":"たきのおとは","sound":"たきのおとわ","parts":[["滝","たき"],["の","の"],["音","おと"],["は","は"]],"diffs":[{"at":5,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"絶えて久しく","kana":"たえてひさしく","sound":"たえてひさしく","parts":[["絶","た"],["えて","えて"],["久","ひさ"],["しく","しく"]],"diffs":[]},
+        {"text":"なりぬれど","kana":"なりぬれど","sound":"なりぬれど","parts":[["なりぬれど","なりぬれど"]],"diffs":[]},
+        {"text":"名こそ流れて","kana":"なこそながれて","sound":"なこそながれて","parts":[["名","な"],["こそ","こそ"],["流","なが"],["れて","れて"]],"diffs":[]},
+        {"text":"なほ聞こえけれ","kana":"なほきこえけれ","sound":"なおきこえけれ","parts":[["なほ","なほ"],["聞","き"],["こえけれ","こえけれ"]],"diffs":[{"at":1,"kana":"ほ","sound":"お","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"滝の音はー絶えて久しくーなりぬれーどー","lower":"名こそー流れてーなほ聞こえーけれ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "kimariji": {"kana":"たき","sound":"たき"}
+    },
+    {
+      "no": 56,
+      "phrases": [
+        {"text":"あらざらむ","kana":"あらざらむ","sound":"あらざらん","parts":[["あらざらむ","あらざらむ"]],"diffs":[{"at":4,"kana":"む","sound":"ん","rule":"む"}]},
+        {"text":"この世のほかの","kana":"このよのほかの","sound":"このよのほかの","parts":[["この","この"],["世","よ"],["のほかの","のほかの"]],"diffs":[]},
+        {"text":"思ひ出に","kana":"おもひでに","sound":"おもいでに","parts":[["思","おも"],["ひ","ひ"],["出","で"],["に","に"]],"diffs":[{"at":2,"kana":"ひ","sound":"い","rule":"語中のハ行"}]},
+        {"text":"今ひとたびの","kana":"いまひとたびの","sound":"いまひとたびの","parts":[["今","いま"],["ひとたびの","ひとたびの"]],"diffs":[]},
+        {"text":"逢ふこともがな","kana":"あふこともがな","sound":"おうこともがな","parts":[["逢","あ"],["ふこともがな","ふこともがな"]],"diffs":[{"at":0,"kana":"あふ","sound":"おう","rule":"長音"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":4}],
+      "marked": {"upper":"あらざらむーこの世のほかのー思ひ出ーにー","lower":"今ーひとたびのー逢ふことーもがな"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":1,"at":4,"kana":"ほ","why":"語の頭"},{"phrase":3,"at":2,"kana":"ひ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "kimariji": {"kana":"あらざ","sound":"あらざ"}
+    },
+    {
+      "no": 57,
+      "phrases": [
+        {"text":"めぐり逢ひて","kana":"めぐりあひて","sound":"めぐりあいて","parts":[["めぐり","めぐり"],["逢","あ"],["ひて","ひて"]],"diffs":[{"at":4,"kana":"ひ","sound":"い","rule":"語中のハ行"}]},
+        {"text":"見しやそれとも","kana":"みしやそれとも","sound":"みしやそれとも","parts":[["見","み"],["しやそれとも","しやそれとも"]],"diffs":[]},
+        {"text":"分かぬ間に","kana":"わかぬまに","sound":"わかぬまに","parts":[["分","わ"],["かぬ","かぬ"],["間","ま"],["に","に"]],"diffs":[]},
+        {"text":"雲隠れにし","kana":"くもがくれにし","sound":"くもがくれにし","parts":[["雲隠","くもがく"],["れにし","れにし"]],"diffs":[]},
+        {"text":"夜半の月かな","kana":"よはのつきかな","sound":"よわのつきかな","parts":[["夜半","よは"],["の","の"],["月","つき"],["かな","かな"]],"diffs":[{"at":1,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"めぐり逢ひてー見しやそれともー分かぬ間ーにー","lower":"雲隠れーにしー夜半の月ーかな"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15}},
+      "kimariji": {"kana":"め","sound":"め"}
+    },
+    {
+      "no": 58,
+      "phrases": [
+        {"text":"有馬山","kana":"ありまやま","sound":"ありまやま","parts":[["有馬山","ありまやま"]],"diffs":[]},
+        {"text":"猪名の笹原","kana":"ゐなのささはら","sound":"いなのささはら","parts":[["猪名","ゐな"],["の","の"],["笹原","ささはら"]],"diffs":[{"at":0,"kana":"ゐ","sound":"い","rule":"ワ行"}]},
+        {"text":"風吹けば","kana":"かぜふけば","sound":"かぜふけば","parts":[["風","かぜ"],["吹","ふ"],["けば","けば"]],"diffs":[]},
+        {"text":"いでそよ人を","kana":"いでそよひとを","sound":"いでそよひとお","parts":[["いでそよ","いでそよ"],["人","ひと"],["を","を"]],"diffs":[{"at":6,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"忘れやはする","kana":"わすれやはする","sound":"わすれやわする","parts":[["忘","わす"],["れやはする","れやはする"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"有馬山ー猪名の笹原ー風吹けーばー","lower":"いでそよー人をー忘れやはーする"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":1,"at":5,"kana":"は","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "kimariji": {"kana":"ありま","sound":"ありま"}
+    },
+    {
+      "no": 59,
+      "phrases": [
+        {"text":"やすらはで","kana":"やすらはで","sound":"やすらわで","parts":[["やすらはで","やすらはで"]],"diffs":[{"at":3,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"寝なましものを","kana":"ねなましものを","sound":"ねなましものお","parts":[["寝","ね"],["なましものを","なましものを"]],"diffs":[{"at":6,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"小夜更けて","kana":"さよふけて","sound":"さよふけて","parts":[["小夜","さよ"],["更","ふ"],["けて","けて"]],"diffs":[]},
+        {"text":"かたぶくまでの","kana":"かたぶくまでの","sound":"かたぶくまでの","parts":[["かたぶくまでの","かたぶくまでの"]],"diffs":[]},
+        {"text":"月を見しかな","kana":"つきをみしかな","sound":"つきおみしかな","parts":[["月","つき"],["を","を"],["見","み"],["しかな","しかな"]],"diffs":[{"at":2,"kana":"を","sound":"お","rule":"ワ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"やすらはでー寝なましものをー小夜更けーてー","lower":"かたぶくーまでのー月を見しーかな"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "kimariji": {"kana":"やす","sound":"やす"}
+    },
+    {
+      "no": 60,
+      "phrases": [
+        {"text":"大江山","kana":"おほえやま","sound":"おおえやま","parts":[["大江山","おほえやま"]],"diffs":[{"at":1,"kana":"ほ","sound":"お","rule":"語中のハ行"}]},
+        {"text":"いく野の道の","kana":"いくののみちの","sound":"いくののみちの","parts":[["いく","いく"],["野","の"],["の","の"],["道","みち"],["の","の"]],"diffs":[]},
+        {"text":"遠ければ","kana":"とほければ","sound":"とおければ","parts":[["遠","とほ"],["ければ","ければ"]],"diffs":[{"at":1,"kana":"ほ","sound":"お","rule":"語中のハ行"}]},
+        {"text":"まだふみも見ず","kana":"まだふみもみず","sound":"まだふみもみず","parts":[["まだふみも","まだふみも"],["見","み"],["ず","ず"]],"diffs":[]},
+        {"text":"天の橋立","kana":"あまのはしだて","sound":"あまのはしだて","parts":[["天","あま"],["の","の"],["橋","はし"],["立","だて"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"大江山ーいく野の道のー遠けれーばー","lower":"まだーふみも見ずー天の橋ー立"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":2,"kana":"ふ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "kimariji": {"kana":"おほえ","sound":"おおえ"}
+    },
+    {
+      "no": 61,
+      "phrases": [
+        {"text":"いにしへの","kana":"いにしへの","sound":"いにしえの","parts":[["いにしへの","いにしへの"]],"diffs":[{"at":3,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"奈良の都の","kana":"ならのみやこの","sound":"ならのみやこの","parts":[["奈良","なら"],["の","の"],["都","みやこ"],["の","の"]],"diffs":[]},
+        {"text":"八重ざくら","kana":"やへざくら","sound":"やえざくら","parts":[["八重","やへ"],["ざくら","ざくら"]],"diffs":[{"at":1,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"けふ九重に","kana":"けふここのへに","sound":"きょうここのえに","parts":[["けふ","けふ"],["九重","ここのへ"],["に","に"]],"diffs":[{"at":0,"kana":"けふ","sound":"きょう","rule":"長音"},{"at":5,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"匂ひぬるかな","kana":"にほひぬるかな","sound":"においぬるかな","parts":[["匂","にほ"],["ひぬるかな","ひぬるかな"]],"diffs":[{"at":1,"kana":"ほ","sound":"お","rule":"語中のハ行"},{"at":2,"kana":"ひ","sound":"い","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"いにしへのー奈良の都のー八重ざくーらー","lower":"けふー九重にー匂ひぬるーかな"},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"八重桜","to":"八重ざくら","why":"漢字1字の読みの途中で伸ばすので、仮名で書いた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "kimariji": {"kana":"いに","sound":"いに"}
+    },
+    {
+      "no": 62,
+      "phrases": [
+        {"text":"夜をこめて","kana":"よをこめて","sound":"よおこめて","parts":[["夜","よ"],["をこめて","をこめて"]],"diffs":[{"at":1,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"鳥のそら音は","kana":"とりのそらねは","sound":"とりのそらねわ","parts":[["鳥","とり"],["のそら","のそら"],["音","ね"],["は","は"]],"diffs":[{"at":6,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"はかるとも","kana":"はかるとも","sound":"はかるとも","parts":[["はかるとも","はかるとも"]],"diffs":[]},
+        {"text":"よに逢坂の","kana":"よにあふさかの","sound":"よにおうさかの","parts":[["よに","よに"],["逢坂","あふさか"],["の","の"]],"diffs":[{"at":2,"kana":"あふ","sound":"おう","rule":"長音"}]},
+        {"text":"関はゆるさじ","kana":"せきはゆるさじ","sound":"せきわゆるさじ","parts":[["関","せき"],["はゆるさじ","はゆるさじ"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"夜をこめてー鳥のそら音はーはかるーともー","lower":"よにー逢坂のー関はゆるーさじ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "kimariji": {"kana":"よを","sound":"よお"}
+    },
+    {
+      "no": 63,
+      "phrases": [
+        {"text":"今はただ","kana":"いまはただ","sound":"いまわただ","parts":[["今","いま"],["はただ","はただ"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"思ひ絶えなむ","kana":"おもひたえなむ","sound":"おもいたえなん","parts":[["思","おも"],["ひ","ひ"],["絶","た"],["えなむ","えなむ"]],"diffs":[{"at":2,"kana":"ひ","sound":"い","rule":"語中のハ行"},{"at":6,"kana":"む","sound":"ん","rule":"む"}]},
+        {"text":"とばかりを","kana":"とばかりを","sound":"とばかりお","parts":[["とばかりを","とばかりを"]],"diffs":[{"at":4,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"人づてならで","kana":"ひとづてならで","sound":"ひとずてならで","parts":[["人","ひと"],["づてならで","づてならで"]],"diffs":[{"at":2,"kana":"づ","sound":"ず","rule":"四つ仮名"}]},
+        {"text":"いふよしもがな","kana":"いふよしもがな","sound":"ゆうよしもがな","parts":[["いふよしもがな","いふよしもがな"]],"diffs":[{"at":0,"kana":"いふ","sound":"ゆう","rule":"長音"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":2,"after":1},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":4}],
+      "marked": {"upper":"今はただー思ひ絶えなむとーばかりーをー","lower":"人づてーならでーいふよしーもがな"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "kimariji": {"kana":"いまは","sound":"いまわ"}
+    },
+    {
+      "no": 64,
+      "phrases": [
+        {"text":"朝ぼらけ","kana":"あさぼらけ","sound":"あさぼらけ","parts":[["朝","あさ"],["ぼらけ","ぼらけ"]],"diffs":[]},
+        {"text":"宇治の川霧","kana":"うぢのかはぎり","sound":"うじのかわぎり","parts":[["宇治","うぢ"],["の","の"],["川霧","かはぎり"]],"diffs":[{"at":1,"kana":"ぢ","sound":"じ","rule":"四つ仮名"},{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"たえだえに","kana":"たえだえに","sound":"たえだえに","parts":[["たえだえに","たえだえに"]],"diffs":[]},
+        {"text":"あらはれわたる","kana":"あらはれわたる","sound":"あらわれわたる","parts":[["あらはれわたる","あらはれわたる"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"瀬々のあじろ木","kana":"せぜのあじろぎ","sound":"せぜのあじろぎ","parts":[["瀬々","せぜ"],["のあじろ","のあじろ"],["木","ぎ"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"朝ぼらけ宇治の川霧ーたえだえーにー","lower":"あらはれーわたるー瀬々のあじーろ木"},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"網代木","to":"あじろ木","why":"漢字1字の読みの途中で伸ばすので、仮名で書いた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "kimariji": {"kana":"あさぼらけう","sound":"あさぼらけう"}
+    },
+    {
+      "no": 65,
+      "phrases": [
+        {"text":"恨みわび","kana":"うらみわび","sound":"うらみわび","parts":[["恨","うら"],["みわび","みわび"]],"diffs":[]},
+        {"text":"干さぬ袖だに","kana":"ほさぬそでだに","sound":"ほさぬそでだに","parts":[["干","ほ"],["さぬ","さぬ"],["袖","そで"],["だに","だに"]],"diffs":[]},
+        {"text":"あるものを","kana":"あるものを","sound":"あるものお","parts":[["あるものを","あるものを"]],"diffs":[{"at":4,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"恋に朽ちなむ","kana":"こひにくちなむ","sound":"こいにくちなん","parts":[["恋","こひ"],["に","に"],["朽","く"],["ちなむ","ちなむ"]],"diffs":[{"at":1,"kana":"ひ","sound":"い","rule":"語中のハ行"},{"at":6,"kana":"む","sound":"ん","rule":"む"}]},
+        {"text":"名こそ惜しけれ","kana":"なこそをしけれ","sound":"なこそおしけれ","parts":[["名","な"],["こそ","こそ"],["惜","を"],["しけれ","しけれ"]],"diffs":[{"at":3,"kana":"を","sound":"お","rule":"ワ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"恨みわびー干さぬ袖だにーあるものーをー","lower":"恋にー朽ちなむー名こそ惜しーけれ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "kimariji": {"kana":"うら","sound":"うら"}
+    },
+    {
+      "no": 66,
+      "phrases": [
+        {"text":"もろともに","kana":"もろともに","sound":"もろともに","parts":[["もろともに","もろともに"]],"diffs":[]},
+        {"text":"あはれと思へ","kana":"あはれとおもへ","sound":"あわれとおもえ","parts":[["あはれと","あはれと"],["思","おも"],["へ","へ"]],"diffs":[{"at":1,"kana":"は","sound":"わ","rule":"語中のハ行"},{"at":6,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"山ざくら","kana":"やまざくら","sound":"やまざくら","parts":[["山","やま"],["ざくら","ざくら"]],"diffs":[]},
+        {"text":"花よりほかに","kana":"はなよりほかに","sound":"はなよりほかに","parts":[["花","はな"],["よりほかに","よりほかに"]],"diffs":[]},
+        {"text":"知る人もなし","kana":"しるひともなし","sound":"しるひともなし","parts":[["知","し"],["る","る"],["人","ひと"],["もなし","もなし"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"もろともにーあはれと思へー山ざくーらー","lower":"花よりーほかにー知る人もーなし"},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"思え","to":"思へ","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"},{"field":"本文","from":"山桜","to":"山ざくら","why":"漢字1字の読みの途中で伸ばすので、仮名で書いた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":4,"kana":"ほ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "kimariji": {"kana":"もろ","sound":"もろ"}
+    },
+    {
+      "no": 67,
+      "phrases": [
+        {"text":"春の夜の","kana":"はるのよの","sound":"はるのよの","parts":[["春","はる"],["の","の"],["夜","よ"],["の","の"]],"diffs":[]},
+        {"text":"夢ばかりなる","kana":"ゆめばかりなる","sound":"ゆめばかりなる","parts":[["夢","ゆめ"],["ばかりなる","ばかりなる"]],"diffs":[]},
+        {"text":"手枕に","kana":"たまくらに","sound":"たまくらに","parts":[["手枕","たまくら"],["に","に"]],"diffs":[]},
+        {"text":"かひなく立たむ","kana":"かひなくたたむ","sound":"かいなくたたん","parts":[["かひなく","かひなく"],["立","た"],["たむ","たむ"]],"diffs":[{"at":1,"kana":"ひ","sound":"い","rule":"語中のハ行"},{"at":6,"kana":"む","sound":"ん","rule":"む"}]},
+        {"text":"名こそ惜しけれ","kana":"なこそをしけれ","sound":"なこそおしけれ","parts":[["名","な"],["こそ","こそ"],["惜","を"],["しけれ","しけれ"]],"diffs":[{"at":3,"kana":"を","sound":"お","rule":"ワ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"春の夜のー夢ばかりなるー手枕ーにー","lower":"かひなくー立たむー名こそ惜しーけれ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "kimariji": {"kana":"はるの","sound":"はるの"}
+    },
+    {
+      "no": 68,
+      "phrases": [
+        {"text":"心にも","kana":"こころにも","sound":"こころにも","parts":[["心","こころ"],["にも","にも"]],"diffs":[]},
+        {"text":"あらで憂き世に","kana":"あらでうきよに","sound":"あらでうきよに","parts":[["あらで","あらで"],["憂","う"],["き","き"],["世","よ"],["に","に"]],"diffs":[]},
+        {"text":"ながらへば","kana":"ながらへば","sound":"ながらえば","parts":[["ながらへば","ながらへば"]],"diffs":[{"at":3,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"恋しかるべき","kana":"こひしかるべき","sound":"こいしかるべき","parts":[["恋","こひ"],["しかるべき","しかるべき"]],"diffs":[{"at":1,"kana":"ひ","sound":"い","rule":"語中のハ行"}]},
+        {"text":"夜半の月かな","kana":"よはのつきかな","sound":"よわのつきかな","parts":[["夜半","よは"],["の","の"],["月","つき"],["かな","かな"]],"diffs":[{"at":1,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"心にもーあらで憂き世にーながらへーばー","lower":"恋しかるーべきー夜半の月ーかな"},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"憂き夜","to":"憂き世","why":"データの漢字の誤りである"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "kimariji": {"kana":"こころに","sound":"こころに"}
+    },
+    {
+      "no": 69,
+      "phrases": [
+        {"text":"嵐ふく","kana":"あらしふく","sound":"あらしふく","parts":[["嵐","あらし"],["ふく","ふく"]],"diffs":[]},
+        {"text":"三室の山の","kana":"みむろのやまの","sound":"みむろのやまの","parts":[["三室","みむろ"],["の","の"],["山","やま"],["の","の"]],"diffs":[]},
+        {"text":"もみぢ葉は","kana":"もみぢばは","sound":"もみじばわ","parts":[["もみぢ","もみぢ"],["葉","ば"],["は","は"]],"diffs":[{"at":2,"kana":"ぢ","sound":"じ","rule":"四つ仮名"},{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"竜田の川の","kana":"たつたのかはの","sound":"たつたのかわの","parts":[["竜田","たつた"],["の","の"],["川","かは"],["の","の"]],"diffs":[{"at":5,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"錦なりけり","kana":"にしきなりけり","sound":"にしきなりけり","parts":[["錦","にしき"],["なりけり","なりけり"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"嵐ふくー三室の山のーもみぢ葉ーはー","lower":"竜田のー川のー錦なりーけり"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":0,"at":3,"kana":"ふ","why":"語の頭"},{"phrase":1,"at":1,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "kimariji": {"kana":"あらし","sound":"あらし"}
+    },
+    {
+      "no": 70,
+      "phrases": [
+        {"text":"寂しさに","kana":"さびしさに","sound":"さびしさに","parts":[["寂","さび"],["しさに","しさに"]],"diffs":[]},
+        {"text":"宿を立ち出でて","kana":"やどをたちいでて","sound":"やどおたちいでて","parts":[["宿","やど"],["を","を"],["立","た"],["ち","ち"],["出","い"],["でて","でて"]],"diffs":[{"at":2,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"ながむれば","kana":"ながむれば","sound":"ながむれば","parts":[["ながむれば","ながむれば"]],"diffs":[]},
+        {"text":"いづこも同じ","kana":"いづこもおなじ","sound":"いずこもおなじ","parts":[["いづこも","いづこも"],["同","おな"],["じ","じ"]],"diffs":[{"at":1,"kana":"づ","sound":"ず","rule":"四つ仮名"}]},
+        {"text":"秋の夕暮れ","kana":"あきのゆふぐれ","sound":"あきのゆうぐれ","parts":[["秋","あき"],["の","の"],["夕","ゆふ"],["暮","ぐ"],["れ","れ"]],"diffs":[{"at":4,"kana":"ふ","sound":"う","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"寂しさにー宿を立ち出でてーながむれーばー","lower":"いづこもー同じー秋の夕ー暮れ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":2,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15}},
+      "kimariji": {"kana":"さ","sound":"さ"}
+    },
+    {
+      "no": 71,
+      "phrases": [
+        {"text":"夕されば","kana":"ゆふされば","sound":"ゆうされば","parts":[["夕","ゆふ"],["されば","されば"]],"diffs":[{"at":1,"kana":"ふ","sound":"う","rule":"語中のハ行"}]},
+        {"text":"門田の稲葉","kana":"かどたのいなば","sound":"かどたのいなば","parts":[["門田","かどた"],["の","の"],["稲葉","いなば"]],"diffs":[]},
+        {"text":"おとづれて","kana":"おとづれて","sound":"おとずれて","parts":[["おとづれて","おとづれて"]],"diffs":[{"at":2,"kana":"づ","sound":"ず","rule":"四つ仮名"}]},
+        {"text":"葦のまろやに","kana":"あしのまろやに","sound":"あしのまろやに","parts":[["葦","あし"],["のまろやに","のまろやに"]],"diffs":[]},
+        {"text":"秋風ぞ吹く","kana":"あきかぜぞふく","sound":"あきかぜぞふく","parts":[["秋風","あきかぜ"],["ぞ","ぞ"],["吹","ふ"],["く","く"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"夕さればー門田の稲葉ーおとづれーてー","lower":"葦のーまろやにー秋風ぞー吹く"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "kimariji": {"kana":"ゆふ","sound":"ゆう"}
+    },
+    {
+      "no": 72,
+      "phrases": [
+        {"text":"音に聞く","kana":"おとにきく","sound":"おとにきく","parts":[["音","おと"],["に","に"],["聞","き"],["く","く"]],"diffs":[]},
+        {"text":"高師の浜の","kana":"たかしのはまの","sound":"たかしのはまの","parts":[["高師","たかし"],["の","の"],["浜","はま"],["の","の"]],"diffs":[]},
+        {"text":"あだ波は","kana":"あだなみは","sound":"あだなみわ","parts":[["あだ","あだ"],["波","なみ"],["は","は"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"かけじや袖の","kana":"かけじやそでの","sound":"かけじやそでの","parts":[["かけじや","かけじや"],["袖","そで"],["の","の"]],"diffs":[]},
+        {"text":"ぬれもこそすれ","kana":"ぬれもこそすれ","sound":"ぬれもこそすれ","parts":[["ぬれもこそすれ","ぬれもこそすれ"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"音に聞くー高師の浜のーあだ波ーはー","lower":"かけじやー袖のーぬれもこそーすれ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "kimariji": {"kana":"おと","sound":"おと"}
+    },
+    {
+      "no": 73,
+      "phrases": [
+        {"text":"高砂の","kana":"たかさごの","sound":"たかさごの","parts":[["高砂","たかさご"],["の","の"]],"diffs":[]},
+        {"text":"尾上の桜","kana":"をのへのさくら","sound":"おのえのさくら","parts":[["尾上","をのへ"],["の","の"],["桜","さくら"]],"diffs":[{"at":0,"kana":"を","sound":"お","rule":"ワ行"},{"at":2,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"咲きにけり","kana":"さきにけり","sound":"さきにけり","parts":[["咲","さ"],["きにけり","きにけり"]],"diffs":[]},
+        {"text":"外山の霞","kana":"とやまのかすみ","sound":"とやまのかすみ","parts":[["外山","とやま"],["の","の"],["霞","かすみ"]],"diffs":[]},
+        {"text":"立たずもあらなむ","kana":"たたずもあらなむ","sound":"たたずもあらなん","parts":[["立","た"],["たずもあらなむ","たずもあらなむ"]],"diffs":[{"at":7,"kana":"む","sound":"ん","rule":"む"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":6}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":6}],
+      "marked": {"upper":"高砂のー尾上の桜ー咲きにーけりー","lower":"外山のー霞ー立たずもあらーなむ"},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"尾の上","to":"尾上","why":"1つの語として「上」を語の頭から外した"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "kimariji": {"kana":"たか","sound":"たか"}
+    },
+    {
+      "no": 74,
+      "phrases": [
+        {"text":"憂かりける","kana":"うかりける","sound":"うかりける","parts":[["憂","う"],["かりける","かりける"]],"diffs":[]},
+        {"text":"人を初瀬の","kana":"ひとをはつせの","sound":"ひとおはつせの","parts":[["人","ひと"],["を","を"],["初瀬","はつせ"],["の","の"]],"diffs":[{"at":2,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"山おろし","kana":"やまおろし","sound":"やまおろし","parts":[["山","やま"],["おろし","おろし"]],"diffs":[]},
+        {"text":"はげしかれとは","kana":"はげしかれとは","sound":"はげしかれとわ","parts":[["はげしかれとは","はげしかれとは"]],"diffs":[{"at":6,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"祈らぬものを","kana":"いのらぬものを","sound":"いのらぬものお","parts":[["祈","いの"],["らぬものを","らぬものを"]],"diffs":[{"at":6,"kana":"を","sound":"お","rule":"ワ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":4}],
+      "marked": {"upper":"憂かりけるー人を初瀬のー山おろーしー","lower":"はげしかれーとはー祈らぬーものを"},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"山おろしよ","to":"山おろし","why":"読み方一覧の形に合わせた"},{"field":"仮名","from":"やまおろしよ","to":"やまおろし","why":"読み方一覧の形に合わせた"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "kimariji": {"kana":"うか","sound":"うか"}
+    },
+    {
+      "no": 75,
+      "phrases": [
+        {"text":"契りおきし","kana":"ちぎりおきし","sound":"ちぎりおきし","parts":[["契","ちぎ"],["りおきし","りおきし"]],"diffs":[]},
+        {"text":"させもが露を","kana":"させもがつゆを","sound":"させもがつゆお","parts":[["させもが","させもが"],["露","つゆ"],["を","を"]],"diffs":[{"at":6,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"命にて","kana":"いのちにて","sound":"いのちにて","parts":[["命","いのち"],["にて","にて"]],"diffs":[]},
+        {"text":"あはれ今年の","kana":"あはれことしの","sound":"あわれことしの","parts":[["あはれ","あはれ"],["今年","ことし"],["の","の"]],"diffs":[{"at":1,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"秋もいぬめり","kana":"あきもいぬめり","sound":"あきもいぬめり","parts":[["秋","あき"],["もいぬめり","もいぬめり"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":6},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"契りおきしーさせもが露をー命にーてー","lower":"あはれー今年のー秋もいぬーめり"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":12}},
+      "kimariji": {"kana":"ちぎりお","sound":"ちぎりお"}
+    },
+    {
+      "no": 76,
+      "phrases": [
+        {"text":"わたの原","kana":"わたのはら","sound":"わたのはら","parts":[["わたの","わたの"],["原","はら"]],"diffs":[]},
+        {"text":"漕ぎ出でて見れば","kana":"こぎいでてみれば","sound":"こぎいでてみれば","parts":[["漕","こ"],["ぎ","ぎ"],["出","い"],["でて","でて"],["見","み"],["れば","れば"]],"diffs":[]},
+        {"text":"ひさかたの","kana":"ひさかたの","sound":"ひさかたの","parts":[["ひさかたの","ひさかたの"]],"diffs":[]},
+        {"text":"雲居にまがふ","kana":"くもゐにまがふ","sound":"くもいにまごう","parts":[["雲居","くもゐ"],["にまがふ","にまがふ"]],"diffs":[{"at":2,"kana":"ゐ","sound":"い","rule":"ワ行"},{"at":5,"kana":"がふ","sound":"ごう","rule":"長音"}]},
+        {"text":"沖つ白波","kana":"おきつしらなみ","sound":"おきつしらなみ","parts":[["沖","おき"],["つ","つ"],["白","しら"],["波","なみ"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"わたの原漕ぎ出でて見ればーひさかたーのー","lower":"雲居にーまがふー沖つ白ー波"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "kimariji": {"kana":"わたのはらこ","sound":"わたのはらこ"}
+    },
+    {
+      "no": 77,
+      "phrases": [
+        {"text":"瀬をはやみ","kana":"せをはやみ","sound":"せおはやみ","parts":[["瀬","せ"],["をはやみ","をはやみ"]],"diffs":[{"at":1,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"岩にせかるる","kana":"いはにせかるる","sound":"いわにせかるる","parts":[["岩","いは"],["にせかるる","にせかるる"]],"diffs":[{"at":1,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"滝川の","kana":"たきがはの","sound":"たきがわの","parts":[["滝川","たきがは"],["の","の"]],"diffs":[{"at":3,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"われても末に","kana":"われてもすゑに","sound":"われてもすえに","parts":[["われても","われても"],["末","すゑ"],["に","に"]],"diffs":[{"at":5,"kana":"ゑ","sound":"え","rule":"ワ行"}]},
+        {"text":"逢はむとぞ思ふ","kana":"あはむとぞおもふ","sound":"あわんとぞおもう","parts":[["逢","あ"],["はむとぞ","はむとぞ"],["思","おも"],["ふ","ふ"]],"diffs":[{"at":1,"kana":"は","sound":"わ","rule":"語中のハ行"},{"at":2,"kana":"む","sound":"ん","rule":"む"},{"at":7,"kana":"ふ","sound":"う","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"瀬をはやみー岩にせかるるー滝川ーのー","lower":"われてもー末にー逢はむとぞー思ふ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":0,"at":2,"kana":"は","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15}},
+      "kimariji": {"kana":"せ","sound":"せ"}
+    },
+    {
+      "no": 78,
+      "phrases": [
+        {"text":"淡路島","kana":"あはぢしま","sound":"あわじしま","parts":[["淡路島","あはぢしま"]],"diffs":[{"at":1,"kana":"は","sound":"わ","rule":"語中のハ行"},{"at":2,"kana":"ぢ","sound":"じ","rule":"四つ仮名"}]},
+        {"text":"通ふ千鳥の","kana":"かよふちどりの","sound":"かようちどりの","parts":[["通","かよ"],["ふ","ふ"],["千鳥","ちどり"],["の","の"]],"diffs":[{"at":2,"kana":"ふ","sound":"う","rule":"語中のハ行"}]},
+        {"text":"鳴く声に","kana":"なくこゑに","sound":"なくこえに","parts":[["鳴","な"],["く","く"],["声","こゑ"],["に","に"]],"diffs":[{"at":3,"kana":"ゑ","sound":"え","rule":"ワ行"}]},
+        {"text":"いく夜寝覚めぬ","kana":"いくよねざめぬ","sound":"いくよねざめぬ","parts":[["いく","いく"],["夜","よ"],["寝覚","ねざ"],["めぬ","めぬ"]],"diffs":[]},
+        {"text":"須磨の関守","kana":"すまのせきもり","sound":"すまのせきもり","parts":[["須磨","すま"],["の","の"],["関","せき"],["守","もり"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"淡路島ー通ふ千鳥のー鳴く声ーにー","lower":"いく夜ー寝覚めぬー須磨の関ー守"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "kimariji": {"kana":"あはぢ","sound":"あわじ"}
+    },
+    {
+      "no": 79,
+      "phrases": [
+        {"text":"秋風に","kana":"あきかぜに","sound":"あきかぜに","parts":[["秋風","あきかぜ"],["に","に"]],"diffs":[]},
+        {"text":"たなびく雲の","kana":"たなびくくもの","sound":"たなびくくもの","parts":[["たなびく","たなびく"],["雲","くも"],["の","の"]],"diffs":[]},
+        {"text":"たえ間より","kana":"たえまより","sound":"たえまより","parts":[["たえ","たえ"],["間","ま"],["より","より"]],"diffs":[]},
+        {"text":"もれ出づる月の","kana":"もれいづるつきの","sound":"もれいずるつきの","parts":[["もれ","もれ"],["出","い"],["づる","づる"],["月","つき"],["の","の"]],"diffs":[{"at":3,"kana":"づ","sound":"ず","rule":"四つ仮名"}]},
+        {"text":"影のさやけさ","kana":"かげのさやけさ","sound":"かげのさやけさ","parts":[["影","かげ"],["のさやけさ","のさやけさ"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":8},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":8},{"phrase":4,"after":5}],
+      "marked": {"upper":"秋風にーたなびく雲のーたえ間ーよりー","lower":"もれ出づるー月のー影のさやーけさ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":5}},
+      "kimariji": {"kana":"あきか","sound":"あきか"}
+    },
+    {
+      "no": 80,
+      "phrases": [
+        {"text":"ながからむ","kana":"ながからむ","sound":"ながからん","parts":[["ながからむ","ながからむ"]],"diffs":[{"at":4,"kana":"む","sound":"ん","rule":"む"}]},
+        {"text":"心も知らず","kana":"こころもしらず","sound":"こころもしらず","parts":[["心","こころ"],["も","も"],["知","し"],["らず","らず"]],"diffs":[]},
+        {"text":"黒髪の","kana":"くろかみの","sound":"くろかみの","parts":[["黒髪","くろかみ"],["の","の"]],"diffs":[]},
+        {"text":"乱れてけさは","kana":"みだれてけさは","sound":"みだれてけさわ","parts":[["乱","みだ"],["れてけさは","れてけさは"]],"diffs":[{"at":6,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"ものをこそ思へ","kana":"ものをこそおもへ","sound":"ものおこそおもえ","parts":[["ものをこそ","ものをこそ"],["思","おも"],["へ","へ"]],"diffs":[{"at":2,"kana":"を","sound":"お","rule":"ワ行"},{"at":7,"kana":"へ","sound":"え","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"ながからむー心も知らずー黒髪ーのー","lower":"乱れてーけさはーものをこそー思へ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "kimariji": {"kana":"ながか","sound":"ながか"}
+    },
+    {
+      "no": 81,
+      "phrases": [
+        {"text":"ほととぎす","kana":"ほととぎす","sound":"ほととぎす","parts":[["ほととぎす","ほととぎす"]],"diffs":[]},
+        {"text":"鳴きつる方を","kana":"なきつるかたを","sound":"なきつるかたお","parts":[["鳴","な"],["きつる","きつる"],["方","かた"],["を","を"]],"diffs":[{"at":6,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"ながむれば","kana":"ながむれば","sound":"ながむれば","parts":[["ながむれば","ながむれば"]],"diffs":[]},
+        {"text":"ただ有明の","kana":"ただありあけの","sound":"ただありあけの","parts":[["ただ","ただ"],["有明","ありあけ"],["の","の"]],"diffs":[]},
+        {"text":"月ぞ残れる","kana":"つきぞのこれる","sound":"つきぞのこれる","parts":[["月","つき"],["ぞ","ぞ"],["残","のこ"],["れる","れる"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"ほととぎすー鳴きつる方をーながむれーばー","lower":"ただー有明のー月ぞ残ーれる"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":2,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15}},
+      "kimariji": {"kana":"ほ","sound":"ほ"}
+    },
+    {
+      "no": 82,
+      "phrases": [
+        {"text":"思ひわび","kana":"おもひわび","sound":"おもいわび","parts":[["思","おも"],["ひわび","ひわび"]],"diffs":[{"at":2,"kana":"ひ","sound":"い","rule":"語中のハ行"}]},
+        {"text":"さても命は","kana":"さてもいのちは","sound":"さてもいのちわ","parts":[["さても","さても"],["命","いのち"],["は","は"]],"diffs":[{"at":6,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"あるものを","kana":"あるものを","sound":"あるものお","parts":[["あるものを","あるものを"]],"diffs":[{"at":4,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"憂きに堪へぬは","kana":"うきにたへぬは","sound":"うきにたえぬわ","parts":[["憂","う"],["きに","きに"],["堪","た"],["へぬは","へぬは"]],"diffs":[{"at":4,"kana":"へ","sound":"え","rule":"語中のハ行"},{"at":6,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"涙なりけり","kana":"なみだなりけり","sound":"なみだなりけり","parts":[["涙","なみだ"],["なりけり","なりけり"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"思ひわびーさても命はーあるものーをー","lower":"憂きにー堪へぬはー涙なりーけり"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "kimariji": {"kana":"おも","sound":"おも"}
+    },
+    {
+      "no": 83,
+      "phrases": [
+        {"text":"世の中よ","kana":"よのなかよ","sound":"よのなかよ","parts":[["世","よ"],["の","の"],["中","なか"],["よ","よ"]],"diffs":[]},
+        {"text":"道こそなけれ","kana":"みちこそなけれ","sound":"みちこそなけれ","parts":[["道","みち"],["こそなけれ","こそなけれ"]],"diffs":[]},
+        {"text":"思ひ入る","kana":"おもひいる","sound":"おもいいる","parts":[["思","おも"],["ひ","ひ"],["入","い"],["る","る"]],"diffs":[{"at":2,"kana":"ひ","sound":"い","rule":"語中のハ行"}]},
+        {"text":"山の奥にも","kana":"やまのおくにも","sound":"やまのおくにも","parts":[["山","やま"],["の","の"],["奥","おく"],["にも","にも"]],"diffs":[]},
+        {"text":"鹿ぞ鳴くなる","kana":"しかぞなくなる","sound":"しかぞなくなる","parts":[["鹿","しか"],["ぞ","ぞ"],["鳴","な"],["くなる","くなる"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"世の中よー道こそなけれー思ひー入るー","lower":"山のー奥にもー鹿ぞ鳴くーなる"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "kimariji": {"kana":"よのなかよ","sound":"よのなかよ"}
+    },
+    {
+      "no": 84,
+      "phrases": [
+        {"text":"ながらへば","kana":"ながらへば","sound":"ながらえば","parts":[["ながらへば","ながらへば"]],"diffs":[{"at":3,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"またこのごろや","kana":"またこのごろや","sound":"またこのごろや","parts":[["またこのごろや","またこのごろや"]],"diffs":[]},
+        {"text":"しのばれむ","kana":"しのばれむ","sound":"しのばれん","parts":[["しのばれむ","しのばれむ"]],"diffs":[{"at":4,"kana":"む","sound":"ん","rule":"む"}]},
+        {"text":"憂しと見し世ぞ","kana":"うしとみしよぞ","sound":"うしとみしよぞ","parts":[["憂","う"],["しと","しと"],["見","み"],["し","し"],["世","よ"],["ぞ","ぞ"]],"diffs":[]},
+        {"text":"今は恋しき","kana":"いまはこひしき","sound":"いまわこいしき","parts":[["今","いま"],["は","は"],["恋","こひ"],["しき","しき"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"},{"at":4,"kana":"ひ","sound":"い","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"ながらへばーまたこのごろやーしのばれーむー","lower":"憂しとー見し世ぞー今は恋ーしき"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "kimariji": {"kana":"ながら","sound":"ながら"}
+    },
+    {
+      "no": 85,
+      "phrases": [
+        {"text":"夜もすがら","kana":"よもすがら","sound":"よもすがら","parts":[["夜","よ"],["もすがら","もすがら"]],"diffs":[]},
+        {"text":"もの思ふころは","kana":"ものおもふころは","sound":"ものおもうころわ","parts":[["もの","もの"],["思","おも"],["ふころは","ふころは"]],"diffs":[{"at":4,"kana":"ふ","sound":"う","rule":"語中のハ行"},{"at":7,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"明けやらで","kana":"あけやらで","sound":"あけやらで","parts":[["明","あ"],["けやらで","けやらで"]],"diffs":[]},
+        {"text":"ねやのひまさへ","kana":"ねやのひまさへ","sound":"ねやのひまさえ","parts":[["ねやのひまさへ","ねやのひまさへ"]],"diffs":[{"at":6,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"つれなかりけり","kana":"つれなかりけり","sound":"つれなかりけり","parts":[["つれなかりけり","つれなかりけり"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":8},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"夜もすがらーもの思ふころはー明けやらーでー","lower":"ねやのーひまさへーつれなかりーけり"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":3,"kana":"ひ","why":"語の頭"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "kimariji": {"kana":"よも","sound":"よも"}
+    },
+    {
+      "no": 86,
+      "phrases": [
+        {"text":"嘆けとて","kana":"なげけとて","sound":"なげけとて","parts":[["嘆","なげ"],["けとて","けとて"]],"diffs":[]},
+        {"text":"月やはものを","kana":"つきやはものを","sound":"つきやわものお","parts":[["月","つき"],["やはものを","やはものを"]],"diffs":[{"at":3,"kana":"は","sound":"わ","rule":"語中のハ行"},{"at":6,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"思はする","kana":"おもはする","sound":"おもわする","parts":[["思","おも"],["はする","はする"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"かこち顔なる","kana":"かこちがほなる","sound":"かこちがおなる","parts":[["かこち","かこち"],["顔","がほ"],["なる","なる"]],"diffs":[{"at":4,"kana":"ほ","sound":"お","rule":"語中のハ行"}]},
+        {"text":"わが涙かな","kana":"わがなみだかな","sound":"わがなみだかな","parts":[["わが","わが"],["涙","なみだ"],["かな","かな"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"嘆けとてー月やはものをー思はーするー","lower":"かこち顔ーなるーわが涙ーかな"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "kimariji": {"kana":"なげけ","sound":"なげけ"}
+    },
+    {
+      "no": 87,
+      "phrases": [
+        {"text":"村雨の","kana":"むらさめの","sound":"むらさめの","parts":[["村雨","むらさめ"],["の","の"]],"diffs":[]},
+        {"text":"露もまだ干ぬ","kana":"つゆもまだひぬ","sound":"つゆもまだひぬ","parts":[["露","つゆ"],["もまだ","もまだ"],["干","ひ"],["ぬ","ぬ"]],"diffs":[]},
+        {"text":"まきの葉に","kana":"まきのはに","sound":"まきのはに","parts":[["まきの","まきの"],["葉","は"],["に","に"]],"diffs":[]},
+        {"text":"霧立ちのぼる","kana":"きりたちのぼる","sound":"きりたちのぼる","parts":[["霧","きり"],["立","た"],["ちのぼる","ちのぼる"]],"diffs":[]},
+        {"text":"秋の夕暮","kana":"あきのゆふぐれ","sound":"あきのゆうぐれ","parts":[["秋","あき"],["の","の"],["夕","ゆふ"],["暮","ぐれ"]],"diffs":[{"at":4,"kana":"ふ","sound":"う","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"村雨のー露もまだ干ぬーまきの葉ーにー","lower":"霧ー立ちのぼるー秋の夕ー暮"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":15}},
+      "kimariji": {"kana":"む","sound":"む"}
+    },
+    {
+      "no": 88,
+      "phrases": [
+        {"text":"難波江の","kana":"なにはえの","sound":"なにわえの","parts":[["難波江","なにはえ"],["の","の"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"葦のかりねの","kana":"あしのかりねの","sound":"あしのかりねの","parts":[["葦","あし"],["のかりねの","のかりねの"]],"diffs":[]},
+        {"text":"ひとよゆゑ","kana":"ひとよゆゑ","sound":"ひとよゆえ","parts":[["ひとよゆゑ","ひとよゆゑ"]],"diffs":[{"at":4,"kana":"ゑ","sound":"え","rule":"ワ行"}]},
+        {"text":"身をつくしてや","kana":"みをつくしてや","sound":"みおつくしてや","parts":[["身","み"],["をつくしてや","をつくしてや"]],"diffs":[{"at":1,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"恋ひわたるべき","kana":"こひわたるべき","sound":"こいわたるべき","parts":[["恋","こ"],["ひわたるべき","ひわたるべき"]],"diffs":[{"at":1,"kana":"ひ","sound":"い","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"難波江のー葦のかりねのーひとよーゆゑー","lower":"身をーつくしてやー恋ひわたるーべき"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":6}},
+      "kimariji": {"kana":"なにはえ","sound":"なにわえ"}
+    },
+    {
+      "no": 89,
+      "phrases": [
+        {"text":"玉の緒よ","kana":"たまのをよ","sound":"たまのおよ","parts":[["玉","たま"],["の","の"],["緒","を"],["よ","よ"]],"diffs":[{"at":3,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"絶えなば絶えね","kana":"たえなばたえね","sound":"たえなばたえね","parts":[["絶","た"],["えなば","えなば"],["絶","た"],["えね","えね"]],"diffs":[]},
+        {"text":"ながらへば","kana":"ながらへば","sound":"ながらえば","parts":[["ながらへば","ながらへば"]],"diffs":[{"at":3,"kana":"へ","sound":"え","rule":"語中のハ行"}]},
+        {"text":"忍ぶることの","kana":"しのぶることの","sound":"しのぶることの","parts":[["忍","しの"],["ぶることの","ぶることの"]],"diffs":[]},
+        {"text":"弱りもぞする","kana":"よわりもぞする","sound":"よわりもぞする","parts":[["弱","よわ"],["りもぞする","りもぞする"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"玉の緒よー絶えなば絶えねーながらへーばー","lower":"忍ぶるーことのー弱りもぞーする"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "kimariji": {"kana":"たま","sound":"たま"}
+    },
+    {
+      "no": 90,
+      "phrases": [
+        {"text":"見せばやな","kana":"みせばやな","sound":"みせばやな","parts":[["見","み"],["せばやな","せばやな"]],"diffs":[]},
+        {"text":"雄島の海人の","kana":"をじまのあまの","sound":"おじまのあまの","parts":[["雄島","をじま"],["の","の"],["海人","あま"],["の","の"]],"diffs":[{"at":0,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"袖だにも","kana":"そでだにも","sound":"そでだにも","parts":[["袖","そで"],["だにも","だにも"]],"diffs":[]},
+        {"text":"濡れにぞ濡れし","kana":"ぬれにぞぬれし","sound":"ぬれにぞぬれし","parts":[["濡","ぬ"],["れにぞ","れにぞ"],["濡","ぬ"],["れし","れし"]],"diffs":[]},
+        {"text":"色は変はらず","kana":"いろはかはらず","sound":"いろわかわらず","parts":[["色","いろ"],["は","は"],["変","か"],["はらず","はらず"]],"diffs":[{"at":2,"kana":"は","sound":"わ","rule":"語中のハ行"},{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"見せばやなー雄島の海人のー袖だにーもー","lower":"濡れにぞー濡れしー色は変はーらず"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "kimariji": {"kana":"みせ","sound":"みせ"}
+    },
+    {
+      "no": 91,
+      "phrases": [
+        {"text":"きりぎりす","kana":"きりぎりす","sound":"きりぎりす","parts":[["きりぎりす","きりぎりす"]],"diffs":[]},
+        {"text":"鳴くや霜夜の","kana":"なくやしもよの","sound":"なくやしもよの","parts":[["鳴","な"],["くや","くや"],["霜夜","しもよ"],["の","の"]],"diffs":[]},
+        {"text":"さむしろに","kana":"さむしろに","sound":"さむしろに","parts":[["さむしろに","さむしろに"]],"diffs":[]},
+        {"text":"衣かたしき","kana":"ころもかたしき","sound":"ころもかたしき","parts":[["衣","ころも"],["かたしき","かたしき"]],"diffs":[]},
+        {"text":"ひとりかも寝む","kana":"ひとりかもねむ","sound":"ひとりかもねん","parts":[["ひとりかも","ひとりかも"],["寝","ね"],["む","む"]],"diffs":[{"at":6,"kana":"む","sound":"ん","rule":"む"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"きりぎりすー鳴くや霜夜のーさむしろーにー","lower":"衣ーかたしきーひとりかもー寝む"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":2,"at":1,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "kimariji": {"kana":"きり","sound":"きり"}
+    },
+    {
+      "no": 92,
+      "phrases": [
+        {"text":"わが袖は","kana":"わがそでは","sound":"わがそでわ","parts":[["わが","わが"],["袖","そで"],["は","は"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"潮干に見えぬ","kana":"しほひにみえぬ","sound":"しおひにみえぬ","parts":[["潮","しほ"],["干","ひ"],["に","に"],["見","み"],["えぬ","えぬ"]],"diffs":[{"at":1,"kana":"ほ","sound":"お","rule":"語中のハ行"}]},
+        {"text":"沖の石の","kana":"おきのいしの","sound":"おきのいしの","parts":[["沖","おき"],["の","の"],["石","いし"],["の","の"]],"diffs":[]},
+        {"text":"人こそ知らね","kana":"ひとこそしらね","sound":"ひとこそしらね","parts":[["人","ひと"],["こそ","こそ"],["知","し"],["らね","らね"]],"diffs":[]},
+        {"text":"かわく間もなし","kana":"かわくまもなし","sound":"かわくまもなし","parts":[["かわく","かわく"],["間","ま"],["もなし","もなし"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":5},{"phrase":2,"after":6},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"わが袖はー潮干に見えぬー沖の石ーのー","lower":"人こそー知らねーかわく間もーなし"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":8}},
+      "kimariji": {"kana":"わがそ","sound":"わがそ"}
+    },
+    {
+      "no": 93,
+      "phrases": [
+        {"text":"世の中は","kana":"よのなかは","sound":"よのなかわ","parts":[["世","よ"],["の","の"],["中","なか"],["は","は"]],"diffs":[{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"常にもがもな","kana":"つねにもがもな","sound":"つねにもがもな","parts":[["常","つね"],["にもがもな","にもがもな"]],"diffs":[]},
+        {"text":"渚漕ぐ","kana":"なぎさこぐ","sound":"なぎさこぐ","parts":[["渚","なぎさ"],["漕","こ"],["ぐ","ぐ"]],"diffs":[]},
+        {"text":"海人の小舟の","kana":"あまのをぶねの","sound":"あまのおぶねの","parts":[["海人","あま"],["の","の"],["小舟","をぶね"],["の","の"]],"diffs":[{"at":3,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"綱手かなしも","kana":"つなでかなしも","sound":"つなでかなしも","parts":[["綱手","つなで"],["かなしも","かなしも"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"世の中はー常にもがもなー渚ー漕ぐー","lower":"海人のー小舟のー綱手かなーしも"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "kimariji": {"kana":"よのなかは","sound":"よのなかわ"}
+    },
+    {
+      "no": 94,
+      "phrases": [
+        {"text":"み吉野の","kana":"みよしのの","sound":"みよしのの","parts":[["み","み"],["吉野","よしの"],["の","の"]],"diffs":[]},
+        {"text":"山の秋風","kana":"やまのあきかぜ","sound":"やまのあきかぜ","parts":[["山","やま"],["の","の"],["秋風","あきかぜ"]],"diffs":[]},
+        {"text":"小夜更けて","kana":"さよふけて","sound":"さよふけて","parts":[["小夜","さよ"],["更","ふ"],["けて","けて"]],"diffs":[]},
+        {"text":"ふるさと寒く","kana":"ふるさとさむく","sound":"ふるさとさむく","parts":[["ふるさと","ふるさと"],["寒","さむ"],["く","く"]],"diffs":[]},
+        {"text":"衣うつなり","kana":"ころもうつなり","sound":"ころもうつなり","parts":[["衣","ころも"],["うつなり","うつなり"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"み吉野のー山の秋風ー小夜更けーてー","lower":"ふるさとー寒くー衣うつーなり"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[{"phrase":3,"at":5,"kana":"む","why":"語の一部"}]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "kimariji": {"kana":"みよ","sound":"みよ"}
+    },
+    {
+      "no": 95,
+      "phrases": [
+        {"text":"おほけなく","kana":"おほけなく","sound":"おおけなく","parts":[["おほけなく","おほけなく"]],"diffs":[{"at":1,"kana":"ほ","sound":"お","rule":"語中のハ行"}]},
+        {"text":"憂き世の民に","kana":"うきよのたみに","sound":"うきよのたみに","parts":[["憂","う"],["き","き"],["世","よ"],["の","の"],["民","たみ"],["に","に"]],"diffs":[]},
+        {"text":"おほふかな","kana":"おほふかな","sound":"おおうかな","parts":[["おほふかな","おほふかな"]],"diffs":[{"at":1,"kana":"ほ","sound":"お","rule":"語中のハ行"},{"at":2,"kana":"ふ","sound":"う","rule":"語中のハ行"}]},
+        {"text":"わが立つ杣に","kana":"わがたつそまに","sound":"わがたつそまに","parts":[["わが","わが"],["立","た"],["つ","つ"],["杣","そま"],["に","に"]],"diffs":[]},
+        {"text":"すみ染の袖","kana":"すみぞめのそで","sound":"すみぞめのそで","parts":[["すみ","すみ"],["染","ぞめ"],["の","の"],["袖","そで"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":3},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"おほけなくー憂き世の民にーおほふーかなー","lower":"わがー立つ杣にーすみ染のー袖"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":7}},
+      "kimariji": {"kana":"おほけ","sound":"おおけ"}
+    },
+    {
+      "no": 96,
+      "phrases": [
+        {"text":"花さそふ","kana":"はなさそふ","sound":"はなさそう","parts":[["花","はな"],["さそふ","さそふ"]],"diffs":[{"at":4,"kana":"ふ","sound":"う","rule":"語中のハ行"}]},
+        {"text":"嵐の庭の","kana":"あらしのにはの","sound":"あらしのにわの","parts":[["嵐","あらし"],["の","の"],["庭","には"],["の","の"]],"diffs":[{"at":5,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"雪ならで","kana":"ゆきならで","sound":"ゆきならで","parts":[["雪","ゆき"],["ならで","ならで"]],"diffs":[]},
+        {"text":"ふりゆくものは","kana":"ふりゆくものは","sound":"ふりゆくものわ","parts":[["ふりゆくものは","ふりゆくものは"]],"diffs":[{"at":6,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"わが身なりけり","kana":"わがみなりけり","sound":"わがみなりけり","parts":[["わが","わが"],["身","み"],["なりけり","なりけり"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"花さそふー嵐の庭のー雪ならーでー","lower":"ふりゆくーものはーわが身なりーけり"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":10}},
+      "kimariji": {"kana":"はなさ","sound":"はなさ"}
+    },
+    {
+      "no": 97,
+      "phrases": [
+        {"text":"来ぬ人を","kana":"こぬひとを","sound":"こぬひとお","parts":[["来","こ"],["ぬ","ぬ"],["人","ひと"],["を","を"]],"diffs":[{"at":4,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"松帆の浦の","kana":"まつほのうらの","sound":"まつほのうらの","parts":[["松","まつ"],["帆","ほ"],["の","の"],["浦","うら"],["の","の"]],"diffs":[]},
+        {"text":"夕なぎに","kana":"ゆふなぎに","sound":"ゆうなぎに","parts":[["夕","ゆふ"],["なぎに","なぎに"]],"diffs":[{"at":1,"kana":"ふ","sound":"う","rule":"語中のハ行"}]},
+        {"text":"焼くや藻塩の","kana":"やくやもしほの","sound":"やくやもしおの","parts":[["焼","や"],["くや","くや"],["藻塩","もしほ"],["の","の"]],"diffs":[{"at":5,"kana":"ほ","sound":"お","rule":"語中のハ行"}]},
+        {"text":"身もこがれつつ","kana":"みもこがれつつ","sound":"みもこがれつつ","parts":[["身","み"],["もこがれつつ","もこがれつつ"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":3},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"来ぬ人をー松帆の浦のー夕なぎーにー","lower":"焼くやー藻塩のー身もこがれーつつ"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":9}},
+      "kimariji": {"kana":"こぬ","sound":"こぬ"}
+    },
+    {
+      "no": 98,
+      "phrases": [
+        {"text":"風そよぐ","kana":"かぜそよぐ","sound":"かぜそよぐ","parts":[["風","かぜ"],["そよぐ","そよぐ"]],"diffs":[]},
+        {"text":"楢の小川の","kana":"ならのをがはの","sound":"ならのおがわの","parts":[["楢","なら"],["の","の"],["小川","をがは"],["の","の"]],"diffs":[{"at":3,"kana":"を","sound":"お","rule":"ワ行"},{"at":5,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"夕暮は","kana":"ゆふぐれは","sound":"ゆうぐれわ","parts":[["夕","ゆふ"],["暮","ぐれ"],["は","は"]],"diffs":[{"at":1,"kana":"ふ","sound":"う","rule":"語中のハ行"},{"at":4,"kana":"は","sound":"わ","rule":"語中のハ行"}]},
+        {"text":"みそぎぞ夏の","kana":"みそぎぞなつの","sound":"みそぎぞなつの","parts":[["みそぎぞ","みそぎぞ"],["夏","なつ"],["の","の"]],"diffs":[]},
+        {"text":"しるしなりける","kana":"しるしなりける","sound":"しるしなりける","parts":[["しるしなりける","しるしなりける"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":4},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"風そよぐー楢の小川のー夕暮ーはー","lower":"みそぎぞー夏のーしるしなりーける"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":11}},
+      "kimariji": {"kana":"かぜそ","sound":"かぜそ"}
+    },
+    {
+      "no": 99,
+      "phrases": [
+        {"text":"人もをし","kana":"ひともをし","sound":"ひともおし","parts":[["人","ひと"],["もをし","もをし"]],"diffs":[{"at":3,"kana":"を","sound":"お","rule":"ワ行"}]},
+        {"text":"人もうらめし","kana":"ひともうらめし","sound":"ひともうらめし","parts":[["人","ひと"],["もうらめし","もうらめし"]],"diffs":[]},
+        {"text":"あぢきなく","kana":"あぢきなく","sound":"あじきなく","parts":[["あぢきなく","あぢきなく"]],"diffs":[{"at":1,"kana":"ぢ","sound":"じ","rule":"四つ仮名"}]},
+        {"text":"世を思ふゆゑに","kana":"よをおもふゆゑに","sound":"よおおもうゆえに","parts":[["世","よ"],["を","を"],["思","おも"],["ふゆゑに","ふゆゑに"]],"diffs":[{"at":1,"kana":"を","sound":"お","rule":"ワ行"},{"at":4,"kana":"ふ","sound":"う","rule":"語中のハ行"},{"at":6,"kana":"ゑ","sound":"え","rule":"ワ行"}]},
+        {"text":"もの思ふ身は","kana":"ものおもふみは","sound":"ものおもうみわ","parts":[["もの","もの"],["思","おも"],["ふ","ふ"],["身","み"],["は","は"]],"diffs":[{"at":4,"kana":"ふ","sound":"う","rule":"語中のハ行"},{"at":6,"kana":"は","sound":"わ","rule":"語中のハ行"}]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":8},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":8},{"phrase":4,"after":5}],
+      "marked": {"upper":"人もをしー人もうらめしーあぢきなーくー","lower":"世をー思ふゆゑにーもの思ふー身は"},
+      "origin": {"text":{"source":"csv","fixes":[{"field":"本文","from":"あじきなく","to":"あぢきなく","why":"データの漢字の列の誤りで、同じデータの仮名の列と合わない"}]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":13}},
+      "kimariji": {"kana":"ひとも","sound":"ひとも"}
+    },
+    {
+      "no": 100,
+      "phrases": [
+        {"text":"百敷や","kana":"ももしきや","sound":"ももしきや","parts":[["百敷","ももしき"],["や","や"]],"diffs":[]},
+        {"text":"古き軒端の","kana":"ふるきのきばの","sound":"ふるきのきばの","parts":[["古","ふる"],["き","き"],["軒端","のきば"],["の","の"]],"diffs":[]},
+        {"text":"しのぶにも","kana":"しのぶにも","sound":"しのぶにも","parts":[["しのぶにも","しのぶにも"]],"diffs":[]},
+        {"text":"なほあまりある","kana":"なほあまりある","sound":"なおあまりある","parts":[["なほあまりある","なほあまりある"]],"diffs":[{"at":1,"kana":"ほ","sound":"お","rule":"語中のハ行"}]},
+        {"text":"昔なりけり","kana":"むかしなりけり","sound":"むかしなりけり","parts":[["昔","むかし"],["なりけり","なりけり"]],"diffs":[]}
+      ],
+      "ruleStretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "stretches": [{"phrase":0,"after":5},{"phrase":1,"after":7},{"phrase":2,"after":4},{"phrase":2,"after":5},{"phrase":3,"after":2},{"phrase":3,"after":7},{"phrase":4,"after":5}],
+      "marked": {"upper":"百敷やー古き軒端のーしのぶにーもー","lower":"なほーあまりあるー昔なりーけり"},
+      "origin": {"text":{"source":"csv","fixes":[]},"sound":{"basis":"rules","checkedWith":"list","kept":[]},"ruleStretches":{"source":"rules"},"stretches":{"source":"list","page":14}},
+      "kimariji": {"kana":"もも","sound":"もも"}
+    }
+  ]
+}
