@@ -159,9 +159,9 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
 .tate rt { font-family: var(--f-sans); font-size: 0.42em; letter-spacing: 0; color: var(--ink-3); }
 /* ▼ の字は書体で形が変わり、縦に伸ばせないので、形を描く。
    中に全角の空白を入れて字と同じ基準線に乗せる。空の箱は行の幅の中央に寄り、ふりがなのぶん右へずれる。
-   上の四角は声を保つ所、下の三角は声を弱め始めてよい余韻の最後の1秒である。全部を三角にすると、余韻の始めから弱めると読めてしまう（2026-11-04 のユーザーの判断）。
-   四角と三角の境目（--yoin-hold）は FADE_SEC から出す */
-.yoin { display: inline-block; width: 1em; height: 1.5em; margin-top: 0.2em; line-height: 1; color: transparent; background: var(--ink); clip-path: polygon(25% 0, 75% 0, 75% var(--yoin-hold, 66.7%), 50% 100%, 25% var(--yoin-hold, 66.7%)); }
+   形は上から下へ細くなる三角にする。余韻に入ったら早めに弱め始める「にんじん型」を理想とする資料（講習資料 s.25）に合わせる。
+   上を四角、下を三角にした形も試したが、音量を保つ「だいこん型」に近く読めるので戻した（2026-11-04 夜のユーザーの判断） */
+.yoin { display: inline-block; width: 1em; height: 1.5em; margin-top: 0.2em; line-height: 1; color: transparent; background: var(--ink); clip-path: polygon(25% 0, 75% 0, 50% 100%); }
 .poem { display: grid; grid-template-columns: minmax(0, 1fr) 72px; gap: 8px; padding: 16px 14px; }
 .poem .tate { justify-self: center; --lyric: clamp(22px, 6.4vw, 28px); }
 .poem aside { display: flex; flex-direction: column; justify-content: space-between; text-align: right; }
@@ -673,9 +673,6 @@ const SEGMENTS = [
 ];
 const PAIR_SEC = SEGMENTS.reduce((sum, s) => sum + s.sec, 0);
 
-// 余韻の最後の1秒は、声を弱め始めてよい範囲とする（2026-11-03 のユーザーの判断）
-const FADE_SEC = 1;
-document.documentElement.style.setProperty('--yoin-hold', `${((1 - FADE_SEC / SEGMENTS[1].sec) * 100).toFixed(1)}%`);
 
 // 間は1秒しかなく、区間ごとに名前と色を替えると目で追えないので、余韻と間を1つの区間として見せる。
 // key は歌の区切り（blocksHtml の data-phase）と同じ名前にする
@@ -898,11 +895,9 @@ function paintStage(root, t) {
   });
   const [, yoinSeg] = SEGMENTS;
   const yoinEnd = YOIN_START + yoinSeg.sec;
-  const fadeFrom = yoinEnd - FADE_SEC;
-  const hold = 1 - FADE_SEC / yoinSeg.sec;
   const markFrom = Number(root.querySelector('.lyric .yoin')?.dataset.from ?? YOIN_START);
-  // 四角（声を保つ所）は「る」を塗り終えてから fadeFrom まで、三角（弱め始めてよい最後の1秒）は fadeFrom から余韻の終わりまでに塗る。形の境目と塗りの境目をそろえるためである
-  const yoinDone = !assist ? 0 : t < fadeFrom ? hold * progress(markFrom, fadeFrom) : hold + (1 - hold) * progress(fadeFrom, yoinEnd);
+  // 余韻の印は、「る」を塗り終えてから余韻の終わりまで、一定の速さで上から塗る
+  const yoinDone = progress(markFrom, yoinEnd);
   root.style.setProperty('--yoin-done', pct(yoinDone));
   // 待機（t=0）では囲まない。まだどこも読んでいないからである
   const phase = phaseAt(t);
