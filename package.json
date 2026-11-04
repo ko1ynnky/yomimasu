@@ -14,6 +14,7 @@
     "build": "node site/build.ts",
     "dev": "npm run build && wrangler dev --ip 127.0.0.1 --port 8787",
     "e2e": "playwright test",
+    "eval:real": "node scripts/measure/eval-real.ts",
     "check": "npm run typecheck && npm test && npm run test:shell && npm run build"
   },
   "dependencies": {
