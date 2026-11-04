@@ -24,6 +24,18 @@ test('英語の断りは決めた文のまま lang="en" で添える', () => {
   );
 });
 
+test('再利用の節は、札の文字のデータも再利用を認めないものとして挙げる', () => {
+  const reuse = source().markdown.split('## 再利用について')[1] ?? '';
+  for (const subject of ['知識の文章', '札の文字のデータ', '札ごとの読みの表']) {
+    assert.ok(reuse.includes(subject), subject);
+  }
+});
+
+test('再利用の節は、資料から来た内容がどこにあっても MIT License の範囲外だと書く', () => {
+  const reuse = source().markdown.split('## 再利用について')[1] ?? '';
+  assert.match(reuse, /資料から来た内容は、どのファイルにあっても MIT License の範囲外/);
+});
+
 test('録音を端末の外へ出さないことを書く', () => {
   assert.match(source().markdown, /録音は端末の外へ出ません。/);
 });
