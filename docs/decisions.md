@@ -2,6 +2,43 @@
 
 あとの作業に影響する技術と設計の判断を、新しいものを上にして書く。理由と、採らなかった案も残す。結論を改めるときは、元の項目を消さずに、改めた日付と理由を足す。
 
+## 2026-11-05 自走にスキル yomimasu の下だけを書かせる
+
+- 決めたこと：
+  - `auto.yml` の Claude の step に、action の `settings` で `PermissionRequest` の hook を渡す。hook は `.github/scripts/allow-skill-write.sh` で、`.claude/skills/yomimasu/` の下への Write と Edit にだけ allow を答え、ほかには答えない。
+  - スキル yomimasu の下でも、`SKILL.md`（深さと大文字と小文字によらない）と、入れ子の `.claude/` の下には答えない。
+  - hook は、Claude を動かす前に `~/.claude/hooks/` へ写し、写した先から動かす。
+  - `.claude/settings*`、`.claude/hooks/`、ほかのスキル（`verify`、`review-pr`）は、今のまま自走に書かせない。
+- 経緯：#13 の自走が `.claude/skills/yomimasu/scripts/commands.ts` を Write しようとして、`--allowedTools` に `Write` があるのに拒まれ、止まった。ユーザーは「skills の下だけ許す」と決めた（2026-11-05）。
+- 根拠：
+  - Claude Code は `.claude/` と `~/.claude/` を守られた場所として扱う。`default` のモードでは確認を求め、`-p` と Agent SDK の実行は `default` で始まる。設定の `permissions.allow` の規則は、守られた場所への書き込みを事前には許さない。
+  - `-p` の実行で確認の要る呼び出しは、`PermissionRequest` の hook か `--permission-prompt-tool` が許さなければ拒まれる。hook は確認を求める場面で呼ばれ、答えがなければ拒まれる。
+  - スキルの frontmatter の `allowed-tools` と `hooks` は、スキルを使う間の権限を足す。ワークスペースの信頼にも左右されない（`permissions` の文書）。
+  - 手元の `claude -p`（2.1.317、`--permission-mode default`、`--setting-sources project`、`--tools "Write,Edit,Read"`、モデルは haiku）で次を確かめた。
+    - hook なしでは、`--allowedTools` が `Write(.claude/skills/yomimasu/**)` でも `Write(/.claude/skills/yomimasu/**)` でも `Write` でも、スキルの下への Write は #13 と同じ文で拒まれた。
+    - `--settings` で hook を渡し、`--allowedTools` を `Write,Edit,Read` にすると、スキル yomimasu の下の Write と Edit は通った。`.claude/settings.json`、`.claude/hooks/`、`.claude/skills/verify/` への Write と、`SKILL.md` の Edit は拒まれた。
+    - 同じ条件で、作業フォルダーの外（`$RUNNER_TEMP` に当たる場所）への Write は確認なしに通った。`~/.claude/` の下への Write は拒まれた。
+- 判断：
+  - hook は判断できないとき何も答えない。答えのない確認は拒まれるので、壊れたときも書けない側に倒れる。
+  - パスは、親へ上る部分、「.」の部分、最後の「/」、リンクのファイルを断り、あるところまでを実際の場所に直して比べる。比べる先は、実際の場所に直したプロジェクトから名前で組み立てる。リンクのフォルダーを通る書き込みも、スキルのフォルダーそのものがリンクの場合も、スキルの外へは許さない。「.」と最後の「/」を断るのは、書く前にパスを整えると、名前で見る断りと違うファイルに書くからである。同じ理由で、スキルより下の部分に使える文字を英数字と `._/-` に絞る。整え方の綴り（最後の空白など）を1つずつ追うと、抜けがまた開くからである。スキルの今のファイル名はすべてこの範囲に入り、日本語の名前のファイルは書かせない。
+  - `SKILL.md` を外すのは、frontmatter を書き換えてから `Skill` で使えば、許可を広げられるからである。設定と同じものとして守る。入れ子の `<フォルダー>/.claude/skills/<名前>/SKILL.md` は、Claude がそのフォルダーのファイルを触るとスキルとして読まれる（`skills` の文書）ので、入れ子の `SKILL.md` と `.claude/` の下も守る。#13 で要ったのは `scripts/` の下である。
+  - 守りの行を1つずつ外した写しでテストを動かし、どの行を外しても、その行のテストが落ちることを確かめた。
+  - hook を `~/.claude/` の下に置くのは、hook を書き換えれば許す範囲を広げられるからである。`$RUNNER_TEMP` には Write が届くと手元で分かった。
+- 採らなかった案：
+  - `--allowedTools` や `permissions.allow` にパスを書く案。文書のとおり、手元でも効かなかった。
+  - hook を `.claude/settings.json` に置く案。手元のセッションでも、スキル yomimasu の下を確認なしに書けるようになる。hook のスクリプトも、実行の中で書き換えられる。
+  - hook を `$RUNNER_TEMP` に写す案。最初はこの形で書いたが、Write が届くので、実行の中で hook を書き換えられる（reviewer の指摘から手元で確かめた）。
+  - `PreToolUse` の hook で allow を返す案。確認の要らない呼び出しにも答えることになり、確認に答えるだけの `PermissionRequest` より広い。
+  - `bypassPermissions` のモード。設定と hook も書けるようになる。
+  - `auto` のモード。守られた場所への書き込みは分類器に回り、通るかが実行ごとに決まらない。
+  - Bash で書く案。権限の確認を回り込むことになる。
+- 限界：
+  - GitHub Actions ではまだ動かしていない。action は `settings` を `~/.claude/settings.json`（ユーザーの設定）に書き、手元では `--settings` で渡した。どちらの hook も動くと文書にはあるが、Actions では確かめていない。
+  - action が入れる Claude Code の版は、手元の 2.1.317 と違うことがある。action は Agent SDK で Claude を動かすが、手元では `claude -p` しか試していない。
+  - 2026-11-03 の項のとおり `--allowedTools` は境界にならない。`Edit` と `npm run` を組み合わせれば、`~/.claude/` の hook も `.claude/` の下も書き換えられる。この hook は、守られた場所の確認を、Write と Edit のうちスキルの下へのものに限って外すだけである。
+  - `~/.claude/` の下への Write が拒まれることは、`--settings` で渡した hook で確かめた。action の `settings` から読む実物では確かめていない。
+- 根拠の文書（確認日 2026-11-05）：Claude Code の `permission-modes`（Protected paths、Which mode a session starts in）、`permissions`（Extend permissions with hooks、ワークスペースの信頼の表）、`hooks`（PermissionRequest）、`headless`、`skills`（Load skills in monorepos and subdirectories）。claude-code-action `d535f51` の `base-action/src/setup-claude-code-settings.ts`。
+
 ## 2026-11-05 測定の定義を決め、選択と値を1か所のデータに置く
 
 - 決めたこと：
@@ -85,6 +122,7 @@
   - 字の時刻は標準の時間の中の割り振りで、お手本の音とは合わない。
   - 幅 320 では、歌の字が 10.9px まで縮む。
   - 実機では確かめていない（iPhone SE のシミュレーターと Chromium で確かめた）。
+
 ## 2026-11-04 54番の四句の「けふ」を、一覧のふりがなではなくユーザーの判断で読む
 
 - 決めたこと：

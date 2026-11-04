@@ -87,6 +87,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cp .github/scripts/run-summary.sh "$RUNNER_TEMP/run-summary.sh"
+          # hook を書き換えれば許す範囲を広げられるので、Claude Code が守る ~/.claude/ の下に置く。
+          # $RUNNER_TEMP には、--allowedTools の Write が確認なしに届く（docs/decisions.md）。
+          mkdir -p ~/.claude/hooks
+          cp .github/scripts/allow-skill-write.sh ~/.claude/hooks/allow-skill-write.sh
           if [[ -n $ISSUE ]]; then
             gh issue edit "$ISSUE" --add-label in-progress
           else
@@ -109,6 +113,11 @@ jobs:
             contents: write
             pull_requests: write
             issues: write
+          # Claude Code は .claude/ の下を守り、--allowedTools の Write と Edit では、パスを書いても書かせない。
+          # スキル yomimasu の下だけを、確認に答える hook で許す。設定、hook、SKILL.md、ほかのスキルは守ったままにする。
+          # .claude/settings.json に置かないのは、手元のセッションでも確認なしに書けるようになるからである。
+          settings: |
+            {"hooks": {"PermissionRequest": [{"matcher": "Write|Edit", "hooks": [{"type": "command", "command": "bash ~/.claude/hooks/allow-skill-write.sh"}]}]}}
           prompt: |
             ${{ needs.pick.outputs.issue != '' && format('Issue #{0} を実装する。', needs.pick.outputs.issue) || format('PR #{0} のレビューの指摘に答える。', needs.pick.outputs.pr) }}
 

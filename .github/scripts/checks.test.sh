@@ -694,6 +694,84 @@ for sample in \
   [[ -n $(token_problems "$bad_workflow") ]] || ng "token: 通してはいけない Workflow を通した（${sample%%|*}、${sample#*|}）"
 done
 
+# 自走の実行で .claude/ の下の書き込みを確かめる PermissionRequest の hook。許すときだけ allow を出し、
+# ほかは何も答えない。答えのない確認は -p の実行で拒まれる。
+skill_project=$(mktemp -d "$work/project.XXXXXX")
+mkdir -p "$skill_project/.claude/skills/yomimasu/scripts" "$skill_project/.claude/skills/yomimasu-other" \
+  "$skill_project/.claude/skills/verify" "$skill_project/.claude/hooks"
+touch "$skill_project/.claude/hooks/guard-files.sh"
+ln -s ../../hooks "$skill_project/.claude/skills/yomimasu/linked"
+ln -s ../../../hooks/guard-files.sh "$skill_project/.claude/skills/yomimasu/scripts/linked.sh"
+ln -s ../yomimasu-other "$skill_project/.claude/skills/yomimasu/other-link"
+# パスに .claude を含めずにスキルの中を指す入口。
+ln -s .claude/skills/yomimasu "$skill_project/skill-link"
+ln -s "$skill_project" "$work/project-alias"
+# スキルのフォルダーそのものが .claude/hooks/ を指すプロジェクト。
+linked_skill_project=$(mktemp -d "$work/project.XXXXXX")
+mkdir -p "$linked_skill_project/.claude/skills" "$linked_skill_project/.claude/hooks"
+ln -s ../hooks "$linked_skill_project/.claude/skills/yomimasu"
+
+# 相対パスがこのリポジトリの本物のスキルに直らないよう、プロジェクトの中で動かす。
+skill_write() {
+  local project=$1 tool=$2 path=$3
+  jq -n --arg tool "$tool" --arg path "$path" \
+    '{hook_event_name: "PermissionRequest", tool_name: $tool, tool_input: {file_path: $path, content: "x"}}' |
+    (
+      cd "$skill_project" || exit 1
+      if [[ -n $project ]]; then
+        CLAUDE_PROJECT_DIR=$project bash "$scripts/allow-skill-write.sh"
+      else
+        env -u CLAUDE_PROJECT_DIR bash "$scripts/allow-skill-write.sh"
+      fi
+    )
+}
+
+# 第1引数は allow（許す）か none（答えない）。
+expect_skill_write() {
+  local want=$1 what=$2 output code got
+  shift 2
+  output=$(skill_write "$@" 2>&1)
+  code=$?
+  got=none
+  if [[ -n $output ]]; then
+    got=$(jq -r 'select(.hookSpecificOutput.hookEventName == "PermissionRequest") | .hookSpecificOutput.decision.behavior' <<<"$output" 2>/dev/null)
+  fi
+  if [[ $code != 0 || $got != "$want" ]]; then
+    ng "allow-skill-write: $what（期待 $want、exit $code、出力 $output）"
+  fi
+}
+
+skills=$skill_project/.claude/skills
+expect_skill_write allow 'スキル yomimasu の下に新しいファイルを書ける' "$skill_project" Write "$skills/yomimasu/scripts/commands.ts"
+expect_skill_write allow 'スキル yomimasu の下の、まだないフォルダーにも書ける' "$skill_project" Write "$skills/yomimasu/references/new/a.md"
+expect_skill_write allow 'スキル yomimasu の下を Edit で直せる' "$skill_project" Edit "$skills/yomimasu/references/timing.md"
+expect_skill_write allow '大文字を含む名前のファイルも直せる' "$skill_project" Edit "$skills/yomimasu/references/README.md"
+expect_skill_write allow 'プロジェクトのパスがリンクを通っていても、実際の場所で比べて許す' "$work/project-alias" Write "$skills/yomimasu/scripts/commands.ts"
+expect_skill_write none 'スキルの定義の SKILL.md には答えない' "$skill_project" Edit "$skills/yomimasu/SKILL.md"
+expect_skill_write none '大文字と小文字だけが違う SKILL.md にも答えない' "$skill_project" Write "$skills/yomimasu/skill.md"
+expect_skill_write none '入れ子の SKILL.md にも答えない' "$skill_project" Write "$skills/yomimasu/scripts/SKILL.md"
+expect_skill_write none '入れ子の .claude/ の下には答えない' "$skill_project" Write "$skills/yomimasu/x/.claude/agents/a.md"
+expect_skill_write none '入れ子にスキルと同じ並びがあっても、.claude/ の下には答えない' "$skill_project" Write "$skills/yomimasu/x/.claude/skills/yomimasu/a.md"
+expect_skill_write none '最後に空白を付けた SKILL.md には答えない' "$skill_project" Write "$skills/yomimasu/SKILL.md "
+expect_skill_write none '最後に空白を付けたリンクのファイルには答えない' "$skill_project" Edit "$skills/yomimasu/scripts/linked.sh "
+expect_skill_write none '最後に /. を付けた SKILL.md には答えない' "$skill_project" Write "$skills/yomimasu/SKILL.md/."
+expect_skill_write none '最後に / を付けた SKILL.md には答えない' "$skill_project" Write "$skills/yomimasu/SKILL.md/"
+expect_skill_write none '最後に /. を付けたリンクのファイルには答えない' "$skill_project" Edit "$skills/yomimasu/scripts/linked.sh/."
+expect_skill_write none '.claude/settings.json には答えない' "$skill_project" Write "$skill_project/.claude/settings.json"
+expect_skill_write none '.claude/settings.local.json には答えない' "$skill_project" Edit "$skill_project/.claude/settings.local.json"
+expect_skill_write none '.claude/hooks/ には答えない' "$skill_project" Edit "$skill_project/.claude/hooks/guard-files.sh"
+expect_skill_write none 'ほかのスキルには答えない' "$skill_project" Write "$skills/verify/features/a.md"
+expect_skill_write none '名前の頭だけが同じフォルダーには答えない' "$skill_project" Write "$skills/yomimasu-other/scripts/a.ts"
+expect_skill_write none 'リンクを通って、名前の頭だけが同じフォルダーに出るパスには答えない' "$skill_project" Write "$skills/yomimasu/other-link/a.ts"
+expect_skill_write none 'まだないフォルダーを挟んで親へ上るパスには答えない' "$skill_project" Write "$skills/yomimasu/new/../../../settings.json"
+expect_skill_write none '外を指すリンクのフォルダーを通るパスには答えない' "$skill_project" Write "$skills/yomimasu/linked/guard-files.sh"
+expect_skill_write none '外を指すリンクのファイルには答えない' "$skill_project" Edit "$skills/yomimasu/scripts/linked.sh"
+expect_skill_write none 'スキルのフォルダーが外を指すリンクなら、その先に答えない' "$linked_skill_project" Write "$linked_skill_project/.claude/hooks/guard-files.sh"
+expect_skill_write none 'スキルのフォルダーが外を指すリンクなら、リンクを通るパスにも答えない' "$linked_skill_project" Write "$linked_skill_project/.claude/skills/yomimasu/x.sh"
+expect_skill_write none '相対パスには答えない' "$skill_project" Write skill-link/scripts/commands.ts
+expect_skill_write none 'Write と Edit のほかの道具には答えない' "$skill_project" NotebookEdit "$skills/yomimasu/a.ipynb"
+expect_skill_write none 'プロジェクトの場所が分からなければ答えない' '' Write "$skills/yomimasu/scripts/commands.ts"
+
 if ((failures > 0)); then
   printf '%s 件失敗\n' "$failures"
   exit 1
