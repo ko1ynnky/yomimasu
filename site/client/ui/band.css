@@ -1,4 +1,4 @@
-/* 帯の決まりは docs/ui-guide.md の7節にある。総論、聞く画面、読む画面で同じ部品を使う。 */
+/* 帯の決まりは docs/ui-guide.md の7節にある。総論などで使う部品で、読む画面の歌の枠には出さない。 */
 
 .band { display: flex; gap: 2px; height: 34px; }
 .seg { position: relative; min-width: 0; overflow: hidden; border-radius: 4px; background: var(--track); }
@@ -13,7 +13,7 @@
 [data-seg="yoin"] { --seg: var(--seg-yoin); }
 [data-seg="ma"] { --seg: var(--seg-ma); }
 [data-seg="kami"] { --seg: var(--seg-kami); }
-.seg i, .drain { background: var(--seg); }
+.seg i { background: var(--seg); }
 .band--static .seg { background: var(--seg); }
 .band--tall { height: 44px; }
 .band--tall .seg > span { font-size: 13.5px; }

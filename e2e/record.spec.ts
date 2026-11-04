@@ -86,7 +86,6 @@ const takeOf = async (page: Page) => {
     readingStartSec: Number(await read('reading-start-sec')),
     assisted: await read('assisted'),
     pair: await read('pair'),
-    yoinTapSec: await read('yoin-tap-sec'),
     voiceProcessing: JSON.parse((await read('voice-processing')) ?? 'null'),
   };
 };
@@ -95,12 +94,17 @@ const startButton = (page: Page) => page.getByRole('button', { name: '読み始�
 const finishButton = (page: Page) => page.getByRole('button', { name: '読み終えた' });
 const cancelButton = (page: Page) => page.getByRole('button', { name: 'やめる' });
 const recState = (page: Page) => page.locator('.bar').getByText('録音中');
+const block = (page: Page, phase: 'shimo' | 'yoin-ma' | 'kami') => page.locator(`.blk[data-phase="${phase}"]`);
+// 塗った割合で、0.00% から 100.00% まで進む。
+const paintOf = (page: Page, selector: string, name = '--p') =>
+  page.locator(selector).evaluateAll((elements, name) => elements.map((element) => (element as HTMLElement).style.getPropertyValue(name)), name);
+const boxesOf = (page: Page) => page.getByTestId('lyrics').locator('[data-at]').evaluateAll((elements) => elements.map((element) => element.getBoundingClientRect().toJSON()));
 
 // マイクを開くまでは合図が出ないので、合図が出て消えるまでを待つ。
 const waitForReading = async (page: Page) => {
   await expect(page.locator('.count')).toBeVisible();
   await expect(page.locator('.count')).toBeHidden({ timeout: 5000 });
-  await expect(page.locator('.now b')).toHaveText('下の句（5秒程度）');
+  await expect(block(page, 'shimo')).toHaveClass(/is-now/);
 };
 
 test('合図は数字だけで音を鳴らさず、録音は合図の前から始まる', async ({ baseURL }) => {
@@ -130,10 +134,9 @@ test('読み終えたは上の句の区間から押せ、録音を読み始め�
   await waitForReading(page);
   expect(await lyrics.boundingBox()).toEqual(before);
   await expect(finishButton(page)).toBeDisabled();
-  await expect(page.locator('.now b')).toHaveText('余韻と間（3.0＋1.0秒）', { timeout: 7000 });
-  await expect(page.locator('.now span small')).toHaveText('余韻');
+  await expect(block(page, 'yoin-ma')).toHaveClass(/is-now/, { timeout: 7000 });
   await expect(finishButton(page)).toBeDisabled();
-  await expect(page.locator('.now b')).toHaveText('上の句（6秒程度）', { timeout: 6000 });
+  await expect(block(page, 'kami')).toHaveClass(/is-now/, { timeout: 6000 });
   expect(await lyrics.boundingBox()).toEqual(before);
   await finishButton(page).click();
   const wallSec = (Date.now() - pressedAt) / 1000;
@@ -149,7 +152,7 @@ test('読み終えたは上の句の区間から押せ、録音を読み始め�
   expect(take.readingStartSec).toBeLessThan(COUNT_SEC + 0.3);
   expect(take.lengthSec).toBeGreaterThan(take.readingStartSec + 9);
   expect(take.lengthSec).toBeLessThanOrEqual(wallSec);
-  expect(take).toMatchObject({ assisted: 'true', pair: '81-45', yoinTapSec: null });
+  expect(take).toMatchObject({ assisted: 'true', pair: '81-45' });
 
   await expect(page.getByRole('link', { name: '結果を見る' })).toHaveAttribute('href', '/result/');
   await expect(page.getByRole('button', { name: '読み直す' })).toBeVisible();
@@ -167,41 +170,40 @@ test('読み終えたは上の句の区間から押せ、録音を読み始め�
   await browser.close();
 });
 
-test('余韻の入りで画面を押すと、その時刻から余韻と間を数え直し、押した位置を録音に残す', async ({ baseURL }) => {
+test('読んでいるあいだは今の区切りだけを囲み、読み上げた字だけを朱にし、囲みと表記の切り替えの出し入れで字を動かさない', async ({ baseURL }) => {
   const browser = await launchWithFakeMic();
   const page = await openPage(browser, baseURL);
+  const notation = page.getByRole('group', { name: '歌の表記' });
+  await expect(notation).toBeVisible();
+  await expect(page.locator('.blk.is-now')).toHaveCount(0);
+  const before = await boxesOf(page);
 
   await startButton(page).click();
+  await expect(notation).toBeHidden();
   await waitForReading(page);
-  await expect(page.locator('.cue')).toHaveCSS('text-emphasis-style', /circle/);
-  const hint = page.getByText('画面のどこかを、「る」でタップ');
-  await expect(hint).toBeVisible({ timeout: 4000 });
-  await page.waitForTimeout(500);
-  await page.locator('.lyric').dispatchEvent('pointerdown');
+  await expect(page.locator('.blk.is-now')).toHaveCount(1);
 
-  await expect(page.locator('.run')).toContainText(/● 余韻の入りをタップに合わせました（標準より \d\.\d\d秒早い）/);
-  await expect(page.locator('.now b')).toHaveText('余韻と間（3.0＋1.0秒）');
-  await expect(hint).toBeHidden();
-  await page.locator('.lyric').dispatchEvent('pointerdown');
-  await expect(page.locator('.run .read')).toHaveCount(1);
-
-  await expect(finishButton(page)).toBeEnabled({ timeout: 6000 });
-  await finishButton(page).click();
-  const take = await takeOf(page);
-  // 確かめる画面と読み直す画面には、前の読みのタップの差を残さない。
-  await expect(page.locator('.run')).not.toContainText('タップ');
-  await page.getByRole('button', { name: '読み直す' }).click();
-  await expect(startButton(page)).toBeVisible();
-  await expect(page.locator('.run')).not.toContainText('タップ');
-  expect(Number(take.yoinTapSec)).toBeGreaterThan(2);
-  expect(Number(take.yoinTapSec)).toBeLessThan(5);
-
+  await expect(block(page, 'yoin-ma')).toHaveClass(/is-now/, { timeout: 7000 });
+  await expect(page.locator('.blk.is-now')).toHaveCount(1);
+  expect(new Set(await paintOf(page, '.blk[data-phase="shimo"] [data-at]'))).toEqual(new Set(['100.00%']));
+  expect(new Set(await paintOf(page, '.blk[data-phase="kami"] [data-at]'))).toEqual(new Set(['0.00%']));
+  expect(await boxesOf(page)).toEqual(before);
   mkdirSync(ARTIFACTS_DIR, { recursive: true });
-  writeFileSync(join(ARTIFACTS_DIR, 'yoin-tap.json'), JSON.stringify({ yoinTapSec: Number(take.yoinTapSec) }, null, 2));
+  await page.screenshot({ path: join(ARTIFACTS_DIR, 'reading-yoin.png') });
+
+  await expect(block(page, 'kami')).toHaveClass(/is-now/, { timeout: 6000 });
+  await expect(page.locator('.blk.is-now')).toHaveCount(1);
+  expect(await paintOf(page, '.lyric .yoin', '--yoin-done')).toEqual(['100.00%']);
+  await expect(page.locator('body')).not.toContainText('タップ');
+
+  await cancelButton(page).click();
+  await expect(notation).toBeVisible();
+  await expect(page.locator('.blk.is-now')).toHaveCount(0);
+  expect(await boxesOf(page)).toEqual(before);
   await browser.close();
 });
 
-test('補助を外すと、帯の進み、色の減り、残り秒数が消え、歌詞と録音中の表示は残る', async ({ baseURL }) => {
+test('補助を外すと、字の朱と区切りの囲みを出さずに「補助なし」と出し、歌詞と録音中の表示は残る', async ({ baseURL }) => {
   const browser = await launchWithFakeMic();
   const page = await openPage(browser, baseURL);
 
@@ -209,25 +211,22 @@ test('補助を外すと、帯の進み、色の減り、残り秒数が消え�
   await expect(page.getByRole('button', { name: '補助を外す' })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('button', { name: '補助あり' })).toHaveAttribute('aria-pressed', 'false');
   await expect(page.locator('.now b')).toHaveText('補助なし');
-  await expect(page.locator('.cue')).not.toHaveCSS('text-emphasis-style', /circle/);
 
   await startButton(page).click();
   await expect(page.locator('.count')).toBeVisible();
   await expect(page.locator('.count')).toBeHidden({ timeout: 5000 });
   await expect(page.locator('.now b')).toHaveText('補助なし');
-  await page.waitForTimeout(3000);
-  await expect(page.locator('.drain')).toBeHidden();
-  await expect(page.locator('.now span')).toBeHidden();
-  await expect(page.locator('.seg i').first()).toBeHidden();
+  // 余韻を弱め始める 7 秒を過ぎるまで待つ。余韻の印の塗りは、その前後で式が変わる。
+  await page.waitForTimeout(7500);
+  await expect(page.locator('.blk.is-now')).toHaveCount(0);
+  expect(new Set(await paintOf(page, '.lyric [data-at]'))).toEqual(new Set(['0.00%']));
+  expect(await paintOf(page, '.lyric .yoin', '--yoin-done')).toEqual(['0.00%']);
   await expect(page.getByTestId('lyrics')).toBeVisible();
   await expect(recState(page)).toBeVisible();
-  await expect(page.getByText('画面のどこかを、「る」でタップ')).toBeHidden();
-  await page.locator('.lyric').dispatchEvent('pointerdown');
-  await expect(page.locator('.run .read')).toHaveCount(0);
 
-  await expect(finishButton(page)).toBeEnabled({ timeout: 8000 });
+  await expect(finishButton(page)).toBeEnabled({ timeout: 4000 });
   await finishButton(page).click();
-  expect(await takeOf(page)).toMatchObject({ assisted: 'false', yoinTapSec: null });
+  expect(await takeOf(page)).toMatchObject({ assisted: 'false' });
   await browser.close();
 });
 
@@ -365,7 +364,7 @@ test('画面を消さない設定を取れなくても、録音は止めない',
 
   await startButton(page).click();
   await waitForReading(page);
-  await expect(page.locator('.now b')).toHaveText('上の句（6秒程度）', { timeout: 12_000 });
+  await expect(block(page, 'kami')).toHaveClass(/is-now/, { timeout: 12_000 });
   await finishButton(page).click();
   await expect(page.getByTestId('take')).toBeAttached();
   await browser.close();
@@ -390,11 +389,12 @@ test('実行の行は組を決まり字で書き、前回の直す点を渡す�
   await expect(page.locator('.run')).toHaveCount(0);
 });
 
-test('初めて開いたときだけ読む前の説明を出し、わかったで閉じたあとは説明のリンクで開ける', async ({ page }) => {
+test('初めて開いたときだけ読む前の説明を出し、わかったで閉じたあとは説明のリンクで同じ説明を開ける', async ({ page }) => {
+  const items = ['「読み始める」を押すと、3・2・1 と数えます。数え終わったら読み始めてください。'];
   await page.goto('/read/rec/');
   const help = page.getByRole('dialog', { name: '読む前に' });
   await expect(help).toBeVisible();
-  await expect(help).toContainText('下の句の最後の「る」を読む瞬間に、画面のどこかをタップしてください。');
+  await expect(help.locator('p')).toHaveText(items);
   await help.getByRole('button', { name: 'わかった' }).click();
   await expect(help).toBeHidden();
 
@@ -403,6 +403,7 @@ test('初めて開いたときだけ読む前の説明を出し、わかった�
   await expect(help).toBeHidden();
   await page.getByRole('button', { name: '読み方の説明' }).click();
   await expect(help).toBeVisible();
+  await expect(help.locator('p')).toHaveText(items);
 });
 
 test('読み始めるを押すと、読む前の説明を閉じて覚える', async ({ baseURL }) => {

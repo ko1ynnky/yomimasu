@@ -96,19 +96,5 @@ export function pairLines(cards: readonly Card[], pair: Pair): PairLines {
   return { shimo: linesOf(find(pair.shimo), LOWER), kami: linesOf(find(pair.kami), UPPER) };
 }
 
-// 余韻は最後の音から始まるので、字ではなく、聞こえる最後の音を出す。漢字で終わる札（2番の「山」）で字を出すと1音早く押すことになり、
-// 発音の違う仮名で終わる札（77番の「ふ」→お、3番の「む」→ん）で字を出すと、聞こえる音と食い違う。
-export function tapCharOf(lines: PairLines): string {
-  const line = lines.shimo.at(-1)!;
-  const last = line[lastSoundAt(line)];
-  return (last.ruby ?? last.text).at(-1)!;
-}
-
 // 伸ばす印と余韻の印は音を持たないので飛ばす。
 export const lastSoundAt = (line: Line) => line.findLastIndex((token) => !token.nobi && !token.yoin);
-
-// 文字の時刻の列は C3 で表に入る。それまでは字数で分けた仮の位置で、押し間違いを数えない範囲にだけ使う。
-export function secondShimoLineAt(lines: PairLines, shimoSec: number): number {
-  const [first, second] = lines.shimo.map((line) => lineText(line).length);
-  return (shimoSec * first) / (first + second);
-}
