@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { definition, voicedSpanMethods, type Definition } from '../../.claude/skills/yomimasu/scripts/definition.ts';
-import { measure, measureKami, type Measurement, type Recording, type Seconds } from '../../.claude/skills/yomimasu/scripts/measure.ts';
+import { measure, measureKami, rangePlacement, type Measurement, type Recording, type Seconds } from '../../.claude/skills/yomimasu/scripts/measure.ts';
 import { standardReading, synthesize, type ReadingPlan } from '../support/synth.ts';
 
 const TOLERANCE_SEC = 0.05;
@@ -237,4 +237,12 @@ test('上の句だけを測るとき、物音しかない録音では、上の�
   const plan: ReadingPlan = { ...kamiOnly, kamiSec: 0, tailSec: 2.5, extras: [{ kind: 'thud', atSec: 1.5, lengthSec: 0.3 }] };
   const result = measureKami(recordingOf(plan, { autoGainControl: false }));
   assert.deepEqual(result, { kami: { status: 'unmeasured', reason: 'too-quiet' }, level: { status: 'unmeasured', reason: 'too-quiet' } });
+});
+
+test('判定の幅は両端を含み、0.01 秒の値で、幅の中か、上か、下かを決める', () => {
+  const range = definition.ranges.ma;
+  assert.equal(rangePlacement(range.minSec, range), 'inside');
+  assert.equal(rangePlacement(range.maxSec, range), 'inside');
+  assert.equal(rangePlacement(range.maxSec + 0.01, range), 'above');
+  assert.equal(rangePlacement(range.minSec - 0.01, range), 'below');
 });

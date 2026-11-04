@@ -1,5 +1,5 @@
 // 定義は docs/measure.md に置き、選択と値は definition.ts に置く。ここを変えるときは定義も一緒に変える。
-import { definition as standard, type Definition, type VoicedSpanMethod } from './definition.ts';
+import { definition as standard, type Definition, type Range, type VoicedSpanMethod } from './definition.ts';
 
 export type Unmeasured = 'too-quiet' | 'no-gap' | 'cut-off';
 export type Seconds = { status: 'ok'; sec: number } | { status: 'unmeasured'; reason: Unmeasured };
@@ -259,4 +259,13 @@ export function measureKami(recording: Recording, use: Definition = standard): K
   const single = quiet ? null : methods[use.voicedSpan.method].single(analysis, use);
   if (!single) return { kami: unmeasured('too-quiet'), ...levelOf(recording, analysis, true, use) };
   return { kami: seconds(single.end - single.start, single.cut.start || single.cut.end), ...level };
+}
+
+// 判定は Web とスキルで同じにするので、ここで決める。幅は両端を含み、measure が返す 0.01 秒の値で比べる。
+export type Placement = 'inside' | 'above' | 'below';
+
+export function rangePlacement(sec: number, range: Range): Placement {
+  if (sec > range.maxSec) return 'above';
+  if (sec < range.minSec) return 'below';
+  return 'inside';
 }
