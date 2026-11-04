@@ -1,0 +1,54 @@
+/* 教科書のページ（総論、最低限これだけ、ポイントを知る、100首の一覧、1首のページ）の見た目。値と意味は docs/ui-guide.md と見本の docs/ui-sample.html にある。
+   どのページにも読み込まれるので、読む画面の stage.css と同じ名前の部品（.poem、.tate など）は .karuta-page の中だけに当てる。 */
+
+/* stage.css と同じ書体の宣言。切り出した版を置く PR で、両方の src を差し替える。 */
+@font-face { font-family: "yomimasu-uta"; src: local("はんなり明朝"), local("HannariMincho-Regular"), local("Hannari Mincho"); }
+
+yomimasu-karuta-list, yomimasu-band { display: grid; gap: 8px; }
+
+.screen > h3, .karuta-page > h3 { font-size: 17px; line-height: 1.5; }
+.screen > ul, .screen > ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; }
+.src { font-size: 13px; line-height: 1.6; color: var(--ink-3); }
+.card p.src { font-size: 13px; line-height: 1.6; color: var(--ink-3); }
+
+/* 総論 */
+.big-num { font-family: var(--f-mono); font-size: 30px; font-weight: 600; line-height: 1.3; }
+yomimasu-band .band { height: 44px; }
+yomimasu-band .seg span { font-size: 13.5px; }
+.list > div { display: grid; grid-template-columns: 34px minmax(0, 1fr); padding: 12px 14px; }
+.list .n { font-family: var(--f-mono); font-size: 22px; font-weight: 600; line-height: 1.3; color: var(--shu-deep); }
+.list b { display: block; line-height: 1.5; }
+.list p { font-size: 15px; line-height: 1.7; color: var(--ink-2); }
+
+/* 注意点のカード（ポイント、1首のページ） */
+.card.point { padding: 12px 14px; display: grid; gap: 4px; }
+.card.point b, .points b { display: block; line-height: 1.55; text-wrap: balance; }
+.points > div { padding: 12px 14px; display: grid; gap: 4px; }
+.sources { padding: 12px 14px; display: grid; gap: 6px; }
+.card.sources p { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
+
+/* 決まり字（歌の書体） */
+.kim-in { font-family: var(--f-uta); font-weight: 400; font-synthesis: none; color: var(--shu-deep); }
+
+/* 100首の一覧 */
+.kim-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.kim-grid a { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 56px; padding: 4px; border-radius: 8px; border: 1px solid var(--ink); background: var(--card); color: var(--ink); text-decoration: none; }
+.kim-grid b { font-family: var(--f-uta); font-weight: 400; font-synthesis: none; font-size: 18px; line-height: 1.35; }
+.kim-grid small { font-family: var(--f-mono); font-size: 12px; line-height: 1.2; }
+.kim-grid .joka { grid-column: span 3; }
+.group-head { display: flex; align-items: baseline; gap: 8px; margin: 10px 0 4px; font-size: 16px; }
+.group-head b { font-family: var(--f-uta); font-weight: 400; font-synthesis: none; font-size: 22px; color: var(--shu-deep); }
+
+/* 1首のページ */
+.karuta-page { display: grid; gap: 16px; }
+.karuta-page .poem { display: grid; grid-template-columns: minmax(0, 1fr) 72px; gap: 8px; padding: 16px 14px; }
+.karuta-page .tate { justify-self: center; writing-mode: vertical-rl; font-family: var(--f-uta); font-weight: 400; font-synthesis: none; font-size: clamp(22px, 6.4vw, 28px); line-height: 1.6; letter-spacing: 0.05em; }
+/* Safari は flex の子の縦書きを最小の高さで折り返し、1字ずつの列に崩す */
+.karuta-page .tate .ln { white-space: nowrap; }
+.karuta-page .tate .ln.break { margin-block-start: 0.7em; }
+.karuta-page .tate rt { font-family: var(--f-sans); font-size: 0.42em; letter-spacing: 0; color: var(--ink-3); }
+.karuta-page .nobi { color: var(--shu); }
+/* ▼ の字は書体で形が変わり、縦に伸ばせないので形を描く。中に全角の空白を入れて字と同じ基準線に乗せる */
+.karuta-page .yoin { display: inline-block; width: 1em; height: 1.5em; margin-top: 0.2em; line-height: 1; color: transparent; background: var(--shu); clip-path: polygon(25% 0, 75% 0, 50% 100%); }
+.karuta-page .poem aside { display: flex; flex-direction: column; justify-content: space-between; text-align: right; }
+.karuta-page .poem .kim { font-family: var(--f-uta); font-size: 19px; font-weight: 400; font-synthesis: none; color: var(--shu-deep); }

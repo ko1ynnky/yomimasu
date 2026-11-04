@@ -1,4 +1,5 @@
 import './ui/base.css';
+import './ui/textbook.css';
 
 // 返す関数は要素が外れたときに呼ぶ。本文を入れ替えたときに、画面の木とマイクを残さないためである。
 type Mount = (element: HTMLElement) => () => void;
@@ -9,6 +10,8 @@ const ELEMENTS: Record<string, () => Promise<Mount>> = {
   'yomimasu-recorder': () => import('./recorder.tsx').then((m) => m.mountRecorder),
   'yomimasu-listen': () => import('./listen.tsx').then((m) => m.mountListen),
   'yomimasu-result': () => import('./result.tsx').then((m) => m.mountResult),
+  'yomimasu-karuta-list': () => import('./karuta-list.ts').then((m) => m.mountKarutaList),
+  'yomimasu-band': () => import('./band-figure.tsx').then((m) => m.mountBandFigure),
 };
 
 // 取ってきた HTML を差し込んでも動くように、枠組みの島ではなくカスタム要素で読み込む。
