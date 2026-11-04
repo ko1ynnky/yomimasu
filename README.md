@@ -8,6 +8,22 @@
 
 公開したら、ここに URL と、マイクを使わずに結果まで見る手順を書きます。
 
+## AI に入れる
+
+読みの知識は、スキル `yomimasu` として AI に入れられます。全日本かるた協会の公認ではありません。
+
+Claude Code、Codex、Cursor、Gemini CLI などのコーディングエージェントには、ターミナルで次を実行します。入れる先のエージェントを選ぶ画面が出ます。Node.js が要ります。
+
+```sh
+npx skills add ko1ynnky/yomimasu
+```
+
+入れたら、`/yomimasu 余韻の3秒はどこから数える？` のように聞きます。更新するときは `npx skills update` を実行します。
+
+この手順は、リポジトリを公開してから実行して確かめます。読みの知識はスキルに順に足している途中です。
+
+Claude、ChatGPT、Gemini に入れる手順は、入れて答えることを確かめてから、こことアプリに足します。
+
 ## 開発の記録
 
 - 判断と理由は [docs/decisions.md](docs/decisions.md) にあります。
