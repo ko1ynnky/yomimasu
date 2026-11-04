@@ -590,24 +590,6 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
   </div>
 </template>
 
-<template id="t-heard">
-  <div class="hero" style="padding-block: 20px 8px">
-    <h2 class="head">読めました。<br>まず聴いてみましょう。</h2>
-    <p>数値を見る前に、自分の耳で確かめます。どこが気になるか、お手本と比べてください。</p>
-  </div>
-  <div class="pair">
-    <button class="btn" type="button" data-say="自分の読みを再生"><svg class="ico"><use href="#i-play"/></svg>自分の読み</button>
-    <button class="btn" type="button" data-say="お手本を再生"><svg class="ico"><use href="#i-play"/></svg>お手本</button>
-  </div>
-  <section class="ask" data-ask>
-    <div class="ask-line"><span class="gt">&gt;</span> <span data-typed>/yomimasu </span><span class="caret"></span></div>
-    <div class="next">
-      <a class="btn btn--line" href="#/read/rec/" data-cmd="読み直す">読み直す</a>
-      <a class="btn btn--fill" href="#/result/">結果を見る</a>
-    </div>
-  </section>
-</template>
-
 <template id="t-result">
   <span class="tag" data-example hidden>例の録音です</span>
   <div class="card rows res" data-rows></div>
@@ -655,8 +637,7 @@ const ROUTES = {
   '/install/agent/': { tpl: 't-ai-agent', cmd: 'インストール エージェント', read: 'エージェントに入れる.md' },
   '/read/': { tpl: 't-listen', cmd: 'まず1回読む', step: '1 / 3 聞く', full: true, mount: mountListen },
   '/read/rec/': { tpl: 't-rec', cmd: '読む ほ あはれ', step: '2 / 3 読む', full: true, mount: mountRec },
-  '/read/heard/': { tpl: 't-heard', cmd: '読む ほ あはれ', note: '録音しました', step: '3 / 3 確かめる' },
-  '/result/': { tpl: 't-result', cmd: '結果を見る', step: '補助あり', mount: mountResult },
+  '/result/': { tpl: 't-result', cmd: '結果を見る', note: '録音しました', step: '3 / 3 結果・補助あり', mount: mountResult },
 };
 
 const SEGMENTS = [
@@ -1006,11 +987,12 @@ function markRecHelpDone() {
   try { localStorage.setItem(REC_HELP_KEY, '1'); } catch { /* 覚えられなくても、次も説明が出るだけである */ }
 }
 
-function recHelpHtml() {
+// 初めて開いたときは合図とタップの2つだけ。まだ読んでいない人に、余韻で合わせ直す理由は伝わりにくい（2026-11-04 のフィードバックとユーザーの判断）
+function recHelpHtml(withRealign) {
   return `<b>読む前に</b>
     <p>「読み始める」を押すと、3・2・1 と数えます。数え終わったら読み始めてください。</p>
     <p>下の句の最後の「${TAP_CHAR}」を読む瞬間に、画面のどこかをタップしてください。</p>
-    <p>余韻に入る時刻がガイドとずれると、余韻を無理にのばしたり、ずれたまま読み進めたりすることになります。タップすると、ガイドがあなたの余韻に合わせて数え直します。押さなくても、標準の時間で進みます。</p>
+    ${withRealign ? '<p>余韻に入る時刻がガイドとずれると、余韻を無理にのばしたり、ずれたまま読み進めたりすることになります。タップすると、ガイドがあなたの余韻に合わせて数え直します。押さなくても、標準の時間で進みます。</p>' : ''}
     <button class="btn" type="button" data-help-close>わかった</button>`;
 }
 const COUNT_FROM = 3;
@@ -1030,13 +1012,16 @@ function mountRec(el) {
   tapHint.textContent = `画面のどこかを、「${TAP_CHAR}」でタップ`;
   const help = document.createElement('div');
   help.className = 'rec-help';
-  help.innerHTML = recHelpHtml();
+  const renderHelp = (withRealign) => {
+    help.innerHTML = recHelpHtml(withRealign);
+    help.querySelector('[data-help-close]').addEventListener('click', () => act('わかった', () => {
+      help.hidden = true;
+      markRecHelpDone();
+    }));
+  };
+  renderHelp(false);
   help.hidden = recHelpDone();
   body.append(tapHint, help);
-  help.querySelector('[data-help-close]').addEventListener('click', () => act('わかった', () => {
-    help.hidden = true;
-    markRecHelpDone();
-  }));
   const run = el.querySelector('.run');
   const say = (text) => {
     const line = document.createElement('div');
@@ -1075,7 +1060,7 @@ function mountRec(el) {
       markRecHelpDone();
       toCount();
     }));
-    controls.querySelector('[data-help]').addEventListener('click', () => act('読み方の説明', () => { help.hidden = false; }));
+    controls.querySelector('[data-help]').addEventListener('click', () => act('読み方の説明', () => { renderHelp(true); help.hidden = false; }));
     tapHint.hidden = true;
     run.querySelectorAll('[data-tap-line]').forEach((line) => line.remove());
     tools.hidden = false;
@@ -1142,7 +1127,7 @@ function mountRec(el) {
 
   function finish() {
     disposeAll();
-    go('/read/heard/');
+    go('/result/');
   }
 
   toIdle();
