@@ -33,7 +33,8 @@ yomimasu-band .seg span { font-size: 13.5px; }
 /* 100首の一覧 */
 .kim-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .kim-grid a { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 56px; padding: 4px; border-radius: 8px; border: 1px solid var(--ink); background: var(--card); color: var(--ink); text-decoration: none; }
-.kim-grid b { font-family: var(--f-uta); font-weight: 400; font-synthesis: none; font-size: 18px; line-height: 1.35; }
+/* 決まり字は最長6字で、幅 360px でも1行に収める（docs/ui-guide.md の7節）。18px では1マスに収まらないので、画面の幅に合わせて縮める */
+.kim-grid b { font-family: var(--f-uta); font-weight: 400; font-synthesis: none; font-size: clamp(14px, 4.2vw, 18px); line-height: 1.35; white-space: nowrap; }
 .kim-grid small { font-family: var(--f-mono); font-size: 12px; line-height: 1.2; }
 .kim-grid .joka { grid-column: span 3; }
 .group-head { display: flex; align-items: baseline; gap: 8px; margin: 10px 0 4px; font-size: 16px; }

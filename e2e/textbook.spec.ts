@@ -85,6 +85,17 @@ for (const width of [360, 393]) {
     for (const [name, { path }] of Object.entries(PAGES)) {
       await page.goto(path);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), path).toBe(true);
+      if (path === '/karuta/') {
+        // 6字の決まり字も1行に収まり、マスからはみ出さない。
+        const fits = await page.locator('[data-view="desc"] .kim-grid a').evaluateAll((cells) =>
+          cells.every((a) => {
+            const b = a.querySelector('b')!;
+            const oneLine = b.getBoundingClientRect().height < parseFloat(getComputedStyle(b).lineHeight) * 1.5;
+            return oneLine && b.scrollWidth <= a.clientWidth;
+          }),
+        );
+        expect(fits, `${width}px`).toBe(true);
+      }
       if (width === 393) await page.screenshot({ path: join(ARTIFACTS_DIR, `textbook-${name}.png`), fullPage: true });
     }
   });
