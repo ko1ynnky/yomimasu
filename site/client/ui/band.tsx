@@ -10,7 +10,10 @@ export function Band({ segments, fixed = false }: { segments: readonly Segment[]
           <i />
           <span>
             {s.name}
-            <small>{s.sec}</small>
+            <small>
+              {s.sec}
+              <span class="unit">秒</span>
+            </small>
           </span>
         </div>
       ))}
