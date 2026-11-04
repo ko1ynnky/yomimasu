@@ -27,7 +27,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     # PR の修正を待つかどうかを review-gate の検査の結果で見るので、checks と statuses も読む。
+    # gh は検査のワークフロー名を checkSuite.workflowRun から引くので、actions も読む。
+    # actions がないと、検査の付いた PR が開いているときに pick が落ちる。
     permissions:
+      actions: read
       checks: read
       contents: read
       issues: read
