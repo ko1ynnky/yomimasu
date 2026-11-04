@@ -1,5 +1,16 @@
-import type { Card } from '../.claude/skills/yomimasu/scripts/cards.ts';
-import { finalSound, isGrand, isOneChar, isSixInitial, rulePoints, startsWithVowel, type Point } from '../content/karuta/rules.ts';
+import { soundOffset, type Card } from '../.claude/skills/yomimasu/scripts/cards.ts';
+import {
+  adviceSourceText,
+  finalSound,
+  isGrand,
+  isOneChar,
+  isSixInitial,
+  PRIORITY_NOTE,
+  rulePoints,
+  sourceLines,
+  startsWithVowel,
+  type Point,
+} from '../content/karuta/rules.ts';
 import { pairLines, type Line } from './client/lyrics.ts';
 
 const HTML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
@@ -134,77 +145,61 @@ export function adviceFor(card: Card, advice: readonly Advice[], _cards: readonl
   return advice.filter((a) => (a.table === 'single' ? a.cards.includes(card.no) : groupIncludes(a.group!, card)));
 }
 
-const screenSource = (source: string) => source.replaceAll('完全版', '冊子').replace(/メモ([12]) /g, '読手のメモ$1 ');
-
-function adviceSource(a: Advice): string {
-  const source = screenSource(a.source);
-  if (!a.kind.startsWith('読手のメモ')) return `協会の資料（${source}）`;
-  const tournament = a.kind.includes('大会向け') ? '大会やきちんとした練習会での話で、ふだんの練習会では参考程度。' : '';
-  return `読手のメモ（読手個人のやり方。${tournament}${source}）`;
-}
-
 // 1首のページ
 
-// 「を」に振る読みは、読み分けを読手に確かめるまで教科書に出さない（content/karuta/rules.ts の冒頭）。
 function lineHtml(line: Line): string {
   return line
     .map((token) => {
       if (token.nobi) return '<span class="nobi">ー</span>';
       if (token.yoin) return '<span class="yoin" role="img" aria-label="余韻">　</span>';
       const text = escapeHtml(token.text);
-      return token.ruby && token.text !== 'を' ? `<ruby>${text}<rt>${escapeHtml(token.ruby)}</rt></ruby>` : text;
+      return token.ruby ? `<ruby>${text}<rt>${escapeHtml(token.ruby)}</rt></ruby>` : text;
     })
     .join('');
 }
 
+// 「を」をどう読むかは、読み分けを読手に確かめるまで教科書に出さない（content/karuta/rules.ts の冒頭）。
+// 表の発音は「を」をすべて「お」にしているので、ふりがなを作る前に「を」の読み替えを外し、発音の列の字も「を」に戻す。
+// 仮名1字の「を」には読みが振られず、漢字の語（小倉山）の読みでは「を」の所が「を」のまま残る。
+// 読む画面（lyrics.ts）のふりがなは変えない。docs/ui-guide.md の決まり（を→お）との食い違いはユーザーが決める。
+function withoutWoReading(card: Card): Card {
+  return {
+    ...card,
+    phrases: card.phrases.map((phrase) => {
+      const wo = phrase.diffs.filter((d) => d.kana === 'を');
+      const sound = [...phrase.sound];
+      for (const d of wo) sound[soundOffset(phrase, d.at)] = 'を';
+      return { ...phrase, sound: sound.join(''), diffs: phrase.diffs.filter((d) => d.kana !== 'を') };
+    }),
+  };
+}
+
 export function poemHtml(card: Card, cards: readonly Card[]): string {
-  const { kami, shimo } = pairLines(cards, { shimo: card.no, kami: card.no });
+  const { kami, shimo } = pairLines([withoutWoReading(card)], { shimo: card.no, kami: card.no });
   return [...kami, ...shimo].map((line, i) => `<div class="ln${i === kami.length ? ' break' : ''}">${lineHtml(line)}</div>`).join('');
 }
 
 const prioClass = (point: Point) => (point.priority === '高' ? 'prio prio--hi' : 'prio');
 
-function jokaPoints(card: Card): Point[] {
-  if (card.no !== JOKA_NO) return [];
-  return [
-    {
-      id: 'joka',
-      priority: '高',
-      title: '序歌は下の句を2回読む',
-      body: '序歌は百人一首に入っていない歌で、1枚目の札の前に読みます。上の句、下の句と読んだ後、下の句をもう一度読んでから、1枚目の上の句へ進みます。100首の1組とは形が違います。協会は「難波津に」の歌を序歌に指定していて、昭和29年（1954年）に選ばれました。',
-      source: '協会の資料（冊子 p.36、p.38、p.39-40、講習資料 s.13）',
-    },
-  ];
-}
-
 function sourcesHtml(card: Card, text: string): string {
-  const lines = [
-    `伸ばす位置は読み方一覧（抜粋版 p.${card.origin.stretches.page}）、余韻の印、別の読み、注は読み方一覧（冊子 p.${card.origin.notation.page}）によります。ふりがなは、札の読みの表の発音の列から振りました。`,
-    '冊子：全日本かるた協会 競技かるた部（読唱）『小倉百人一首 競技かるた読手テキスト』冊子、令和2年4月1日初版。p. はページです。',
-    '抜粋版：同じテキストのHP掲載用抜粋版、令和7年4月1日改訂版。',
-    ...(text.includes('講習資料') ? ['講習資料：全日本かるた協会『読手講習ビデオ（PDF版）』2020年10月。s. はスライドの番号です。'] : []),
-    ...(text.includes('読手のメモ')
-      ? ['読手のメモ1、2：A級公認読手が書いたメモ。1は初めて読む人向け（2018年作成、2022年更新）、2は大会で読む人向け（2020年作成、2022年更新）。協会の基準ではなく、読手個人のやり方です。']
-      : []),
-    '解説の文はこのアプリの言葉で書きました。資料の文と違う所があれば、資料が正しいものとしてください。',
-  ];
-  return `<h3>出典</h3>\n<div class="card sources">${lines.map((line) => `<p>${line}</p>`).join('')}</div>`;
+  return `<h3>出典</h3>\n<div class="card sources">${sourceLines(card, text).map((line) => `<p>${escapeHtml(line)}</p>`).join('')}</div>`;
 }
 
 export type CardPage = { path: string; title: string; command: string; readName: string; bodyHtml: string };
 
 export function cardPage(card: Card, cards: readonly Card[], advice: readonly Advice[]): CardPage {
   const name = cardName(card);
-  const points = [...jokaPoints(card), ...rulePoints(card, cards)];
+  const points = rulePoints(card, cards);
   const pointsHtml = points
     .map((p) => `<div><span class="${prioClass(p)}">優先 ${p.priority}</span><b>${escapeHtml(p.title)}</b><p>${escapeHtml(p.body)}</p><p class="src">${escapeHtml(p.source)}</p></div>`)
     .join('');
   const words = adviceFor(card, advice, cards);
-  const wordsHtml = words.map((a) => `<div><p>${escapeHtml(a.text)}。</p><p class="src">${escapeHtml(adviceSource(a))}</p></div>`).join('');
+  const wordsHtml = words.map((a) => `<div><p>${escapeHtml(a.text)}。</p><p class="src">${escapeHtml(adviceSourceText(a.kind, a.source))}</p></div>`).join('');
   const article = [
     '<article class="karuta-page">',
     `<div class="card poem"><div class="tate">${poemHtml(card, cards)}</div><aside><div><small>${card.kimariji ? '決まり字' : '1枚目の前に読む歌'}</small><div class="kim">${escapeHtml(name)}</div></div></aside></div>`,
     '<h3>気をつける点</h3>',
+    `<p class="fine">${escapeHtml(PRIORITY_NOTE)}</p>`,
     `<div class="card rows points">${pointsHtml}</div>`,
     ...(words.length > 0 ? ['<h3>言葉の助言</h3>', `<div class="card rows points">${wordsHtml}</div>`] : []),
     '</article>',

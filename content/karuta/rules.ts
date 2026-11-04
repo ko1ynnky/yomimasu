@@ -513,10 +513,53 @@ function hinshi(card: Card): Point[] {
   ];
 }
 
+function joka(card: Card): Point[] {
+  if (card.no !== 0) return [];
+  return [
+    {
+      id: 'joka',
+      priority: '高',
+      title: '序歌は下の句を2回読む',
+      body: '序歌は百人一首に入っていない歌で、1枚目の札の前に読みます。上の句、下の句と読んだ後、下の句をもう一度読んでから、1枚目の上の句へ進みます。100首の1組とは形が違います。協会は「難波津に」の歌を序歌に指定していて、昭和29年（1954年）に選ばれました。',
+      source: '協会の資料（冊子 p.36、p.38、p.39-40、講習資料 s.13）',
+    },
+  ];
+}
+
+// 1首のページの文のうち、規則によらない決まった文。
+
+export const PRIORITY_NOTE = '優先の高・中・低は、資料が付けた順位ではなく、このアプリの案です。';
+
+// 助言の候補の出典を、画面の呼び名にし、読手のメモと協会の資料を分けて書く。候補の区分が「読手のメモ」でも、出典に協会の資料（読み方一覧の注、講習資料）が並ぶ行がある。
+export function adviceSourceText(kind: string, source: string): string {
+  const parts = source
+    .replaceAll('完全版', '冊子')
+    .split('、')
+    .map((part) => part.replace(/^メモ([12]) /, '読手のメモ$1 '));
+  const memo = parts.filter((part) => part.startsWith('読手のメモ'));
+  const others = parts.filter((part) => !part.startsWith('読手のメモ'));
+  if (!kind.startsWith('読手のメモ')) return `協会の資料（${parts.join('、')}）`;
+  const tournament = kind.includes('大会向け') ? '大会やきちんとした練習会での話で、ふだんの練習会では参考程度。' : '';
+  return `読手のメモ（読手個人のやり方。${tournament}${memo.join('、')}）${others.length > 0 ? `、協会の資料（${others.join('、')}）` : ''}`;
+}
+
+export const sourceLines = (card: Card, text: string): string[] => [
+  `伸ばす位置は読み方一覧（抜粋版 p.${card.origin.stretches.page}）、余韻の印、別の読み、注は読み方一覧（冊子 p.${card.origin.notation.page}）によります。ふりがなは、札の読みの表の発音の列から振りました。`,
+  '冊子：全日本かるた協会 競技かるた部（読唱）『小倉百人一首 競技かるた読手テキスト』冊子、令和2年4月1日初版。p. はページです。',
+  '抜粋版：同じテキストのHP掲載用抜粋版、令和7年4月1日改訂版。',
+  ...(text.includes('講習資料') ? ['講習資料：全日本かるた協会『読手講習ビデオ（PDF版）』2020年10月。s. はスライドの番号です。'] : []),
+  ...(text.includes('読手のメモ')
+    ? ['読手のメモ1、2：A級公認読手が書いたメモ。1は初めて読む人向け（2018年作成、2022年更新）、2は大会で読む人向け（2020年作成、2022年更新）。協会の基準ではなく、読手個人のやり方です。']
+    : []),
+  ...(text.includes('作者の経験') ? ['作者の経験：このアプリの作者の個人の考えです。協会の資料でも読手のメモでもありません。'] : []),
+  '解説の文はこのアプリの言葉で書きました。資料の文と違う所があれば、資料が正しいものとしてください。',
+];
+
 const ORDER: Record<Priority, number> = { 高: 0, 中: 1, 低: 2 };
 
 export function rulePoints(card: Card, cards: readonly Card[]): Point[] {
   const points = [
+    ...joka(card),
     ...oyama(card),
     ...shoku6(card),
     ...shiin(card),

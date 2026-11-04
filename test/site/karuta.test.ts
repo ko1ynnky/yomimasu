@@ -83,6 +83,13 @@ test('教科書では「を」に読みを振らない（「を」の読み分�
   for (const no of [8, 26, 77]) assert.doesNotMatch(cardPage(card(no), cards, advice).bodyHtml, /を<rt>/, `${no}番`);
 });
 
+test('漢字の語の読みでも、「を」の所は「を」のまま振る', () => {
+  const poem = (no: number) => cardPage(card(no), cards, advice).bodyHtml.match(/<div class="tate">.*?<\/div><aside>/s)![0];
+  assert.match(poem(26), /<ruby>小倉山<rt>をぐらやま<\/rt><\/ruby>/);
+  assert.doesNotMatch(poem(93), /おぶね/);
+  assert.match(poem(1), /<ruby>庵<rt>いお<\/rt><\/ruby>/);
+});
+
 test('注意点は優先の高い順に並べる', () => {
   const order = { 高: 0, 中: 1, 低: 2 };
   for (const c of cards) {
@@ -195,4 +202,17 @@ test('最後の音ごとの札の数は、序歌と100首を表から数え、�
   assert.equal(counts.length, 6);
   assert.equal(counts.reduce((a, b) => a + b, 0), 101);
   assert.match(finalSoundCounts(cards), /^あ段 \d+首、い段 \d+首、う段 \d+首、え段 \d+首、お段 \d+首、「ん」 \d+首$/);
+});
+
+test('どの1首のページにも歌番号を出さない', () => {
+  for (const c of cards) assert.doesNotMatch(cardPage(c, cards, advice).bodyHtml, /\d+番/, `${c.no}番`);
+});
+
+test('読手のメモの助言に協会の資料の出典が並ぶときは、協会の資料として分けて書く', () => {
+  const { bodyHtml } = cardPage(card(95), cards, advice);
+  assert.match(bodyHtml, /読手のメモ（読手個人のやり方。読手のメモ1 長音の一覧）、協会の資料（講習資料 s.31）/);
+});
+
+test('1首のページの優先は、このアプリの案だと断る', () => {
+  assert.match(cardPage(card(53), cards, advice).bodyHtml, /このアプリの案です/);
 });
