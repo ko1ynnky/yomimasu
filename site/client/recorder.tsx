@@ -1,7 +1,7 @@
 import { render } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { startCapture, type Capture, type VoiceProcessing } from './capture.ts';
-import { pairLines, secondShimoLineAt, tapCharOf } from './lyrics.ts';
+import { pairLines } from './lyrics.ts';
 import { segmentsOf } from './pair.ts';
 import { putLastTake, type Take } from './take.ts';
 import { cards, pairOf, Stage } from './ui/stage.tsx';
@@ -15,18 +15,16 @@ type View =
   | { kind: 'heard'; take: RecordedTake }
   | { kind: 'failed'; failure: Failure };
 
-// take.ts はこの Issue では yoinTapSec を足すだけにする。声の処理の結果は録音と一緒に置き、型に入れるのは記録を残す C8 で決める。
+// 声の処理の結果は録音と一緒に置き、take.ts の型に入れるのは記録を残す C8 で決める。
 type RecordedTake = Take & { voiceProcessing: VoiceProcessing };
 
-type Session = { capture: Capture; countStart: number; assisted: boolean; tapAt: number | null; frame: number; releaseWake: () => void };
+type Session = { capture: Capture; countStart: number; assisted: boolean; frame: number; releaseWake: () => void };
 
 const COUNT_FROM = 3;
 const COUNT_BEAT_SEC = 0.8;
 const COUNT_SEC = COUNT_FROM * COUNT_BEAT_SEC;
 // 帯の 15 秒が終わっても 10 秒は録り続ける。読むのが遅い人の最後を切らないためである。
 const LIMIT_SEC = 25;
-// 余韻に入るのが遅い人も、標準の余韻の始まりから2秒は合わせ直せる。
-const TAP_LATE_SEC = 2;
 // 「読み始める」と「やめる」は同じ高さにあるので、続けて押すと始めた録音をすぐ止めてしまう。止めた直後の「読み始める」も同じである。
 const RESTART_GUARD_MS = 500;
 const HELP_KEY = 'yomimasu.recHelpDone';
@@ -118,25 +116,18 @@ function Recorder({ fix }: { fix?: string }) {
   const pair = useMemo(() => pairOf(location.search), []);
   const segments = useMemo(() => segmentsOf(pair), [pair]);
   const lines = useMemo(() => pairLines(cards, pair), [pair]);
-  const tapChar = tapCharOf(lines);
-  const yoinStart = segments[0].sec;
   const kamiStart = segments.slice(0, -1).reduce((sum, s) => sum + s.sec, 0);
   const total = kamiStart + segments.at(-1)!.sec;
-  const tapFrom = secondShimoLineAt(lines, yoinStart);
-  const tapUntil = yoinStart + TAP_LATE_SEC;
 
   const [view, setView] = useState<View>({ kind: 'idle' });
   const [assisted, setAssisted] = useState(true);
   const [help, setHelp] = useState(() => !helpDone());
-  const [tapLine, setTapLine] = useState<string | null>(null);
   const session = useRef<Session | null>(null);
   const opening = useRef(false);
   // 止めた時刻までの録音の塊を待っている録音。待つ間に「やめる」を押すか画面を離れたら、確かめる画面へ進めない。
   const stopping = useRef<Capture | null>(null);
   const startedAt = useRef(Number.NEGATIVE_INFINITY);
   const stoppedAt = useRef(Number.NEGATIVE_INFINITY);
-
-  const guideTime = (t: number, tapAt: number | null) => (tapAt === null || t < tapAt ? t : yoinStart + (t - tapAt));
 
   function end(): Session | null {
     const current = session.current;
@@ -171,12 +162,9 @@ function Recorder({ fix }: { fix?: string }) {
       readingStartSec,
       assisted: current.assisted,
       pair,
-      ...(current.tapAt === null ? {} : { yoinTapSec: current.tapAt }),
       voiceProcessing,
     };
     putLastTake(take);
-    // 確かめる画面では数値を先に見せないので、タップの差の行も消す。
-    setTapLine(null);
     setView({ kind: 'heard', take });
   }
 
@@ -205,7 +193,6 @@ function Recorder({ fix }: { fix?: string }) {
     opening.current = true;
     startedAt.current = performance.now();
     closeHelp();
-    setTapLine(null);
     setView({ kind: 'starting' });
     let capture: Capture;
     try {
@@ -221,14 +208,13 @@ function Recorder({ fix }: { fix?: string }) {
       return;
     }
     opening.current = false;
-    session.current = { capture, countStart: capture.now(), assisted, tapAt: null, frame: 0, releaseWake: holdWakeLock() };
+    session.current = { capture, countStart: capture.now(), assisted, frame: 0, releaseWake: holdWakeLock() };
     tick();
   }
 
   function stopByUser() {
     if (performance.now() - startedAt.current < RESTART_GUARD_MS) return;
     cancel();
-    setTapLine(null);
     setView({ kind: 'idle' });
   }
 
@@ -237,7 +223,6 @@ function Recorder({ fix }: { fix?: string }) {
     const leave = () => {
       if (!session.current && !opening.current && !stopping.current) return;
       cancel();
-      setTapLine(null);
       setView({ kind: 'idle' });
     };
     const onVisibility = () => {
@@ -252,43 +237,22 @@ function Recorder({ fix }: { fix?: string }) {
     };
   }, []);
 
-  // 余韻の入りで画面のどこかを押すと、その時刻から余韻と間を数え直す。押した瞬間に合わせるので、打ち込みの間は置かない。
-  useEffect(() => {
-    const onTap = (event: PointerEvent) => {
-      const current = session.current;
-      if (!current || !current.assisted || current.tapAt !== null) return;
-      if (event.target instanceof Element && event.target.closest('button, a')) return;
-      const t = current.capture.now() - current.countStart - COUNT_SEC;
-      if (t < tapFrom || t > tapUntil) return;
-      current.tapAt = t;
-      const diff = t - yoinStart;
-      // 余韻の長さに読める数字は出さない。音から測った値に見えるからである。
-      setTapLine(`余韻の入りをタップに合わせました（標準より ${Math.abs(diff).toFixed(2)}秒${diff < 0 ? '早い' : '遅い'}）`);
-    };
-    document.addEventListener('pointerdown', onTap);
-    return () => document.removeEventListener('pointerdown', onTap);
-  }, [tapFrom, tapUntil, yoinStart]);
-
   const recording = view.kind === 'count' || view.kind === 'reading';
-  const tapAt = session.current?.tapAt ?? null;
-  const guide = view.kind === 'reading' ? Math.min(guideTime(view.t, tapAt), total) : 0;
-  const accepting = view.kind === 'reading' && assisted && tapAt === null && view.t >= tapFrom && view.t <= tapUntil;
+  const guide = view.kind === 'reading' ? Math.min(view.t, total) : 0;
   const kimariji = [pair.shimo, pair.kami].map((no) => cards.find((card) => card.no === no)?.kimariji?.kana ?? `${no}番`).join(' ');
 
-  const notes = [tapLine, view.kind === 'heard' ? '録音しました' : null].filter((line): line is string => line !== null);
+  const heard = view.kind === 'heard';
   const run = (
     <>
       {fix && <div class="fix-chip">直す1点：{fix}</div>}
-      {(!fix || notes.length > 0) && (
+      {(!fix || heard) && (
         <div class="run">
           {!fix && (
             <div>
               <span class="gt">&gt;</span> /yomimasu 読む {kimariji}
             </div>
           )}
-          {notes.map((line) => (
-            <div class="read">● {line}</div>
-          ))}
+          {heard && <div class="read">● 録音しました</div>}
         </div>
       )}
     </>
@@ -330,7 +294,6 @@ function Recorder({ fix }: { fix?: string }) {
           data-reading-start-sec={take.readingStartSec.toFixed(3)}
           data-assisted={String(take.assisted)}
           data-pair={`${take.pair.shimo}-${take.pair.kami}`}
-          data-yoin-tap-sec={take.yoinTapSec?.toFixed(3)}
           data-voice-processing={JSON.stringify(take.voiceProcessing)}
         />
       </>
@@ -346,18 +309,15 @@ function Recorder({ fix }: { fix?: string }) {
         lines={lines}
         t={guide}
         assisted={assisted}
-        tap
+        notationLocked={view.kind === 'starting' || recording}
         count={view.kind === 'count' ? view.beat : null}
-        hint={accepting ? `画面のどこかを、「${tapChar}」でタップ` : null}
       >
+        {/* 余韻の入りで押して数え直す仕組みは置かない。字が朱になっていくのはカラオケと同じ理屈なので、たいていの人は余韻の入りも朱の字に合わせられ、
+            押す操作はかえって、字を追って読む邪魔になる（2026-11-04 のユーザーの判断） */}
         {help && view.kind === 'idle' && (
           <div class="rec-help" role="dialog" aria-label="読む前に">
             <b>読む前に</b>
             <p>「読み始める」を押すと、3・2・1 と数えます。数え終わったら読み始めてください。</p>
-            <p>下の句の最後の「{tapChar}」を読む瞬間に、画面のどこかをタップしてください。</p>
-            <p>
-              余韻に入る時刻がガイドとずれると、余韻を無理にのばしたり、ずれたまま読み進めたりすることになります。タップすると、ガイドがあなたの余韻に合わせて数え直します。押さなくても、標準の時間で進みます。
-            </p>
             <button class="btn" type="button" onClick={closeHelp}>
               わかった
             </button>
