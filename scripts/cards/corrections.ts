@@ -173,6 +173,25 @@ export const KANA_WORD_HEADS: readonly Kept[] = [
   { no: 94, phrase: 3, word: 'さ|むく', why: IN_WORD },
 ];
 
+// 一覧の表記を当てた発音に代えて、ユーザーが聞いて決めた読みで書く所。at は句の仮名の位置、listed は例外がなければ入る発音である。
+export type SoundException = { no: number; phrase: number; at: number; kana: string; listed: string; sound: string; why: string };
+
+// ユーザーが101首の画面の字を見直し、一覧から外すのはこの1か所だけと決めた（2026-11-04）。
+// 95番の三句、20番と77番の結句、長音の「ー」と伸ばしの印が並ぶ所も見たうえで、一覧のままにした。
+export const SOUND_EXCEPTIONS: readonly SoundException[] = [
+  {
+    no: 54,
+    phrase: 3,
+    at: 0,
+    kana: 'けふ',
+    listed: 'きょー',
+    sound: 'きょ',
+    why: '一覧は「今日（きょー）をー」と書くが、ユーザーの判断で「きょおー」と読む（2026-11-04）。ユーザーには、実際の読みが「きょーおー」とは聞こえないため。',
+  },
+];
+
+export const soundExceptionsOf = (no: number, phrase: number): SoundException[] => SOUND_EXCEPTIONS.filter((e) => e.no === no && e.phrase === phrase);
+
 export const keptOf = (no: number, phrase: number, kana: string): KeptKana[] =>
   KANA_WORD_HEADS.filter((k) => k.no === no && k.phrase === phrase).map((k) => {
     const start = kana.indexOf(k.word.replace('|', ''));

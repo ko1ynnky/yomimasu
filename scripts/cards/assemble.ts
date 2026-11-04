@@ -4,7 +4,6 @@ import { readFileSync } from 'node:fs';
 import {
   GRAND_CARDS,
   JOKA,
-  heard,
   kanaOffset,
   kimarijiLengths,
   markedText,
@@ -18,9 +17,9 @@ import {
   type Stretch,
   type TextFix,
 } from '../../.claude/skills/yomimasu/scripts/cards.ts';
-import { KANJI_HINTS, KANJI_SPLITS, LINE_FIXES, PHRASE_LENGTHS, keptOf, type LineKey } from './corrections.ts';
+import { KANJI_HINTS, KANJI_SPLITS, LINE_FIXES, PHRASE_LENGTHS, keptOf, soundExceptionsOf, type LineKey } from './corrections.ts';
 import type { ListCard, ListLine, ListRuby } from './list.ts';
-import { applyDiffs, soundDiffs } from './sound.ts';
+import { applyDiffs, soundDiffs, withListNotation, withoutSoundExceptions, withSoundExceptions } from './sound.ts';
 
 const STANDARD_LENGTHS = [5, 7, 5, 7, 7];
 const KANJI_RUN = /[\u4e00-\u9fff々]+/;
@@ -247,17 +246,24 @@ export function buildCard(no: number, lines: Lines, fixes: TextFix[], list: List
   const ruleStretches = ruleStretchesOf(no, phrases, GRAND_CARDS.has(no));
   const upperNotation = notationOfLine(upper, 0, list.upper);
   const lowerNotation = notationOfLine(lower, 3, list.lower);
+  const furigana = [...upperNotation.furigana, ...lowerNotation.furigana];
+  const notes = [...upperNotation.notes, ...lowerNotation.notes];
+  const onPhrase = (spans: Furigana[], index: number) => spans.filter((s) => s.phrase === index);
   return {
     no,
-    phrases,
+    phrases: phrases.map((phrase, index) => {
+      const listed = withListNotation(phrase.kana, phrase.diffs, { furigana: onPhrase(furigana, index), notes: onPhrase(notes, index) });
+      const diffs = withSoundExceptions(listed, soundExceptionsOf(no, index));
+      return { ...phrase, sound: applyDiffs(phrase.kana, diffs), diffs };
+    }),
     ruleStretches,
     stretches,
     marked: {
       upper: markedText(upper, stretches.filter((s) => s.phrase <= 2)),
       lower: markedText(lower, stretches.filter((s) => s.phrase >= 3).map((s) => ({ ...s, phrase: s.phrase - 3 }))),
     },
-    furigana: [...upperNotation.furigana, ...lowerNotation.furigana],
-    notes: [...upperNotation.notes, ...lowerNotation.notes],
+    furigana,
+    notes,
     alternatives: [...upperNotation.alternatives, ...lowerNotation.alternatives],
     yoin: yoinOf(phrases, list),
     origin: {
@@ -285,8 +291,9 @@ function kanaOfSoundPrefix(card: Omit<Card, 'kimariji'>, length: number): string
   throw new Error(`${card.no} 番の決まり字が上の句に収まらない`);
 }
 
+// 上の句の発音は「おう」を「おお」に揃えずに比べる。表は一覧の表記に合わせてあり、上の句に「おう」が残るのは16番の「生ふる」だけで、一覧の注が（う）だからである。
 export function withKimariji(cards: Omit<Card, 'kimariji'>[]): Card[] {
-  const upperSound = (card: Omit<Card, 'kimariji'>) => heard(card.phrases.slice(0, 3).map((p) => p.sound).join(''));
+  const upperSound = (card: Omit<Card, 'kimariji'>) => card.phrases.slice(0, 3).map((p) => p.sound).join('');
   const lengths = kimarijiLengths(new Map(cards.filter((c) => c.no !== JOKA).map((c) => [c.no, upperSound(c)])));
   return cards.map((card) => {
     const length = lengths.get(card.no);
@@ -333,9 +340,14 @@ export function compareWithList(cards: readonly Card[], list: readonly ListCard[
     if (!entry) throw new Error(`${card.no} 番が一覧にない`);
     result.notation.yoin += entry.yoin ? 1 : 0;
     if (JSON.stringify(yoinOf(card.phrases, entry)) !== JSON.stringify(card.yoin)) result.notationMismatches.yoin.push(`${card.no} 番`);
+    // 一覧の読みと印の位置は、札ごとの例外を当てる前の発音で数えてあるので、例外を戻して比べる。例外そのものは資料から作り直した表との比較で確かめる。
+    const listed = card.phrases.map((phrase, index) => {
+      const diffs = withoutSoundExceptions(phrase.diffs, soundExceptionsOf(card.no, index));
+      return { ...phrase, sound: applyDiffs(phrase.kana, diffs), diffs };
+    });
     const sides = [
-      { name: '上の句', phrases: card.phrases.slice(0, 3), line: entry.upper, first: 0 },
-      { name: '下の句', phrases: card.phrases.slice(3), line: entry.lower, first: 3 },
+      { name: '上の句', phrases: listed.slice(0, 3), line: entry.upper, first: 0 },
+      { name: '下の句', phrases: listed.slice(3), line: entry.lower, first: 3 },
     ];
     for (const { name, phrases, line, first } of sides) {
       result.lines += 1;

@@ -116,7 +116,8 @@ test('規則が当たる札は、スキルの card-rules.md の札と一致す�
   const nasalFree = [5, 10, 14, 16, 18, 20, 22, 24, 28, 30, 31, 35, 37, 38, 39, 43, 44, 45, 46, 48, 49, 58, 59, 60, 61, 62, 65, 66, 67, 69, 71, 72, 78, 82, 83, 88, 90, 94, 99, 100];
   assert.deepEqual(cardsWith('bidakuon'), except(nasalFree));
   assert.deepEqual(cardsWith('hagyo'), except([3, 6, 7, 14, 22, 26, 31, 33, 34, 44, 76, 79, 81, 91, 94]));
-  assert.deepEqual(cardsWith('choon'), [2, 8, 10, 22, 25, 41, 44, 45, 54, 56, 61, 62, 63, 76]);
+  // 54番の「けふ」はユーザーの判断の読み（きょおー）で、長音の綴りに数えない（card-rules.md）。
+  assert.deepEqual(cardsWith('choon'), [2, 8, 10, 22, 25, 41, 44, 45, 56, 61, 62, 63, 76]);
   assert.deepEqual(cardsWith('mu'), [3, 8, 12, 15, 16, 18, 20, 21, 22, 24, 26, 27, 29, 33, 34, 36, 47, 56, 63, 65, 67, 69, 70, 73, 77, 80, 81, 84, 91, 94]);
   assert.deepEqual(cardsWith('museika'), [12, 13, 17, 22, 23, 33, 35, 51, 53, 69, 79, 99]);
   const wiweDiZu = [5, 8, 9, 12, 14, 17, 18, 23, 24, 25, 26, 27, 32, 33, 36, 39, 42, 45, 46, 49, 54, 58, 63, 64, 69, 70, 71, 76, 77, 78, 79, 88, 99];
@@ -127,7 +128,7 @@ test('ガ行の鼻濁音は60首のべ88か所、語中のハ行は85首のべ16
   const count = (id: string) => hundred.reduce((sum, c) => sum + (pointOf(c.no, id)?.count ?? 0), 0);
   assert.equal(count('bidakuon'), 88);
   assert.equal(count('hagyo'), 167);
-  assert.equal(count('choon'), 14);
+  assert.equal(count('choon'), 13);
 });
 
 test('規則が当たる札は、スキルの card-rules.md の札と一致する（伸ばす位置）', () => {

@@ -34,7 +34,12 @@ test('URL の組の指定で、出す歌が替わる', async ({ page }) => {
 
 test('漢字と発音の違う仮名に、実際の発音のふりがなを振る', async ({ page }) => {
   await page.goto('/read/rec/');
-  await expect(page.getByTestId('lyrics').locator('rt')).toHaveText(['ありあけ', 'つき', 'のこ', 'わ', 'ゆ', 'う', 'ひと', 'わ', 'おも', 'お']);
+  await expect(page.getByTestId('lyrics').locator('rt')).toHaveText(['ありあけ', 'つき', 'のこ', 'わ', 'ゆ', 'ー', 'ひと', 'わ', 'おも', 'お']);
+});
+
+test('54番の下の句の四句は、一覧のふりがなの「きょー」に代えて、ユーザーの判断で「今日」に「きょ」、「を」に「お」と振る', async ({ page }) => {
+  await page.goto('/read/rec/?shimo=54&kami=1');
+  await expect(page.getByTestId('lyrics').locator('.ln').first().locator('rt')).toHaveText(['きょ', 'お']);
 });
 
 test('下の句の最後の字のあとに余韻の印を置き、「余韻」と読み上げさせる', async ({ page }) => {
