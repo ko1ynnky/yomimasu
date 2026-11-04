@@ -22,7 +22,6 @@
   --on-shu: #FFFDF9;
   --seg-shimo: #B8DCB2;
   --seg-yoin: #F6D56E;
-  --seg-yoin-fade: #FBF0C6;
   --seg-ma: #F3B283;
   --seg-kami: #A6C2EC;
 
@@ -155,12 +154,14 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
 /* Safari は flex の子の縦書きを最小の高さで折り返し、1字ずつの列に崩す */
 .tate .ln { white-space: nowrap; }
 .tate .ln.break { margin-block-start: 0.7em; }
-.nobi { color: var(--shu); }
+/* 歌の中の朱は「すでに読み上げた文字」だけに使う。伸ばす印、余韻の印、決まり字も字と同じ色にする。
+   進みのない1首のページもそろえる（2026-11-04 のユーザーの判断） */
 .tate rt { font-family: var(--f-sans); font-size: 0.42em; letter-spacing: 0; color: var(--ink-3); }
 /* ▼ の字は書体で形が変わり、縦に伸ばせないので、形を描く。
-   中に全角の空白を入れて字と同じ基準線に乗せる。空の箱は行の幅の中央に寄り、ふりがなのぶん右へずれる */
-.yoin { display: inline-block; width: 1em; height: 1.5em; margin-top: 0.2em; line-height: 1; color: transparent; background: var(--shu); clip-path: polygon(25% 0, 75% 0, 50% 100%); }
-.kimari { color: var(--shu-deep); }
+   中に全角の空白を入れて字と同じ基準線に乗せる。空の箱は行の幅の中央に寄り、ふりがなのぶん右へずれる。
+   形は上から下へ細くなる三角にする。余韻に入ったら早めに弱め始める「にんじん型」を理想とする資料（講習資料 s.25）に合わせる。
+   上を四角、下を三角にした形も試したが、音量を保つ「だいこん型」に近く読めるので戻した（2026-11-04 夜のユーザーの判断） */
+.yoin { display: inline-block; width: 1em; height: 1.5em; margin-top: 0.2em; line-height: 1; color: transparent; background: var(--ink); clip-path: polygon(25% 0, 75% 0, 50% 100%); }
 .poem { display: grid; grid-template-columns: minmax(0, 1fr) 72px; gap: 8px; padding: 16px 14px; }
 .poem .tate { justify-self: center; --lyric: clamp(22px, 6.4vw, 28px); }
 .poem aside { display: flex; flex-direction: column; justify-content: space-between; text-align: right; }
@@ -171,53 +172,74 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
 .band { display: flex; gap: 2px; height: 34px; }
 .seg { position: relative; min-width: 0; overflow: hidden; border-radius: 4px; background: var(--track); }
 .seg i { position: absolute; inset: 0 auto 0 0; width: 0; }
-.seg span { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 12.5px; line-height: 1.2; white-space: nowrap; }
-.seg span small { font-family: var(--f-mono); font-size: inherit; line-height: inherit; color: inherit; font-variant-numeric: tabular-nums; }
+/* 直下の span だけに当てる。中の「秒」の span まで重ねて置くと、名前の上に重なる（2026-11-04 に iOS の Safari で見つけた） */
+.seg > span { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 12.5px; line-height: 1.2; white-space: nowrap; }
+.seg > span small { font-family: var(--f-mono); font-size: inherit; line-height: inherit; color: inherit; font-variant-numeric: tabular-nums; }
+/* 数字には単位の「秒」を付ける（2026-11-04 のユーザーの判断）。間の区間は幅 320 で 18px ほどしかないので、「秒」だけ小さくして「1秒」を収める */
+.seg > span small .unit { font-family: var(--f-sans); font-size: 0.72em; letter-spacing: -0.02em; }
 .seg.is-now { box-shadow: inset 0 0 0 2px var(--ink); }
 [data-seg="shimo"] { --seg: var(--seg-shimo); }
 [data-seg="yoin"] { --seg: var(--seg-yoin); }
 [data-seg="ma"] { --seg: var(--seg-ma); }
 [data-seg="kami"] { --seg: var(--seg-kami); }
-.seg i, .drain { background: var(--seg); }
+.seg i { background: var(--seg); }
 .band--static .seg { background: var(--seg); }
 .band--tall { height: 44px; }
-.band--tall .seg span { font-size: 13.5px; }
+.band--tall .seg > span { font-size: 13.5px; }
 
-/* 歌詞と帯をまとめた枠 */
-.stage { flex: 1 1 auto; min-height: 300px; max-height: 640px; display: flex; flex-direction: column; gap: 8px; padding: 8px; }
+/* 歌の枠 */
+/* 歌の枠には、地の減りも、区間名・秒数の行も置かない。読む人は朱の文字を追うので精一杯で、地の減りは文字と違う速さで動くノイズになる（2026-11-04 のユーザーの判断）。
+   お手本を聞く画面も同じ形にする。帯と地の減りを説明する導入の段を消したので、聞く画面にだけ残すと説明のない部品になる（同日のユーザーの判断）。
+   上の帯も置かない。ガイドの「上の帯は残す」（デモ動画の段8で、録音の画面の帯の間が光る）とは違う。導入の段1のルールの帯は、進みを見せる部品ではないので残す */
+.stage { flex: 1 1 auto; min-height: 300px; max-height: 640px; display: flex; flex-direction: column; padding: 8px; }
 .stage-body { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; border-radius: 8px; background: var(--track); }
-.drain { position: absolute; inset: 0; transform-origin: bottom; }
-.now { position: absolute; inset: 8px 12px auto 12px; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.now { position: absolute; inset: 8px 12px auto 12px; display: flex; }
 .now b { font-family: var(--f-serif); font-size: 17px; line-height: 1.5; }
-.now span { font-family: var(--f-mono); font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.5; white-space: nowrap; }
-.now span small { font-family: var(--f-sans); font-size: 13px; font-weight: 700; }
-.lyric { position: absolute; inset: 44px 44px 10px 10px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--card); }
+.stage:not([data-head]) .now { display: none; }
+.lyric { position: absolute; inset: 8px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--card); }
+.stage[data-head] .lyric { top: 40px; }
 .lyric .tate { color: var(--ink); }
-.lyric .on { color: var(--shu); }
+/* 字は、その字の始まりから次の字の始まりまでに、上から少しずつ朱にする。カラオケと同じ塗り方で、伸ばす印もどれだけ伸ばすかが塗りで分かる（2026-11-04 のユーザーの判断）。
+   塗る割合は paintStage が字ごとに --p で渡す。ふりがなは自分の色を持つので、塗りに巻き込まれない */
+.lyric [data-at] { color: transparent; background-image: linear-gradient(to bottom, var(--shu) var(--p, 0%), var(--ink) var(--p, 0%)); -webkit-background-clip: text; background-clip: text; }
+/* 余韻の印は、「る」を塗り終えてから余韻の終わりまでに上から朱にする。読み上げた所を朱にする決まりの、余韻の分である（同日のユーザーの判断） */
+.lyric .yoin { background: linear-gradient(to bottom, var(--shu) var(--yoin-done, 0%), var(--ink) var(--yoin-done, 0%)); }
 .count { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; background: rgba(32, 29, 25, 0.78); color: var(--card); font-family: var(--f-mono); font-size: 92px; font-weight: 600; }
-.stage[data-assist="off"] .drain, .stage[data-assist="off"] .seg i, .stage[data-assist="off"] .now span { display: none; }
-/* 余韻で押す字の目印。読む画面の補助ありのときだけ出す */
-.stage[data-tap]:not([data-assist="off"]) .cue { -webkit-text-emphasis: filled circle var(--shu-deep); text-emphasis: filled circle var(--shu-deep); }
-.tap-hint { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); padding: 4px 12px; border-radius: 999px; background: var(--ink); color: var(--card); font-size: 14px; font-weight: 600; white-space: nowrap; pointer-events: none; }
 /* 読む前の説明。枠の上に重ねて、読む画面の高さを増やさない */
 .rec-help { position: absolute; inset: 0; z-index: 3; overflow: auto; padding: 14px; display: grid; align-content: start; gap: 8px; background: var(--card); font-size: 14px; line-height: 1.65; }
 .rec-help b { font-family: var(--f-serif); font-size: 17px; }
 .rec-help p::before { content: "● "; color: var(--shu); }
 .rec-help .btn { justify-self: start; min-height: 44px; }
 .link-inline { padding: 0; border: 0; background: none; color: var(--ink-2); font-size: inherit; text-decoration: underline; cursor: pointer; }
-.stage[data-assist="off"] .seg.is-now { box-shadow: none; }
+
+/* 歌は、下の句、余韻と間、上の句の3つの区切りに分け、区切りごとに見出しの下へ置く。時間で変わるのは字の色と、今の区切りの囲みだけにする（2026-11-04 のユーザーの案で、同日夜にこの形に決めた）。
+   区切りは右から並べ、見出しも縦に書く。余韻と間の区切りは1列の幅しかなく、横書きの見出しが収まらないからである */
+/* 区切りの高さは、いちばん長い区切りにそろえる。囲みが区切りごとに伸び縮みしないようにするためである（同日のユーザーの判断） */
+.tate.blocks { writing-mode: horizontal-tb; display: flex; flex-direction: row-reverse; align-items: stretch; gap: 0.5em; }
+/* 囲みの線の分の内側は、どの区切りにも、囲んでいないあいだも取っておく。囲みが出たときに歌が動かず、どの区切りも同じ高さから始まるようにするためである */
+.blk { display: flex; flex-direction: column; align-items: center; gap: 0.5em; padding: 0.35em 0.3em; border-radius: 0.4em; }
+/* 読んでいるあいだ、今の区切りを囲む（同日のユーザーの判断）。余韻と間は1つの区切りにし、見出しも本文も1列にする。
+   間を別の区切りにして1秒だけ囲むと、囲みが跳ねてせわしない。区間名を「余韻と間」の1つにした判断（2026-11-03）と同じ理由である。
+   朱は読み上げた字だけに使うので、囲みの線は帯の今の区間と同じ黒にする */
+.blk.is-now { box-shadow: inset 0 0 0 2px var(--ink); }
+.blk-head, .blk-body { writing-mode: vertical-rl; }
+/* 見出しの長さをそろえ、どの区切りも歌が同じ高さから始まるようにする。いちばん長いのは「下の句5秒」である。歌が縮んでも見出しが読める大きさを保つ */
+.blk-head { height: 5.6em; font-family: var(--f-sans); font-size: max(12px, 0.62em); font-weight: 700; line-height: 1.4; letter-spacing: 0.08em; white-space: nowrap; color: var(--ink-3); }
+.tcy { text-combine-upright: all; -webkit-text-combine: horizontal; }
+.blk-body { min-width: 1.6em; }
+
+/* 歌の表記の切り替え。歌の面の左上に重ねるので、字に重ならないよう左に場所を取っておく。
+   切り替えを出さないあいだ（導入の段、録音中）も取るのは、歌の座標を変えないためである。
+   右にも同じだけ取り、歌を枠の真ん中に置く。左だけだと歌が右に寄り、左右の余白が偏って見える（2026-11-04 のユーザーの指摘）。
+   横に並べて上下に場所を取る形は採らない。高さの低い画面で歌が大きく縮んだ（375×600 で 12.3px、聞く画面は 8.4px） */
+.kana-corner { position: absolute; top: 6px; left: 6px; z-index: 1; display: grid; gap: 4px; }
+.kana-corner .btn { width: 40px; min-height: 44px; padding: 0; font-size: 13px; }
+.stage .lyric { padding-inline: 42px; }
 
 .screen--stage { gap: 10px; }
 /* 導入の1行。Claude Code の出力のように ● を付ける */
 .say { font-size: 16px; line-height: 1.75; }
 .say::before { content: "● "; color: var(--shu); }
-.intro-points { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; font-size: 15px; line-height: 1.6; }
-.intro-points b { color: var(--shu-deep); }
-/* 導入の段2で、説明している仕組みを枠で囲んで番号を付ける */
-.is-marked { position: relative; outline: 3px solid var(--shu); outline-offset: 2px; border-radius: 6px; }
-.is-marked::after { content: attr(data-mark); position: absolute; z-index: 4; width: 22px; height: 22px; border-radius: 50%; background: var(--shu); color: var(--on-shu); font: 700 13px/22px var(--f-mono); text-align: center; }
-.band.is-marked::after { top: -12px; left: -12px; }
-.stage-body.is-marked::after { bottom: 8px; left: 8px; }
 .intro-rule { display: grid; gap: 12px; padding-block: 8px; }
 .link-btn { justify-self: start; min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink-2); font-size: 14px; text-decoration: underline; cursor: pointer; }
 .controls { flex: none; display: grid; align-content: start; gap: 6px; min-height: 150px; }
@@ -242,6 +264,7 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
 .only-sample { width: calc(100% - 2 * var(--gutter)); max-width: calc(var(--column) - 2 * var(--gutter)); margin: 0 auto 24px; padding: 10px 12px; border: 1px dashed var(--ink-3); border-radius: 8px; display: grid; gap: 8px; font-size: 13px; color: var(--ink-3); }
 .only-sample div { display: flex; flex-wrap: wrap; gap: 6px; }
 .only-sample button { min-height: 36px; padding: 2px 10px; border-radius: 6px; border: 1px solid var(--ink-3); background: transparent; cursor: pointer; }
+.only-sample div > span { align-self: center; font-weight: 700; }
 
 /* 一覧の最後の項目と取り違えて押さないよう、一覧から離す */
 .footnote { padding-top: 28px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
@@ -541,10 +564,6 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
 
 <template id="t-listen">
   <p class="say" data-say-line></p>
-  <ol class="intro-points" data-intro-points hidden>
-    <li><b>① 上の帯</b>：全体の時間の進みがわかります</li>
-    <li><b>② 歌の後ろの色</b>：下の句、余韻と間、上の句の、それぞれの中での進みがわかります</li>
-  </ol>
   <div class="intro-rule" data-intro-rule>
     <div class="big-num">5-3-1-6</div>
     <div class="band band--tall" data-rule-band></div>
@@ -552,6 +571,10 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
   <p data-pair hidden><span class="kim-in">ほ</span> → <span class="kim-in">あはれ</span></p>
   <div class="card stage" data-stage data-t="0" hidden></div>
   <div class="controls" data-controls></div>
+  <template data-tools>
+    見本だけの切り替え
+    <div><button type="button" data-reset-sample>最初に戻す</button></div>
+  </template>
 </template>
 
 <template id="t-rec">
@@ -561,6 +584,8 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
   <template data-tools>
     見本だけの切り替え
     <div><button type="button" data-denied>マイクを許可しない</button><button type="button" data-retry-on>読み直しの表示</button></div>
+    <div><span>止めて見る</span><button type="button" data-freeze="3">下の句</button><button type="button" data-freeze="6">余韻</button><button type="button" data-freeze="7.6">余韻の最後</button><button type="button" data-freeze="8.5">間</button><button type="button" data-freeze="11">上の句</button><button type="button" data-freeze="0">戻す</button></div>
+    <div><button type="button" data-reset-sample>最初に戻す</button></div>
   </template>
 </template>
 
@@ -590,24 +615,6 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
   </div>
 </template>
 
-<template id="t-heard">
-  <div class="hero" style="padding-block: 20px 8px">
-    <h2 class="head">読めました。<br>まず聴いてみましょう。</h2>
-    <p>数値を見る前に、自分の耳で確かめます。どこが気になるか、お手本と比べてください。</p>
-  </div>
-  <div class="pair">
-    <button class="btn" type="button" data-say="自分の読みを再生"><svg class="ico"><use href="#i-play"/></svg>自分の読み</button>
-    <button class="btn" type="button" data-say="お手本を再生"><svg class="ico"><use href="#i-play"/></svg>お手本</button>
-  </div>
-  <section class="ask" data-ask>
-    <div class="ask-line"><span class="gt">&gt;</span> <span data-typed>/yomimasu </span><span class="caret"></span></div>
-    <div class="next">
-      <a class="btn btn--line" href="#/read/rec/" data-cmd="読み直す">読み直す</a>
-      <a class="btn btn--fill" href="#/result/">結果を見る</a>
-    </div>
-  </section>
-</template>
-
 <template id="t-result">
   <span class="tag" data-example hidden>例の録音です</span>
   <div class="card rows res" data-rows></div>
@@ -625,7 +632,7 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
   <p class="fine">録音は端末の外へ出ません。</p>
   <template data-tools>
     見本だけの切り替え
-    <div><button type="button" data-variant="normal">直す点あり</button><button type="button" data-variant="clear">全部幅の中</button><button type="button" data-variant="unmeasured">測れない</button></div>
+    <div><button type="button" data-result="normal">直す点あり</button><button type="button" data-result="clear">全部幅の中</button><button type="button" data-result="unmeasured">測れない</button></div>
   </template>
 </template>
 
@@ -655,8 +662,7 @@ const ROUTES = {
   '/install/agent/': { tpl: 't-ai-agent', cmd: 'インストール エージェント', read: 'エージェントに入れる.md' },
   '/read/': { tpl: 't-listen', cmd: 'まず1回読む', step: '1 / 3 聞く', full: true, mount: mountListen },
   '/read/rec/': { tpl: 't-rec', cmd: '読む ほ あはれ', step: '2 / 3 読む', full: true, mount: mountRec },
-  '/read/heard/': { tpl: 't-heard', cmd: '読む ほ あはれ', note: '録音しました', step: '3 / 3 確かめる' },
-  '/result/': { tpl: 't-result', cmd: '結果を見る', step: '補助あり', mount: mountResult },
+  '/result/': { tpl: 't-result', cmd: '結果を見る', note: '録音しました', step: '3 / 3 結果・補助あり', mount: mountResult },
 };
 
 const SEGMENTS = [
@@ -667,37 +673,22 @@ const SEGMENTS = [
 ];
 const PAIR_SEC = SEGMENTS.reduce((sum, s) => sum + s.sec, 0);
 
-// 余韻の最後の1秒は、声を弱め始めてよい範囲として地の色を薄くしていく（2026-11-03 のユーザーの判断）
-const FADE_SEC = 1;
 
-// 間は1秒しかなく、区間ごとに名前と色を替えると目で追えないので、余韻と間を1つの区間として見せる
+// 間は1秒しかなく、区間ごとに名前と色を替えると目で追えないので、余韻と間を1つの区間として見せる。
+// key は歌の区切り（blocksHtml の data-phase）と同じ名前にする
 const PHASES = [
-  { keys: ['shimo'], key: 'shimo', label: '下の句（5秒程度）' },
-  { keys: ['yoin', 'ma'], key: 'yoin', label: '余韻と間（3.0＋1.0秒）' },
-  { keys: ['kami'], key: 'kami', label: '上の句（6秒程度）' },
-].map((p) => {
-  const segs = SEGMENTS.filter((s) => p.keys.includes(s.key));
-  const sec = segs.reduce((sum, s) => sum + s.sec, 0);
-  // 地は上から減るので、先に来る区間の色を上に置く。余韻の色が減りきると間の色だけが残り、境目が見える
-  let at = 0;
-  const pct = (x) => `${(x / sec) * 100}%`;
-  const stops = segs.map((s) => {
-    const from = at;
-    at += s.sec;
-    if (s.key === 'yoin') return `var(--seg-yoin) ${pct(from)} ${pct(at - FADE_SEC)}, var(--seg-yoin-fade) ${pct(at)}`;
-    return `var(--seg-${s.key}) ${pct(from)} ${pct(at)}`;
-  });
-  return { ...p, sec, fill: segs.length === 1 ? `var(--seg-${segs[0].key})` : `linear-gradient(to bottom, ${stops.join(', ')})` };
-});
+  { keys: ['shimo'], key: 'shimo' },
+  { keys: ['yoin', 'ma'], key: 'yoin-ma' },
+  { keys: ['kami'], key: 'kami' },
+].map((p) => ({ ...p, sec: SEGMENTS.filter((s) => p.keys.includes(s.key)).reduce((sum, s) => sum + s.sec, 0) }));
 
 function phaseAt(t) {
   let from = 0;
   for (const p of PHASES) {
-    if (t < from + p.sec) return { phase: p, from };
+    if (t < from + p.sec) return p;
     from += p.sec;
   }
-  const last = PHASES.at(-1);
-  return { phase: last, from: PAIR_SEC - last.sec };
+  return PHASES.at(-1);
 }
 
 // ふりがなは札の読みの表の読み（sound）から振った。余韻の印は下の句の最後の行に付ける。
@@ -709,11 +700,50 @@ const CARDS = {
 const LYRICS = [
   // 81番の下の句と45番の上の句（5-3-1-6 に最も近いお手本の組）。伸ばす位置とふりがなは札の読みの表から取った
   { at: 0, to: 2.3, chars: [['た'], ['だ'], ['ー', 2], ['有', 2, 'あり'], ['明', 2, 'あけ'], ['の'], ['ー', 2]] },
-  { at: 2.3, to: 5, yoin: true, chars: [['月', 2, 'つき'], ['ぞ'], ['残', 2, 'のこ'], ['ー', 2], ['れ'], ['る', 1, null, true]] },
-  { at: 9, to: 10.6, brk: true, chars: [['あ'], ['は', 1, 'わ'], ['れ'], ['と'], ['も'], ['ー', 2]] },
+  { at: 2.3, to: 5, chars: [['月', 2, 'つき'], ['ぞ'], ['残', 2, 'のこ'], ['ー', 2], ['れ'], ['る', 1, null, true]] },
+  { at: 9, to: 10.6, chars: [['あ'], ['は', 1, 'わ'], ['れ'], ['と'], ['も'], ['ー', 2]] },
   { at: 10.6, to: 12.6, chars: [['い', 1, 'ゆ'], ['ふ', 1, 'ー'], ['べ'], ['き'], ['人', 2, 'ひと'], ['は', 1, 'わ'], ['ー', 2]] },
   { at: 12.6, to: 15, chars: [['思', 2, 'おも'], ['ほ', 1, 'お'], ['え'], ['ー', 2], ['で'], ['ー', 2]] },
 ];
+
+// kana は利用者の設定である。見本だけの切り替えの値は、キーに sample を付けて覚える
+const SETTINGS = {
+  kana: { key: 'yomimasu.kana', values: ['kanji', 'kana'], initial: 'kana' },
+};
+// 前の版の見本が端末に覚えた sample の値も、「最初に戻す」で消す
+const SAMPLE_KEY_PREFIX = 'yomimasu.sample.';
+// 端末に覚えられないときも、開いている間は切り替えが効くよう手元にも持つ
+const settingCache = {};
+
+function setting(name) {
+  if (!(name in settingCache)) {
+    const { key, values, initial } = SETTINGS[name];
+    let stored = null;
+    try { stored = localStorage.getItem(key); } catch { /* 読めなければ最初の値で出す */ }
+    settingCache[name] = values.includes(stored) ? stored : initial;
+  }
+  return settingCache[name];
+}
+
+function saveSetting(name, value) {
+  settingCache[name] = value;
+  try { localStorage.setItem(SETTINGS[name].key, value); } catch { /* 覚えられなくても、開いている間は切り替わる */ }
+}
+
+// 全ひらがなの歌。読みは LYRICS のふりがなだけから作り、外の読みのデータは足さない。
+// 仮名は札の書き方（「あはれ」の「は」）にせず、ふりがなの発音どおりにする（2026-11-04 のユーザーの判断）。
+// 読みが2字以上の字を1字ずつに分けて重みを等分するのは、朱の進みを1字ずつ動かすためである
+function lyricLines() {
+  if (setting('kana') === 'kanji') return LYRICS;
+  return LYRICS.map((line) => ({
+    ...line,
+    chars: line.chars.flatMap(([ch, w = 1, ruby, cue]) => {
+      if (!ruby) return [[ch, w, ruby, cue]];
+      const kana = [...ruby];
+      return kana.map((k, i) => [k, w / kana.length, null, cue && i === kana.length - 1]);
+    }),
+  }));
+}
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const clone = (id) => document.getElementById(id).content.cloneNode(true);
@@ -733,13 +763,13 @@ function buildBand(root, { fixed = false } = {}) {
   root.setAttribute('role', 'img');
   root.setAttribute('aria-label', SEGMENTS.map((s) => `${s.name} ${s.sec}秒`).join('、'));
   root.innerHTML = SEGMENTS.map((s) =>
-    `<div class="seg" data-seg="${s.key}" style="flex:${s.sec} 1 0" aria-hidden="true"><i></i><span>${s.name}<small>${s.sec}</small></span></div>`).join('');
+    `<div class="seg" data-seg="${s.key}" style="flex:${s.sec} 1 0" aria-hidden="true"><i></i><span>${s.name}<small>${s.sec}<span class="unit">秒</span></small></span></div>`).join('');
   if (fixed) root.classList.add('band--static');
 }
 
 function paintBand(root, t) {
   const inPair = t >= 0 && t < PAIR_SEC;
-  const { phase } = phaseAt(t);
+  const phase = phaseAt(t);
   let cursor = 0;
   root.querySelectorAll('.seg').forEach((el, i) => {
     const s = SEGMENTS[i];
@@ -751,71 +781,160 @@ function paintBand(root, t) {
 }
 
 function buildStage(root) {
-  root.innerHTML = `<div class="band" data-band></div>
-    <div class="stage-body">
-      <div class="drain"></div>
-      <div class="now"><b></b><span></span></div>
-      <div class="lyric"><div class="tate">${LYRICS.map(lineHtml).join('')}</div></div>
+  root.innerHTML = `<div class="stage-body">
+      <div class="now"><b>補助なし</b></div>
+      <div class="lyric"><div class="tate blocks"></div></div>
       <div class="count" hidden></div>
     </div>`;
-  buildBand(root.querySelector('[data-band]'));
+  renderLyric(root);
   paintStage(root, Number(root.dataset.t));
-  const box = root.querySelector('.lyric');
-  const observer = new ResizeObserver(() => fitLyric(box));
-  observer.observe(box);
+  const observer = new ResizeObserver(() => fitStage(root));
+  observer.observe(root.querySelector('.lyric'));
   onDisposeLong(() => observer.disconnect());
 }
 
-// 歌は枠に合わせて縮める。余韻の印やふりがなで行が伸びると、狭い画面で枠の上下にはみ出すからである
+function renderLyric(root) {
+  root.querySelector('.tate').innerHTML = blocksHtml(lyricLines());
+  fitStage(root);
+}
+
+// 区切りの本文の高さを、いちばん長い行の長さにする。横書きの中に置いた縦書きの本文は、iOS の Safari では使える高さいっぱいに伸びる。
+// そのため歌が枠の上に寄り、字も小さくなった（2026-11-04 に iPhone SE のシミュレーターで測った。inline-size: max-content は効かなかった）。
+// 長さは em で持たせ、fitLyric で字を縮めても比が変わらないようにする。隠れていて測れないときは、見えたときの ResizeObserver で測り直す
+function sizeBlockBodies(root) {
+  const tate = root.querySelector('.tate');
+  const em = parseFloat(getComputedStyle(tate).fontSize);
+  tate.querySelectorAll('.blk-body').forEach((body) => {
+    body.style.height = '';
+    const lengths = [...body.querySelectorAll('.ln')].map((ln) => {
+      const rects = [...ln.children].map((el) => el.getBoundingClientRect()).filter((r) => r.height > 0);
+      return rects.length ? Math.max(...rects.map((r) => r.bottom)) - Math.min(...rects.map((r) => r.top)) : 0;
+    });
+    const longest = Math.max(0, ...lengths);
+    if (longest > 0) body.style.height = `${(longest / em + 0.3).toFixed(3)}em`;
+  });
+}
+
+// 下の句の最後の字（余韻の始まりに置く字）は、余韻の区切りへ移す。余韻の3秒は最後の音そのものを含むからである（lineHtml の注と同じ）
+function blocksHtml(lines) {
+  const shimo = lines.filter((line) => line.at < YOIN_START);
+  const last = shimo.at(-1);
+  const shimoLines = [...shimo.slice(0, -1), { ...last, chars: last.chars.filter((c) => !c[3]) }];
+  const [shimoSeg, yoinSeg, maSeg, kamiSeg] = SEGMENTS;
+  // ▼ のあとに「（間）」とは書かない。間の1秒は何も塗らない。書いて塗る形をユーザーが試し、かえって読みづらかった（2026-11-04 夜のユーザーの判断）
+  const lastUnit = (last.to - last.at) / last.chars.reduce((sum, [, w = 1, , cue]) => sum + (cue ? 0 : w), 0);
+  const yoinLine = { at: last.to, to: last.to, unit: lastUnit, yoin: true, chars: last.chars.filter((c) => c[3]) };
+  const head = (seg) => `${seg.name}<span class="tcy">${seg.sec}</span>秒`;
+  const block = (phase, title, blockLines) => `<div class="blk" data-phase="${phase}">
+      <div class="blk-head">${title}</div>
+      <div class="blk-body">${blockLines.map(lineHtml).join('')}</div>
+    </div>`;
+  return [
+    block('shimo', head(shimoSeg), shimoLines),
+    // 見出しは「余韻3秒」「間1秒」の2行にする（同日のユーザーの判断）
+    block('yoin-ma', `${head(yoinSeg)}<br>${head(maSeg)}`, [yoinLine]),
+    block('kami', head(kamiSeg), lines.filter((line) => line.at >= YOIN_START)),
+  ].join('');
+}
+
+function fitStage(root) {
+  sizeBlockBodies(root);
+  fitLyric(root.querySelector('.lyric'));
+}
+
+// 歌は枠に合わせて縮める。余韻の印やふりがなで行が伸びると、狭い画面で枠の上下にはみ出すからである。
+// 1回で縮めきらず、収まるまで測り直す。区切りの見出しは 12px より小さくしないので、歌の字と同じ割合では縮まない。
+// iPhone 13 mini で、見出しが枠の上へはみ出して切れた（2026-11-04 のユーザーの報告。見出しが1行の「余韻3秒・間1秒」だった版）
 function fitLyric(box) {
   const tate = box.querySelector('.tate');
   tate.style.fontSize = '';
   if (!box.clientHeight) return;
-  const size = tate.getBoundingClientRect();
-  const ratio = Math.min(1, (box.clientHeight - 16) / size.height, (box.clientWidth - 16) / size.width);
-  if (ratio < 1) tate.style.fontSize = `${parseFloat(getComputedStyle(tate).fontSize) * ratio}px`;
+  const pad = getComputedStyle(box);
+  const taken = (a, b) => parseFloat(pad[a]) + parseFloat(pad[b]) + 16;
+  for (let i = 0; i < 4; i += 1) {
+    const size = tate.getBoundingClientRect();
+    const ratio = Math.min(1, (box.clientHeight - taken('paddingTop', 'paddingBottom')) / size.height, (box.clientWidth - taken('paddingLeft', 'paddingRight')) / size.width);
+    if (ratio >= 1) return;
+    tate.style.fontSize = `${parseFloat(getComputedStyle(tate).fontSize) * ratio}px`;
+  }
 }
 
 // 下の句の最後の字（4つ目の値が true）は余韻の始まりに置く。余韻の3秒は最後の音そのものを含む（5-3-1-6 の余韻の数え方。根拠の資料は非公開の記録にある）。
 // 下の句の中に置くと、最後の字を読み終えてからさらに3秒のばすように見える
 function lineHtml(line) {
   const total = line.chars.reduce((sum, [, w = 1, , cue]) => sum + (cue ? 0 : w), 0);
+  // 重み1に当たる秒数。余韻の区切りの行は下の句の最後の字しか持たないので、下の句の行の値を受け取る
+  const unit = line.unit ?? (line.to - line.at) / total;
   let seen = 0;
+  let cueEnd = line.to;
   const spans = line.chars.map(([ch, w = 1, ruby, cue]) => {
     let at = line.to;
-    if (!cue) {
-      at = line.at + ((line.to - line.at) * seen) / total;
+    let to = line.to + w * unit;
+    if (cue) {
+      cueEnd = to;
+    } else {
+      at = line.at + unit * seen;
       seen += w;
+      to = line.at + unit * seen;
     }
-    const cls = [ch === 'ー' ? 'nobi' : '', cue ? 'cue' : ''].filter(Boolean).join(' ');
     const body = ruby ? `<ruby>${ch}<rt>${ruby}</rt></ruby>` : ch;
-    return `<span data-at="${at.toFixed(2)}"${cls ? ` class="${cls}"` : ''}>${body}</span>`;
+    return `<span data-at="${at.toFixed(3)}" data-to="${to.toFixed(3)}"${ch === 'ー' ? ' class="nobi"' : ''}>${body}</span>`;
   }).join('');
-  return `<div class="ln${line.brk ? ' break' : ''}">${spans}${line.yoin ? YOIN : ''}</div>`;
+  const yoin = line.yoin ? YOIN.replace('<span class="yoin"', `<span class="yoin" data-from="${cueEnd.toFixed(3)}"`) : '';
+  return `<div class="ln">${spans}${yoin}</div>`;
 }
 
 function paintStage(root, t) {
   const assist = root.dataset.assist !== 'off';
-  paintBand(root.querySelector('[data-band]'), t);
-  const { phase, from } = phaseAt(t);
-  let segFrom = 0;
-  let seg = SEGMENTS.at(-1);
-  let segLeft = 0;
-  for (const s of SEGMENTS) {
-    if (t >= segFrom && t < segFrom + s.sec) { seg = s; segLeft = segFrom + s.sec - t; }
-    segFrom += s.sec;
-  }
-  const left = Math.max(phase.sec - (t - from), 0);
-  const drain = root.querySelector('.drain');
-  drain.dataset.seg = phase.key;
-  drain.style.background = phase.fill;
-  // 縮めると色の境目まで縮むので、上から切り取る
-  drain.style.clipPath = `inset(${(1 - left / phase.sec) * 100}% 0 0 0)`;
-  root.querySelector('.now b').textContent = assist ? phase.label : '補助なし';
-  // 名前は「余韻と間」のまま、数字は余韻3秒と間1秒を別々に数える。4.0 から数えると余韻が4秒に見えるからである
-  root.querySelector('.now span').innerHTML = phase.keys.length > 1 ? `<small>${seg.name}</small> ${segLeft.toFixed(1)}` : left.toFixed(1);
-  root.querySelectorAll('[data-at]').forEach((el) => el.classList.toggle('on', assist && t > Number(el.dataset.at)));
+  const progress = (from, to) => (assist ? Math.min(Math.max((t - from) / (to - from), 0), 1) : 0);
+  const pct = (x) => `${(x * 100).toFixed(2)}%`;
+  // 毎フレーム呼ばれるので、変わった字だけ書き換える
+  root.querySelectorAll('[data-at]').forEach((el) => {
+    const p = pct(progress(Number(el.dataset.at), Number(el.dataset.to)));
+    if (el.style.getPropertyValue('--p') !== p) el.style.setProperty('--p', p);
+  });
+  const [, yoinSeg] = SEGMENTS;
+  const yoinEnd = YOIN_START + yoinSeg.sec;
+  const markFrom = Number(root.querySelector('.lyric .yoin')?.dataset.from ?? YOIN_START);
+  // 余韻の印は、「る」を塗り終えてから余韻の終わりまで、一定の速さで上から塗る
+  const yoinDone = progress(markFrom, yoinEnd);
+  root.style.setProperty('--yoin-done', pct(yoinDone));
+  // 待機（t=0）では囲まない。まだどこも読んでいないからである
+  const phase = phaseAt(t);
+  root.querySelectorAll('.blk').forEach((el) => el.classList.toggle('is-now', assist && t > 0 && el.dataset.phase === phase.key));
 }
+
+const KANA_CHOICES = [['kanji', '漢字', '漢字まじり'], ['kana', 'かな', 'ひらがな']];
+
+// 歌の表記の切り替え。ボタンの列ではなく歌の面の左上に重ねる（2026-11-04 のユーザーの判断）。
+// 補助の切り替えと同じく、打ち込んでから切り替える。札の名前を短くするのは、幅 40px のボタンに収めるためである
+function kanaToggle(onChange) {
+  const group = document.createElement('div');
+  group.className = 'kana-corner';
+  group.setAttribute('role', 'group');
+  group.setAttribute('aria-label', '歌の表記');
+  group.innerHTML = KANA_CHOICES.map(([value, label]) => `<button class="btn" type="button" data-kana="${value}">${label}</button>`).join('');
+  const buttons = [...group.querySelectorAll('[data-kana]')];
+  const sync = () => buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.kana === setting('kana'))));
+  buttons.forEach((b, i) => b.addEventListener('click', () => act(KANA_CHOICES[i][2], () => {
+    saveSetting('kana', b.dataset.kana);
+    sync();
+    onChange();
+  })));
+  sync();
+  return group;
+}
+
+// 端末に覚えた見本の値を消して、最初の値で開き直す。読む前の説明と導入を見たことは消さない。消すと、押すたびに説明と導入をやり直すことになる
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('[data-reset-sample]')) return;
+  try {
+    Object.keys(localStorage)
+      .filter((key) => key === SETTINGS.kana.key || key.startsWith(SAMPLE_KEY_PREFIX))
+      .forEach((key) => localStorage.removeItem(key));
+  } catch { /* 読めない端末は覚えてもいないので、開き直すだけで最初の値になる */ }
+  location.reload();
+});
 
 function runClock(fn) {
   const startedAt = performance.now();
@@ -829,9 +948,9 @@ function runClock(fn) {
 }
 
 // まず1回読む の導入。1段に1つずつ見せるものを増やす。毎回出ると鬱陶しいので、初回だけにする
+// 上の帯と歌の後ろの色を説明する段は置かない。読む画面で帯と地の減りを使わなくなったからである（2026-11-04 夜のユーザーの判断。昼の「導入の4段は今のまま。段2と段3をまとめない」を置き換える）
 const INTRO = [
   '競技かるたの読みには、5-3-1-6 というシンプルなルールがあります。',
-  'このアプリでは、5-3-1-6 の感覚をつかむために、2つの仕組みを使います。',
   'お手本と一緒に、ルールを確かめてみましょう。',
   'では、読んでみませんか？',
 ];
@@ -847,20 +966,27 @@ function markIntroDone() {
 
 function mountListen(el) {
   const say = el.querySelector('[data-say-line]');
-  const points = el.querySelector('[data-intro-points]');
   const rule = el.querySelector('[data-intro-rule]');
   const pair = el.querySelector('[data-pair]');
   const stage = el.querySelector('[data-stage]');
   const controls = el.querySelector('[data-controls]');
+  const tools = document.getElementById('tools');
   buildBand(rule.querySelector('[data-rule-band]'), { fixed: true });
   buildStage(stage);
   let stop = null;
+  let kana = null;
+  // お手本の再生中も、読む画面と同じく歌を動かさないよう、表記は切り替えさせない
+  const lockKana = (locked) => {
+    if (kana) kana.hidden = locked;
+  };
   const halt = () => {
     stop?.();
     stop = null;
     paintStage(stage, 0);
+    lockKana(false);
   };
   const play = (onEnd) => {
+    lockKana(true);
     stop = runClock((t) => {
       if (t >= PAIR_SEC) { halt(); onEnd(); return false; }
       paintStage(stage, t);
@@ -892,75 +1018,53 @@ function mountListen(el) {
     return p;
   };
 
-  const marks = [[stage.querySelector('[data-band]'), '①'], [stage.querySelector('.stage-body'), '②']];
   // withMotion はボタンで段を進めたとき。開いた直後は、画面全体の出し方に任せる
   function setStep(n, withMotion = false) {
     halt();
+    kana?.remove();
+    kana = null;
+    tools.hidden = n !== 3;
     const animate = withMotion && !reduced;
     const stageWasHidden = stage.hidden;
     say.textContent = INTRO[n - 1];
-    points.hidden = n !== 2;
-    marks.forEach(([target]) => target.classList.remove('is-marked'));
-    if (n === 2) {
-      // 「① 上の帯」の行が流れ始めたら上の帯を、「② 歌の後ろの色」の行で歌の後ろの色を囲む
-      const items = [...points.querySelectorAll('li')];
-      marks.forEach(([target, mark], i) => {
-        target.dataset.mark = mark;
-        const on = () => target.classList.add('is-marked');
-        if (animate) items[i].addEventListener('streamstart', on, { once: true });
-        else on();
-      });
-    }
     rule.hidden = n !== 1;
     pair.hidden = n === 1;
     stage.hidden = n === 1;
-    stepEl.textContent = n < 4 ? `はじめに ${n} / 4` : ROUTES['/read/'].step;
+    stepEl.textContent = n < 3 ? `はじめに ${n} / 3` : ROUTES['/read/'].step;
     controls.replaceChildren();
-    if (n === 2) {
-      // 動きは自動で始めず、「確認する」で何度でも音なしで流せる。文を読む前に動き出すと、文と動きを同時に追うことになる
-      const check = button('確認する', 'btn', () => {
-        if (stop) { halt(); check.textContent = '確認する'; return; }
-        act('確認する', () => {
-          check.textContent = 'やめる';
-          play(() => { check.textContent = 'もう一度確認する'; });
-        });
-      });
-      controls.append(check);
-    }
-    if (n <= 2) {
-      const next = button('次へ', 'btn btn--fill', () => act('次へ', () => setStep(n + 1, true)));
+    if (n === 1) {
+      const next = button('次へ', 'btn btn--fill', () => act('次へ', () => setStep(2, true)));
       controls.append(next);
       addBack(next);
     }
-    if (n === 3) {
-      const listen = listenButton('btn btn--fill', () => setStep(4, true));
+    if (n === 2) {
+      const listen = listenButton('btn btn--fill', () => setStep(3, true));
       controls.append(listen, note());
       addBack(listen);
     }
-    if (n === 4) {
+    if (n === 3) {
       markIntroDone();
       const read = document.createElement('a');
       read.className = 'btn btn--fill';
       read.href = '#/read/rec/';
       read.textContent = '読んでみる';
       const again = button('はじめの説明をもう一度見る', 'link-btn', () => act('はじめの説明', () => setStep(1, true)));
+      kana = kanaToggle(() => { renderLyric(stage); paintStage(stage, 0); });
+      stage.querySelector('.lyric').append(kana);
       controls.append(listenButton('btn', () => {}), read, again, note());
       addBack(read);
       bindLinks(controls);
     }
     if (animate) {
-      // 2段目は、歌の枠を先に出してから ①② を流す。①② は冒頭の文の続きとして流し、場所は取っておくので、枠は動かない
       const units = [];
       classify(say, units, true);
       if (n === 1) classify(rule, units);
       if (stageWasHidden && !stage.hidden) [pair, stage].forEach((el) => classify(el, units));
-      if (n === 2) classify(points, units, true);
       classify(controls, units);
-      markLead(units).forEach((u) => { if (points.contains(u.el)) u.instant = false; });
-      streamUnits(units);
+      streamUnits(markLead(units));
     }
   }
-  setStep(introDone() ? 4 : 1);
+  setStep(introDone() ? 3 : 1);
 }
 
 function mountSoron(el) {
@@ -991,11 +1095,7 @@ function mountSoron(el) {
 
 const LIMIT_SEC = 25;
 const KAMI_START_SEC = PAIR_SEC - SEGMENTS.at(-1).sec;
-// 余韻で押す仕組み。押した時刻を余韻の始まりとして、そこから余韻3秒と間1秒を数え直す（2026-11-03〜04 のユーザーの判断）
 const YOIN_START = SEGMENTS[0].sec;
-const TAP_FROM = LYRICS[1].at; // 下の句の2行目より前の押し間違いは数えない
-const TAP_UNTIL = YOIN_START + 2; // 余韻に入るのが遅い人も、標準で切り替わったあと2秒は合わせ直せる
-const TAP_CHAR = 'る';
 const REC_HELP_KEY = 'yomimasu.recHelpDone';
 
 function recHelpDone() {
@@ -1006,13 +1106,11 @@ function markRecHelpDone() {
   try { localStorage.setItem(REC_HELP_KEY, '1'); } catch { /* 覚えられなくても、次も説明が出るだけである */ }
 }
 
-function recHelpHtml() {
-  return `<b>読む前に</b>
+// 読む前の説明は合図だけにする。余韻の入りでタップして数え直す仕組みは置かない。字が朱になっていくのはカラオケと同じ理屈なので、
+// たいていの人は余韻の入りも朱の字に合わせられ、押す操作はかえって、字を追って読むことの邪魔になる（2026-11-04 夜のユーザーの判断）
+const REC_HELP_HTML = `<b>読む前に</b>
     <p>「読み始める」を押すと、3・2・1 と数えます。数え終わったら読み始めてください。</p>
-    <p>下の句の最後の「${TAP_CHAR}」を読む瞬間に、画面のどこかをタップしてください。</p>
-    <p>余韻に入る時刻がガイドとずれると、余韻を無理にのばしたり、ずれたまま読み進めたりすることになります。タップすると、ガイドがあなたの余韻に合わせて数え直します。押さなくても、標準の時間で進みます。</p>
     <button class="btn" type="button" data-help-close>わかった</button>`;
-}
 const COUNT_FROM = 3;
 const COUNT_BEAT_MS = 800;
 
@@ -1022,29 +1120,16 @@ function mountRec(el) {
   const tools = document.getElementById('tools');
   const retry = el.querySelector('[data-retry]');
   buildStage(stage);
-  stage.dataset.tap = '';
   const body = stage.querySelector('.stage-body');
-  const tapHint = document.createElement('div');
-  tapHint.className = 'tap-hint';
-  tapHint.hidden = true;
-  tapHint.textContent = `画面のどこかを、「${TAP_CHAR}」でタップ`;
   const help = document.createElement('div');
   help.className = 'rec-help';
-  help.innerHTML = recHelpHtml();
-  help.hidden = recHelpDone();
-  body.append(tapHint, help);
+  help.innerHTML = REC_HELP_HTML;
   help.querySelector('[data-help-close]').addEventListener('click', () => act('わかった', () => {
     help.hidden = true;
     markRecHelpDone();
   }));
-  const run = el.querySelector('.run');
-  const say = (text) => {
-    const line = document.createElement('div');
-    line.className = 'read';
-    line.dataset.tapLine = '';
-    line.textContent = `● ${text}`;
-    run.append(line);
-  };
+  help.hidden = recHelpDone();
+  body.append(help);
 
   const setControls = (id) => {
     controls.replaceChildren(clone(id));
@@ -1052,20 +1137,35 @@ function mountRec(el) {
     bindLinks(controls);
   };
 
+  // 待機の画面を描く時刻。見本の「止めて見る」で動かす
+  let idleT = 0;
+  let kana = null;
+  const repaint = () => paintStage(stage, idleT);
+  const onKana = () => {
+    renderLyric(stage);
+    repaint();
+  };
+
   function toIdle() {
     disposeAll();
     setBar(ROUTES['/read/rec/']);
     stage.querySelector('.count').hidden = true;
     stage.dataset.t = '0';
+    idleT = 0;
     paintStage(stage, 0);
+    controls.style.minHeight = '';
     setControls('t-rec-idle');
     const assistOn = controls.querySelector('[data-assist-on]');
     const assistOff = controls.querySelector('[data-assist-off]');
+    kana?.remove();
+    kana = kanaToggle(onKana);
+    stage.querySelector('.lyric').append(kana);
     const setAssist = (on) => {
       stage.dataset.assist = on ? 'on' : 'off';
+      stage.toggleAttribute('data-head', !on);
       assistOn.setAttribute('aria-pressed', String(on));
       assistOff.setAttribute('aria-pressed', String(!on));
-      paintStage(stage, 0);
+      repaint();
     };
     assistOn.addEventListener('click', () => act('補助あり', () => setAssist(true)));
     assistOff.addEventListener('click', () => act('補助を外す', () => setAssist(false)));
@@ -1073,11 +1173,11 @@ function mountRec(el) {
     controls.querySelector('[data-start]').addEventListener('click', () => act('読み始める', () => {
       help.hidden = true;
       markRecHelpDone();
+      idleT = 0;
+      repaint();
       toCount();
     }));
     controls.querySelector('[data-help]').addEventListener('click', () => act('読み方の説明', () => { help.hidden = false; }));
-    tapHint.hidden = true;
-    run.querySelectorAll('[data-tap-line]').forEach((line) => line.remove());
     tools.hidden = false;
   }
 
@@ -1087,7 +1187,11 @@ function mountRec(el) {
 
   function toCount() {
     tools.hidden = true;
+    kana?.remove();
+    kana = null;
     showRecBar();
+    // 合図と録音のあいだのボタンは待機より少ない。ボタンの部分が縮むと枠が伸びて歌が動くので、待機の高さを保つ
+    controls.style.minHeight = `${controls.offsetHeight}px`;
     setControls('t-rec-running');
     controls.querySelector('[data-cancel]').addEventListener('click', toIdle);
     controls.querySelector('[data-finish]').addEventListener('click', () => act('読み終えた', finish));
@@ -1112,37 +1216,20 @@ function mountRec(el) {
     onDispose(() => clearInterval(tick));
   }
 
-  // 補助ありのときだけ、余韻の始まりで画面を押せる。押した瞬間に合わせ直し、打ち込みの間は置かない（置くと合わせる意味がなくなる）
   function toReading() {
     const finishButton = controls.querySelector('[data-finish]');
-    const assist = stage.dataset.assist !== 'off';
     const startedAt = performance.now();
-    const elapsed = () => (performance.now() - startedAt) / 1000;
-    let tapAt = null;
-    const guideTime = (t) => (tapAt === null || t < tapAt ? t : YOIN_START + (t - tapAt));
-    const accepting = (t) => assist && tapAt === null && t >= TAP_FROM && t <= TAP_UNTIL;
-    const onTap = (e) => {
-      const t = elapsed();
-      if (e.target.closest('button, a, .only-sample') || !accepting(t)) return;
-      tapAt = t;
-      const diff = t - YOIN_START;
-      say(`余韻の入りをタップに合わせました（標準より ${Math.abs(diff).toFixed(2)}秒${diff < 0 ? '早い' : '遅い'}）`);
-    };
-    document.addEventListener('pointerdown', onTap);
-    onDispose(() => document.removeEventListener('pointerdown', onTap));
     runClock(() => {
-      const t = elapsed();
-      const g = guideTime(t);
-      paintStage(stage, Math.min(g, PAIR_SEC));
-      tapHint.hidden = !accepting(t);
-      if (g >= KAMI_START_SEC) finishButton.disabled = false;
+      const t = (performance.now() - startedAt) / 1000;
+      paintStage(stage, Math.min(t, PAIR_SEC));
+      if (t >= KAMI_START_SEC) finishButton.disabled = false;
       if (t >= LIMIT_SEC) { finish(); return false; }
     });
   }
 
   function finish() {
     disposeAll();
-    go('/read/heard/');
+    go('/result/');
   }
 
   toIdle();
@@ -1154,6 +1241,11 @@ function mountRec(el) {
     retry.hidden = !retry.hidden;
     el.querySelector('.run').hidden = !retry.hidden;
   });
+  // 描画が止まる環境でも各区間の見た目を撮れるよう、待機のまま時刻を止めて描く
+  tools.querySelectorAll('[data-freeze]').forEach((b) => b.addEventListener('click', () => {
+    idleT = Number(b.dataset.freeze);
+    repaint();
+  }));
   const leave = () => { if (document.hidden) toIdle(); };
   document.addEventListener('visibilitychange', leave);
   onDisposeLong(() => document.removeEventListener('visibilitychange', leave));
@@ -1214,7 +1306,7 @@ function mountResult(el) {
     bindLinks(next);
   };
   show('normal');
-  document.querySelectorAll('#tools [data-variant]').forEach((b) => b.addEventListener('click', () => show(b.dataset.variant)));
+  document.querySelectorAll('#tools [data-result]').forEach((b) => b.addEventListener('click', () => show(b.dataset.result)));
 }
 
 function mountPoem(el, no) {
@@ -1300,7 +1392,7 @@ let backWithMotion = false;
 const currentPath = () => location.hash.slice(1) || '/';
 
 // どの操作も、先にターミナルへ打ち込んでから動かす。Claude Code でコマンドを送ってから動くのと同じ順にする。
-// 打ち込まずにすぐ動かすのは、止める操作（やめる、キャンセル）と、読む画面の余韻のタップだけである。質問の選択肢（戻る、入れる先）は、打ち込む代わりに選んだ答えを質問の下に出す
+// 打ち込まずにすぐ動かすのは、止める操作（やめる、キャンセル）だけである。質問の選択肢（戻る、入れる先）は、打ち込む代わりに選んだ答えを質問の下に出す
 function terminal() {
   const ask = out.querySelector('[data-ask]');
   if (ask) return { ask, target: ask.querySelector('[data-typed]') };
@@ -1753,7 +1845,6 @@ async function playUnits(units) {
           u.state = 'run';
           u.el.classList.remove('pending', 'reserved');
           if (u.instant ? u.root : u.kind === 'fade') u.el.classList.add('fade-in');
-          u.el.dispatchEvent(new CustomEvent('streamstart'));
         }
         if (u.kind === 'text' && !u.instant) showChars(u, t >= u.to ? u.total : Math.floor((t - u.from) / msPerChar) + 1);
         if (t >= u.to) {
