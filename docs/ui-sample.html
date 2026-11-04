@@ -247,6 +247,24 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
 .footnote { padding-top: 28px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .foot-link { display: inline-flex; align-items: center; min-height: 44px; padding-inline: 4px; font-family: var(--f-mono); color: var(--ink-2); }
 
+/* 打ち込む文字の枠。折るのは語の切れ目だけにする。引数の中で折ると「cp -」と「R」のように割れて読み違えた。
+   横に送る形は、375px で3つのコマンドがどれも途中で切れ、全体を読めなかったのでやめた。
+   折れた続きは字下げして、別のコマンドに見えないようにする */
+.cmd { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 6px; padding: 6px 6px 6px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); }
+.cmd code { flex: 1 1 14em; min-width: 0; padding-block: 6px; font-family: var(--f-mono); font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
+.cmd code:has(> span) { padding-left: 2ch; text-indent: -2ch; }
+.cmd code > span { white-space: nowrap; }
+.cmd .btn { flex: none; margin-left: auto; min-height: 44px; padding: 4px 10px; }
+/* 各社の画面の略図。画面を写さず、押す場所だけを朱の枠と番号で示す */
+/* 番号の列の下まで広げる。手順の列の幅のままだと、320px で図の文字が 11px まで縮んだ */
+.sketch { margin: 8px 0 0; }
+.list .sketch { margin-left: -34px; }
+.sketch svg { display: block; width: 100%; height: auto; }
+/* 入れる先を尋ねる画面では、問いを本文として置く。画面の縦の余りで行の間が開かないようにする */
+.auq[data-pick] { flex: none; align-content: start; }
+.auq-opts .btn:has(small) { flex-direction: column; align-items: flex-start; gap: 0; }
+.auq-opts .btn small { padding-left: 1.3em; color: var(--ink-3); font-size: 13px; }
+
 @media (prefers-reduced-motion: reduce) {
   .caret { animation: none; }
   .fade-in { animation: none; }
@@ -272,7 +290,7 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
 <template id="t-home">
   <section class="hero">
     <h1>「読みます」と<br>言うために。</h1>
-    <p>すべての人に、読みを身近に。</p>
+    <p>競技かるたにかかわるすべての人に、<br>読みを身近に。</p>
   </section>
   <section class="ask" data-ask>
     <div class="ask-line"><span class="gt">&gt;</span> <span data-typed>/yomimasu </span><span class="caret"></span></div>
@@ -283,6 +301,7 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
       <a href="#/karuta/"><span>/1首ずつ学ぶ</span><small>100首と序歌</small></a>
       <a href="#/saitei/"><span>/最低限これだけ</span><small>急に頼まれたら</small></a>
       <a href="#/practice/"><span>/練習モード</span><small>読んで、秒数を測る</small></a>
+      <a href="#/install/"><span>/インストール</span><small>/yomimasuの知識をあなたのAIに</small></a>
     </nav>
   </section>
   <p class="fine footnote"><span lang="en">Built with Claude Code.</span><a class="foot-link" href="#/about/">/このアプリについて</a></p>
@@ -304,6 +323,108 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
     <div class="ask-line"><span class="gt">&gt;</span> <span data-typed>/yomimasu </span><span class="caret"></span></div>
     <p class="ask-q">次は？</p>
     <div class="next"><a class="btn btn--fill" href="#/read/">まず1回読む</a></div>
+  </section>
+</template>
+
+<template id="t-ai">
+  <h2 class="head">あなたのAIに、<br>読みの知識をインストール。</h2>
+  <p>このアプリにはない、あなた自身の<br>「やりたいこと」が手のひらに。</p>
+  <h3 style="font-size:16px">たとえば</h3>
+  <div class="card rows more">
+    <div>読みを頼まれた日の前に、5-3-1-6 の要点を教えてほしい</div>
+    <div>日本語を母語としない自分のために、Wikipedia などの音声学の資料も読ませて、間違えやすい発音を英語で教えてほしい</div>
+    <div><span class="prio">コーディングエージェントで</span>大山札が決まり字の前に聞き分けられるか、プログラムを作って確かめたい</div>
+    <div><span class="prio">コーディングエージェントで</span>5-3-1-6 の区切りで鳴る、自分の練習用のタイマーを作りたい</div>
+  </div>
+  <div class="auq" data-pick>
+    <p class="auq-q">どこに入れますか？</p>
+    <div class="auq-opts">
+      <a class="btn" href="#/install/claude/" data-label="Claude">1. Claude</a>
+      <a class="btn" href="#/install/chatgpt/" data-label="ChatGPT">2. ChatGPT</a>
+      <a class="btn" href="#/install/gemini/" data-label="Gemini">3. Gemini</a>
+      <a class="btn" href="#/install/agent/" data-label="コーディングエージェント"><span>4. コーディングエージェント</span><small>Claude Code、Codex、Cursor など</small></a>
+    </div>
+  </div>
+  <div class="back-row"><button class="btn btn--line back" type="button" data-back>戻る</button></div>
+</template>
+
+<template id="t-ai-claude">
+  <h2 class="head">Claude に入れる</h2>
+  <p>パソコンのブラウザーで、claude.ai を開いて進めます。</p>
+  <div class="card rows list">
+    <div><span class="n">1</span><div><b>ファイルを保存する</b><p>/yomimasu の知識をまとめたファイルです。開かずに、そのまま次へ進みます。</p><button class="btn dl" type="button" data-dl>yomimasu.zip を保存</button></div></div>
+    <div><span class="n">2</span><div><b>コードの実行をオンにする</b><p>左下の名前から「設定」を開き、「機能」の「クラウドでコードを実行」をオンにします。スキルを使うのに要ります。</p><figure class="sketch" data-sketch="claude-code"></figure></div></div>
+    <div><span class="n">3</span><div><b>ファイルをアップロードする</b><p>左の「カスタマイズ」から「Skills」、「＋追加」、「Skills をアップロード」の順に押します。保存したファイルを選び、「アップロード」を押します。</p><figure class="sketch" data-sketch="claude-upload"></figure></div></div>
+    <div><span class="n">4</span><div><b>聞いてみる</b><p>新しいチャットで、読みのことを聞きます。</p><div class="cmd"><code>競技かるたの読みで、余韻の3秒はどこから数える？</code><button class="btn" type="button" data-copy>コピー</button></div></div></div>
+  </div>
+  <p class="fine">プランによっては使えません。画面の名前は、2026年11月4日にパソコンのブラウザーで確かめたものです。</p>
+  <p class="fine">見本の手順で入れて、答えるところまではまだ確かめていません。</p>
+  <section class="ask" data-ask>
+    <div class="ask-line"><span class="gt">&gt;</span> <span data-typed>/yomimasu </span><span class="caret"></span></div>
+    <p class="ask-q">次は？</p>
+    <div class="next">
+      <a class="btn btn--line" href="#/install/">ほかの AI に入れる</a>
+      <a class="btn btn--fill" href="#/read/">まず1回読む</a>
+    </div>
+  </section>
+</template>
+
+<template id="t-ai-chatgpt">
+  <h2 class="head">ChatGPT に入れる</h2>
+  <p>パソコンのブラウザーで、chatgpt.com を開いて進めます。</p>
+  <div class="card rows list">
+    <div><span class="n">1</span><div><b>ファイルを保存する</b><p>/yomimasu の知識をまとめたファイルです。開かずに、そのまま次へ進みます。</p><button class="btn dl" type="button" data-dl>yomimasu.zip を保存</button></div></div>
+    <div><span class="n">2</span><div><b>ファイルをアップロードする</b><p>左の「プラグイン」から「スキル」、「追加」、「コンピューターからアップロード」の順に押し、保存したファイルを選びます。</p><figure class="sketch" data-sketch="chatgpt-upload"></figure></div></div>
+    <div><span class="n">3</span><div><b>聞いてみる</b><p>新しいチャットで、読みのことを聞きます。</p><div class="cmd"><code>競技かるたの読みで、余韻の3秒はどこから数える？</code><button class="btn" type="button" data-copy>コピー</button></div></div></div>
+  </div>
+  <p class="fine">プランによっては使えません。画面の名前は、2026年11月4日にパソコンのブラウザーで確かめたものです。</p>
+  <p class="fine">見本の手順で入れて、答えるところまではまだ確かめていません。</p>
+  <section class="ask" data-ask>
+    <div class="ask-line"><span class="gt">&gt;</span> <span data-typed>/yomimasu </span><span class="caret"></span></div>
+    <p class="ask-q">次は？</p>
+    <div class="next">
+      <a class="btn btn--line" href="#/install/">ほかの AI に入れる</a>
+      <a class="btn btn--fill" href="#/read/">まず1回読む</a>
+    </div>
+  </section>
+</template>
+
+<template id="t-ai-gemini">
+  <h2 class="head">Gemini に入れる</h2>
+  <p>パソコンのブラウザーで、gemini.google.com を開いて進めます。</p>
+  <div class="card rows list">
+    <div><span class="n">1</span><div><b>ファイルを保存する</b><p>/yomimasu の知識をまとめたファイルです。開かずに、そのまま次へ進みます。</p><button class="btn dl" type="button" data-dl>yomimasu.zip を保存</button></div></div>
+    <div><span class="n">2</span><div><b>ファイルをアップロードする</b><p>左の「カスタマイズ」から「スキル」、「作成」、「アップロード」の順に押し、保存したファイルを選びます。</p><figure class="sketch" data-sketch="gemini-upload"></figure></div></div>
+    <div><span class="n">3</span><div><b>聞いてみる</b><p>新しいチャットで、読みのことを聞きます。</p><div class="cmd"><code>競技かるたの読みで、余韻の3秒はどこから数える？</code><button class="btn" type="button" data-copy>コピー</button></div></div></div>
+  </div>
+  <p class="fine">プランによっては使えません。画面の名前は、2026年11月4日にパソコンのブラウザーで確かめたものです。</p>
+  <p class="fine">見本の手順で入れて、答えるところまではまだ確かめていません。</p>
+  <section class="ask" data-ask>
+    <div class="ask-line"><span class="gt">&gt;</span> <span data-typed>/yomimasu </span><span class="caret"></span></div>
+    <p class="ask-q">次は？</p>
+    <div class="next">
+      <a class="btn btn--line" href="#/install/">ほかの AI に入れる</a>
+      <a class="btn btn--fill" href="#/read/">まず1回読む</a>
+    </div>
+  </section>
+</template>
+
+<template id="t-ai-agent">
+  <h2 class="head">コーディング<br>エージェントに入れる</h2>
+  <p>ターミナルで1行実行して入れます。</p>
+  <div class="card rows list">
+    <div><span class="n">1</span><div><b>ターミナルで実行する</b><p>入れる先のエージェント（Claude Code、Codex、Cursor、Gemini CLI など）を選ぶ画面が出ます。Node.js が要ります。</p><div class="cmd"><code><span>npx</span> <span>skills</span> <span>add</span> <span>ko1ynnky/yomimasu</span></code><button class="btn" type="button" data-copy>コピー</button></div></div></div>
+    <div><span class="n">2</span><div><b>聞いてみる</b><div class="cmd"><code><span>/yomimasu</span> 余韻の3秒はどこから数える？</code><button class="btn" type="button" data-copy>コピー</button></div></div></div>
+  </div>
+  <p class="fine">更新するときは <code>npx skills update</code> を実行します。</p>
+  <p class="fine">見本の注記：リポジトリは提出の時点で公開します。それまでこのコマンドは動きません。</p>
+  <section class="ask" data-ask>
+    <div class="ask-line"><span class="gt">&gt;</span> <span data-typed>/yomimasu </span><span class="caret"></span></div>
+    <p class="ask-q">次は？</p>
+    <div class="next">
+      <a class="btn btn--line" href="#/install/">ほかの AI に入れる</a>
+      <a class="btn btn--fill" href="#/read/">まず1回読む</a>
+    </div>
   </section>
 </template>
 
@@ -527,6 +648,11 @@ const ROUTES = {
   '/karuta/53/': { tpl: 't-karuta', cmd: '1首 なげき', read: 'なげき.md', mount: (el) => mountPoem(el, 53) },
   '/practice/': { tpl: 't-practice', cmd: '練習モード' },
   '/about/': { tpl: 't-about', cmd: 'このアプリについて', read: 'このアプリについて.md' },
+  '/install/': { tpl: 't-ai', cmd: 'インストール', read: 'インストール.md' },
+  '/install/claude/': { tpl: 't-ai-claude', cmd: 'インストール Claude', read: 'Claudeに入れる.md', mount: mountSketches },
+  '/install/chatgpt/': { tpl: 't-ai-chatgpt', cmd: 'インストール ChatGPT', read: 'ChatGPTに入れる.md', mount: mountSketches },
+  '/install/gemini/': { tpl: 't-ai-gemini', cmd: 'インストール Gemini', read: 'Geminiに入れる.md', mount: mountSketches },
+  '/install/agent/': { tpl: 't-ai-agent', cmd: 'インストール エージェント', read: 'エージェントに入れる.md' },
   '/read/': { tpl: 't-listen', cmd: 'まず1回読む', step: '1 / 3 聞く', full: true, mount: mountListen },
   '/read/rec/': { tpl: 't-rec', cmd: '読む ほ あはれ', step: '2 / 3 読む', full: true, mount: mountRec },
   '/read/heard/': { tpl: 't-heard', cmd: '読む ほ あはれ', note: '録音しました', step: '3 / 3 確かめる' },
@@ -1174,11 +1300,11 @@ let backWithMotion = false;
 const currentPath = () => location.hash.slice(1) || '/';
 
 // どの操作も、先にターミナルへ打ち込んでから動かす。Claude Code でコマンドを送ってから動くのと同じ順にする。
-// 打ち込まずにすぐ動かすのは、止める操作（やめる、キャンセル）だけである
+// 打ち込まずにすぐ動かすのは、止める操作（やめる、キャンセル）と、読む画面の余韻のタップだけである。質問の選択肢（戻る、入れる先）は、打ち込む代わりに選んだ答えを質問の下に出す
 function terminal() {
   const ask = out.querySelector('[data-ask]');
   if (ask) return { ask, target: ask.querySelector('[data-typed]') };
-  // 入力の行がない画面（聞く、読む、一覧、練習モード）は、実行の行に打ち込む
+  // 入力の行がない画面（聞く、読む、一覧、練習モード、入れる先を尋ねる画面）は、実行の行に打ち込む
   const run = out.querySelector('[data-run]');
   return run ? { target: run } : null;
 }
@@ -1219,6 +1345,167 @@ document.addEventListener('click', (e) => {
   if (say) act(say.dataset.say, () => {});
 });
 
+document.addEventListener('click', (e) => {
+  const button = e.target.closest('[data-copy]');
+  if (!button) return;
+  const code = button.closest('.cmd').querySelector('code');
+  act('コピー', async () => {
+    try {
+      await navigator.clipboard.writeText(code.textContent);
+      button.textContent = 'コピーしました';
+    } catch {
+      getSelection().selectAllChildren(code);
+      button.textContent = '選びました';
+    }
+    setTimeout(() => { button.textContent = 'コピー'; }, 1600);
+  });
+});
+
+// 入れる先を尋ねる画面の選択肢。戻るの質問と同じく、選んだ答えを質問の下に出し、ひと呼吸置いてから移る。
+// JS がなくても移れるよう、選択肢はリンクにしてある
+document.addEventListener('click', async (e) => {
+  const option = e.target.closest('[data-pick] a');
+  if (!option || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  e.preventDefault();
+  if (busy) return;
+  busy = true;
+  const answer = document.createElement('p');
+  answer.className = 'auq-a';
+  answer.textContent = `❯ ${option.dataset.label}`;
+  option.closest('.auq-opts').replaceWith(answer);
+  if (!reduced) await wait(TYPE_MS + SEND_HOLD_MS);
+  busy = false;
+  const path = option.getAttribute('href').slice(1);
+  trail.push(currentPath());
+  history.pushState(null, '', `#${path}`);
+  render(path, { reveal: !reduced });
+});
+
+// 見本はファイルを持たない。アプリでは /yomimasu.zip へのリンク（download）にする
+document.addEventListener('click', (e) => {
+  const button = e.target.closest('[data-dl]');
+  if (!button) return;
+  act(button.textContent, () => {
+    button.textContent = '見本では保存しません';
+    setTimeout(() => { button.textContent = 'yomimasu.zip を保存'; }, 1600);
+  });
+});
+
+// 各社の画面の略図。画面を写さず、ロゴも使わない。押す場所を朱の枠で囲み、押す順の番号を付ける。
+// 文字と番号は viewBox で 15.2 にする。図の幅が 258px になる 320px の画面でも、13px を下回らないためである
+const SKETCHES = {
+  'claude-code': {
+    host: 'claude.ai', alt: 'Claude の設定の略図。左の「機能」を開き、「クラウドでコードを実行」をオンにする',
+    side: [{ t: '一般' }, { t: '使用量' }, { t: '機能', n: 1 }],
+    rows: [{ title: '機能' }, { toggle: 'クラウドでコードを実行', n: 2 }],
+  },
+  'claude-upload': {
+    host: 'claude.ai', alt: 'Claude の略図。左の「カスタマイズ」、「Skills」、「＋追加」、「Skills をアップロード」の順に押す',
+    side: [{ t: '新規作成' }, { t: 'カスタマイズ', n: 1 }],
+    rows: [{ title: 'カスタマイズ' }, { tabs: [{ t: 'Skills', n: 2 }], action: { t: '＋ 追加', n: 3 } }],
+    menu: [{ t: 'Skills をアップロード', n: 4 }, { t: 'Skills を作成' }],
+  },
+  'chatgpt-upload': {
+    host: 'chatgpt.com', alt: 'ChatGPT の略図。左の「プラグイン」、「スキル」、「追加」、「コンピューターからアップロード」の順に押す',
+    side: [{ t: 'プラグイン', n: 1 }, { t: 'スキル', n: 2 }],
+    rows: [{ title: 'スキル', action: { t: '追加 ▾', n: 3 } }],
+    menu: [{ t: 'チャットで作成' }, { t: 'エディターで作成' }, { t: 'コンピューターからアップロード', n: 4 }],
+  },
+  'gemini-upload': {
+    host: 'gemini.google.com', alt: 'Gemini の略図。左の「カスタマイズ」、「スキル」、「作成」、「アップロード」の順に押す',
+    side: [{ t: 'ライブラリ' }, { t: 'カスタマイズ', n: 1 }],
+    rows: [{ tabs: [{ t: '見つける' }, { t: 'スキル', n: 2 }] }, { title: 'スキル', action: { t: '作成 ▾', n: 3 } }],
+    menu: [{ t: 'Gemini で作成' }, { t: '手動で作成' }, { t: 'アップロード', n: 4 }],
+  },
+};
+
+function sketchSvg(spec) {
+  const W = 300;
+  const F = 15.2;
+  const textW = (t, size = F) => [...t].reduce((w, ch) => w + (ch.codePointAt(0) < 0x2000 ? 0.6 : 1) * size, 0);
+  const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const parts = [];
+  const marks = [];
+  const label = (x, y, t, style = '') => parts.push(`<text x="${x}" y="${y}" style="font-size:${F}px;${style}">${esc(t)}</text>`);
+  const mark = (item, x, y, w, h) => { if (item.n) marks.push({ n: item.n, x, y, w, h }); };
+  const TOP = 30;
+  const ROW = 30;
+  const sideW = Math.ceil(Math.max(...spec.side.map((i) => textW(i.t))) + 24);
+  const mainX = sideW + 12;
+  let bottom = TOP;
+  spec.side.forEach((item, i) => {
+    const y = TOP + 10 + i * 34;
+    label(12, y + 20, item.t, 'fill:var(--ink-2)');
+    mark(item, 4, y, sideW - 8, ROW);
+    bottom = Math.max(bottom, y + ROW);
+  });
+  const sideBottom = bottom;
+  let y = TOP + 10;
+  let menuTop = null;
+  let menuRight = W - 10;
+  spec.rows.forEach((row) => {
+    if (row.title) label(mainX, y + 21, row.title, 'font-size:16px;font-weight:700;fill:var(--ink)');
+    if (row.tabs) {
+      let x = mainX;
+      row.tabs.forEach((tab) => {
+        const w = textW(tab.t) + 20;
+        parts.push(`<rect x="${x}" y="${y}" width="${w}" height="${ROW}" rx="8" style="fill:var(--paper);stroke:var(--rule-2)"/>`);
+        label(x + 10, y + 20, tab.t, 'fill:var(--ink-2)');
+        mark(tab, x, y, w, ROW);
+        x += w + 6;
+      });
+    }
+    if (row.action) {
+      const w = textW(row.action.t) + 24;
+      const x = W - 10 - w;
+      parts.push(`<rect x="${x}" y="${y}" width="${w}" height="${ROW}" rx="15" style="fill:var(--ink)"/>`);
+      label(x + 12, y + 20, row.action.t, 'fill:var(--card)');
+      mark(row.action, x, y, w, ROW);
+      menuTop = y + ROW + 6;
+      menuRight = x + w;
+    }
+    if (row.toggle) {
+      label(mainX, y + 20, row.toggle, 'fill:var(--ink)');
+      const tx = W - 10 - 30;
+      parts.push(`<rect x="${tx}" y="${y + 7}" width="30" height="16" rx="8" style="fill:var(--ink)"/><circle cx="${tx + 22}" cy="${y + 15}" r="6" style="fill:var(--card)"/>`);
+      mark(row, mainX - 6, y, W - mainX - 2, ROW);
+    }
+    bottom = Math.max(bottom, y + ROW);
+    y += ROW + 10;
+  });
+  if (spec.menu) {
+    const w = Math.max(...spec.menu.map((i) => textW(i.t))) + 24;
+    const x = menuRight - w;
+    // 左の列にかかる幅のメニューは、左の列の項目の下に下げる。重ねると左の列の押す場所が隠れる
+    if (x < sideW) menuTop = Math.max(menuTop, sideBottom + 8);
+    const h = spec.menu.length * 32 + 8;
+    parts.push(`<rect x="${x}" y="${menuTop}" width="${w}" height="${h}" rx="10" style="fill:var(--card);stroke:var(--rule)"/>`);
+    spec.menu.forEach((item, i) => {
+      const iy = menuTop + 4 + i * 32;
+      label(x + 12, iy + 21, item.t, 'fill:var(--ink)');
+      mark(item, x + 4, iy, w - 8, ROW);
+    });
+    bottom = Math.max(bottom, menuTop + h);
+  }
+  const H = bottom + 14;
+  const frame = `<rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="10" style="fill:var(--card);stroke:var(--rule)"/>`
+    + `<path d="M1 ${TOP + 0.5}H${W - 1}" style="stroke:var(--rule-2)"/>`
+    + `<path d="M1 ${TOP + 1}H${sideW}V${H - 1}H11a10 10 0 0 1-10-10z" style="fill:var(--paper)"/>`
+    + [14, 26, 38].map((cx) => `<circle cx="${cx}" cy="15" r="3.5" style="fill:var(--rule)"/>`).join('')
+    + `<text x="52" y="20" style="font-size:${F}px;font-family:var(--f-mono);fill:var(--ink-3)">${esc(spec.host)}</text>`;
+  const rings = marks.map((m) => `<rect x="${m.x}" y="${m.y}" width="${m.w}" height="${m.h}" rx="8" style="fill:none;stroke:var(--shu);stroke-width:2"/>`).join('');
+  const badges = marks.map((m) => {
+    const cx = Math.min(m.x + m.w, W - 12);
+    const cy = Math.max(m.y, 12);
+    return `<circle cx="${cx}" cy="${cy}" r="12" style="fill:var(--shu)"/><text x="${cx}" y="${cy + 5}" text-anchor="middle" style="font-size:${F}px;font-weight:700;font-family:var(--f-mono);fill:var(--on-shu)">${m.n}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(spec.alt)}" style="font-family:var(--f-sans)">${frame}${parts.join('')}${rings}${badges}</svg>`;
+}
+
+function mountSketches(root) {
+  root.querySelectorAll('[data-sketch]').forEach((fig) => { fig.innerHTML = sketchSvg(SKETCHES[fig.dataset.sketch]); });
+}
+
 // 戻るは主の操作の右に細く置き、押すと行き先を尋ねる（AskUserQuestion の形）
 function addBack(main) {
   if (!main || main.parentElement.classList.contains('main-row')) return;
@@ -1258,7 +1545,8 @@ async function openBackAsk(back) {
     ...(prevRoute ? [['prev', `1つ前のページ（${prevRoute.read ?? prevRoute.cmd}）`]] : []),
     ['top', 'トップページ'],
   ];
-  const hidden = [...group.children].filter((c) => !c.classList.contains('ask-line'));
+  // 入れる先を尋ねる画面では、その質問も隠す。質問が2つ並ぶと、どちらに答えればよいか分からない
+  const hidden = [...group.children].filter((c) => !c.classList.contains('ask-line')).concat([...out.querySelectorAll('[data-pick]')]);
   hidden.forEach((c) => { c.hidden = true; });
   const box = document.createElement('div');
   box.className = 'auq';
@@ -1368,7 +1656,7 @@ const STREAM_FADE_MS = 70;
 const STREAM_SHOW_MS = 150;
 const streamOwner = new WeakMap();
 // 1字ずつ流さず、まとめて出すもの。縦書きの歌や帯、ボタンは、1字ずつ出すとかえって読みにくい
-const STREAM_ATOMIC = '.band, .stage, .btn, .ask-line, .play, svg, .menu > a, .kim-grid > *, .big-num, .tate, .tag, .link-btn, .link-inline, .main-row, [data-pair]';
+const STREAM_ATOMIC = '.band, .stage, .btn, .ask-line, .play, svg, .menu > a, .kim-grid > *, .big-num, .tate, .tag, .link-btn, .link-inline, .main-row, [data-pair], .cmd';
 
 function isInlineBox(el) {
   const d = getComputedStyle(el).display;
@@ -1520,7 +1808,7 @@ function go(path) {
 
 function bindLinks(root) {
   root.querySelectorAll('a[href^="#/"]').forEach((a) => {
-    if (a.dataset.bound) return;
+    if (a.dataset.bound || a.closest('[data-pick]')) return;
     a.dataset.bound = '1';
     a.addEventListener('click', (e) => {
       if (e.metaKey || e.ctrlKey || e.shiftKey) return;

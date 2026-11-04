@@ -28,6 +28,13 @@ export type Phrase = {
 // after は句の頭から数えた仮名の字数である。句の長さと同じなら句の終わりを指す。
 export type Stretch = { phrase: number; after: number };
 
+// 読み方一覧のふりがなと注。at と length は、読みが掛かる範囲を句の仮名の字数で表す。
+// 本文の漢字の列は一覧の表記と違う札があるので、漢字ではなく仮名の範囲に結びつける。
+export type Furigana = { phrase: number; at: number; length: number; reading: string };
+
+// 別の読みは、phrases の句の範囲を stretches の位置で伸ばす読み方である。marked は一覧の別の読みの字で、印を「ー」に揃えた。
+export type AltReading = { phrases: [first: number, last: number]; marked: string; stretches: Stretch[] };
+
 export type TextFix = { field: '本文' | '仮名'; from: string; to: string; why: string };
 
 export type KeptKana = { phrase: number; at: number; kana: string; why: string };
@@ -39,11 +46,16 @@ export type Card = {
   ruleStretches: Stretch[];
   stretches: Stretch[];
   marked: { upper: string; lower: string };
+  furigana: Furigana[];
+  notes: Furigana[];
+  alternatives: AltReading[];
+  yoin: Stretch | null;
   origin: {
     text: { source: string; fixes: TextFix[] };
     sound: { basis: 'rules'; checkedWith: string; kept: KeptKana[] };
     ruleStretches: { source: string };
     stretches: { source: string; page: number };
+    notation: { source: string; page: number; readFrom: string };
   };
 };
 
@@ -77,16 +89,19 @@ export function ruleStretchesOf(no: number, phrases: readonly { kana: string }[]
   ];
 }
 
+// 字数の変わらない読み替え（「いふ」と「ゆう」など）の途中は、字ごとに対応させる。ふりがなが「ゆ」と「ー」のように字ごとに付くからである。
 export function soundOffset(phrase: Phrase, kanaOffset: number): number {
   let offset = kanaOffset;
   for (const diff of phrase.diffs) {
     if (diff.at >= kanaOffset) break;
-    if (diff.at + diff.kana.length > kanaOffset) throw new Error(`「${phrase.kana}」の ${kanaOffset} 字目は読み替えの途中である`);
+    const changesLength = diff.sound.length !== diff.kana.length;
+    if (changesLength && diff.at + diff.kana.length > kanaOffset) throw new Error(`「${phrase.kana}」の ${kanaOffset} 字目は読み替えの途中である`);
     offset += diff.sound.length - diff.kana.length;
   }
   return offset;
 }
 
+// 伸ばす位置を置くのに使うので、字数の変わらない読み替えの途中も返さない。
 export function kanaOffset(phrase: Phrase, target: number): number | null {
   for (let offset = 0; offset <= phrase.kana.length; offset++) {
     const inside = phrase.diffs.some((d) => d.at < offset && offset < d.at + d.kana.length);

@@ -42,7 +42,13 @@ const SOURCES = {
     url: 'https://www.karuta.or.jp/karuta/reading/',
     pages: '5-15',
     sha256: LIST_SHA256,
-    use: '本文の列の伸ばしの印の位置を、全日本かるた協会の回答の範囲で使う。33、44、74番の本文もこの形に合わせた。一覧のふりがなの字は表に持たず、発音の列と比べて語の切れ目を見つけるのに使った',
+    use: '本文の列の伸ばしの印の位置を、全日本かるた協会の回答の範囲で使う。33、44、74番の本文もこの形に合わせた。一覧のふりがなは発音の列と比べて語の切れ目を見つけるのに使った。ふりがな、注、別の読み、余韻の印は、この版の文字のデータと画像の位置から読み取り、完全版（booklet）の値として表に持つ',
+  },
+  booklet: {
+    title: '小倉百人一首 競技かるた読手テキスト 冊子 読み方一覧',
+    edition: '令和2年4月1日初版',
+    pages: '5-15',
+    use: 'ふりがな、注、別の読み、余韻の印を、全日本かるた協会の回答の範囲で使う。値は抜粋版の読み方一覧の文字のデータと画像の位置から機械で読み取り、この版のスキャンの画像と目で照らした。一致を目で確かめたのは、ふりがな707か所のうち706か所と、注、別の読み、余韻の印のすべてである。33番のふりがな1か所は読み方一覧のスキャンで濁点が判別できず、この版の p.27 が同じ語を「しづごころ」と印刷していることと、2026-11-04 にユーザーが冊子の実物で見たことで確かめた',
   },
   rules: {
     title: '小倉百人一首 競技かるた読手テキスト HP掲載用抜粋版 読唱上の決まり',
@@ -112,15 +118,20 @@ function main() {
 
   const table = formatted(built);
   const current: Card[] = values.check ? JSON.parse(readFileSync(TABLE, 'utf8')).cards : built;
-  const { lines: total, marks, textMismatches, soundMismatches, stretchMismatches } = compareWithList(current, list);
-  const problems = [...textMismatches, ...soundMismatches, ...stretchMismatches];
+  const { lines: total, marks, textMismatches, soundMismatches, stretchMismatches, notation, notationMismatches } = compareWithList(current, list);
+  const problems = [...textMismatches, ...soundMismatches, ...stretchMismatches, ...Object.values(notationMismatches).flat()];
   const unchanged = !values.check || readFileSync(TABLE, 'utf8') === table;
   console.log(
     [
       `札 ${current.length} 枚、句の行 ${total} 行、伸ばしの印 ${marks} か所を一覧と照合した`,
+      `ふりがな ${notation.furigana} か所、注 ${notation.notes} か所、別の読み ${notation.alternatives} 行、余韻の印 ${notation.yoin} 札を一覧と照合した`,
       `本文の仮名の不一致 ${textMismatches.length} 行`,
       `発音の不一致 ${soundMismatches.length} 行`,
       `伸ばす箇所の不一致 ${stretchMismatches.length} 行`,
+      `ふりがなの不一致 ${notationMismatches.furigana.length} 行`,
+      `注の不一致 ${notationMismatches.notes.length} 行`,
+      `別の読みの不一致 ${notationMismatches.alternatives.length} 行`,
+      `余韻の印の不一致 ${notationMismatches.yoin.length} 札`,
       ...(values.check ? [`資料から作り直した表との差 ${unchanged ? 'なし' : 'あり'}`] : []),
     ].join('\n'),
   );
