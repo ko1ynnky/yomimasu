@@ -46,7 +46,7 @@ export function scheduleOf(now: number, durations: readonly number[], gapSec = G
 export type Loader = (context: BaseAudioContext) => Promise<AudioBuffer[]>;
 type Fetcher = (url: string) => Promise<Response>;
 
-// 合成音は下の句と余韻を 5＋3 秒、上の句を 6 秒にする。読手の音声がなくても、帯と音の動きを確かめられる。
+// 合成音は下の句と余韻を 5＋3 秒、上の句を 6 秒にする。読手の音声がなくても、字の塗りと音の動きを確かめられる。
 const SYNTH_SEC: Record<Half, number> = { shimo: 8, kami: 6 };
 const SYNTH_RATE = 24000;
 
@@ -103,7 +103,7 @@ export function browserEnv(): PlaybackEnv {
 export type Outcome = 'ended' | 'stopped' | 'failed';
 
 export type Playback = {
-  // 開始の予約時刻からの秒。帯の時計に使う。予約する前は null である。
+  // 開始の予約時刻からの秒。歌の枠の字の塗りと囲みの時計に使う。予約する前は null である。
   elapsed: () => number | null;
   stop: () => void;
   finished: Promise<Outcome>;
@@ -123,7 +123,7 @@ export function play(load: Loader, env: PlaybackEnv = browserEnv()): Playback {
   let finish: (outcome: Outcome) => void = () => {};
   const finished = new Promise<Outcome>((resolve) => (finish = resolve));
 
-  // 画面が消えると帯を見ながら聞けない。取れない端末でも、再生は止めない。
+  // 画面が消えると歌を見ながら聞けない。取れない端末でも、再生は止めない。
   let wake: WakeLockSentinelLike | null = null;
   void env.requestWakeLock?.().then(
     (sentinel) => {

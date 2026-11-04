@@ -8,7 +8,7 @@ import { audioSourceOf, clipUrl, GAP_SEC, pairLoader, play, scheduleOf, type Pla
 // - 下の句の終わりから 1.0 秒あけて上の句を鳴らす。開始の時刻は、今の時刻に予約の余裕を足した時刻である。
 // - 押した処理の中で、最初の await より前に AudioContext を作って resume() を呼ぶ。
 // - 2本を読み込んでから、両方を start(when) で予約する。
-// - 帯の時計は、開始の予約時刻からの currentTime の差である。
+// - 歌の枠の時計は、開始の予約時刻からの currentTime の差である。
 // - 鳴らす間だけ audioSession を playback にし、鳴らし終えたとき、止めたとき、失敗したときに auto に戻す。
 // - 文脈が running にならなければ鳴らさず、失敗にする。
 // - 途中で止められる。
@@ -144,7 +144,7 @@ test('2本を読み込んでから、両方を start(when) で予約する', asy
   );
 });
 
-test('帯の時計は、予約する前は null で、予約したあとは開始の予約時刻からの currentTime の差である', async () => {
+test('歌の枠の時計は、予約する前は null で、予約したあとは開始の予約時刻からの currentTime の差である', async () => {
   const { env, context } = fakeEnv();
   const playback = play(buffers(8, 6), env);
   assert.equal(playback.elapsed(), null);

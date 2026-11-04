@@ -1,5 +1,5 @@
 import { render } from 'preact';
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { pairLines } from './lyrics.ts';
 import { DEFAULT_PAIR, pairFromSearch, segmentsOf, type CardNo, type Pair } from './pair.ts';
 import { pairLoader, play, storedAudioSource, type Playback } from './playback.ts';
@@ -13,18 +13,11 @@ const STYLE = `
 yomimasu-listen { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; }
 .say { font-size: 16px; line-height: 1.75; }
 .say::before { content: "● "; color: var(--shu); }
-.intro-points { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; font-size: 15px; line-height: 1.6; }
-.intro-points b { color: var(--shu-deep); }
-.intro-rule { display: grid; gap: 10px; }
+.intro-rule { display: grid; gap: 12px; padding-block: 8px; }
 .big-num { font-family: var(--f-mono); font-size: 30px; font-weight: 600; line-height: 1.3; }
 .kim-in { font-family: var(--f-uta); font-weight: 400; font-synthesis: none; color: var(--shu-deep); }
 .listen-pair { font-size: 16px; line-height: 1.6; }
-[data-mark] { position: relative; outline: 3px solid var(--shu); outline-offset: 2px; border-radius: 6px; }
-[data-mark]::after { content: attr(data-mark); position: absolute; z-index: 4; width: 22px; height: 22px; border-radius: 50%; background: var(--shu); color: var(--on-shu); font: 700 13px/22px var(--f-mono); text-align: center; }
-.band[data-mark]::after { top: -12px; left: -12px; }
-.stage-body[data-mark]::after { bottom: 8px; left: 8px; }
 .listen-controls { flex: none; display: grid; gap: 6px; }
-.listen-controls .fine { display: flex; flex-wrap: wrap; align-items: center; column-gap: 1em; }
 .link-btn { justify-self: start; min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink-2); font-size: 14px; text-decoration: underline; cursor: pointer; }
 .listen-alert { padding: 12px 14px; }
 .choose { display: grid; gap: 8px; padding: 12px 14px; }
@@ -32,16 +25,16 @@ yomimasu-listen { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10
 .choose select { min-height: 44px; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 10px; background: var(--card); color: var(--ink); font-family: var(--f-uta); font-size: 16px; }
 `;
 
+// 帯と歌の後ろの色を ①② で説明する段は置かない。歌の枠から帯と地の減りをなくしたからである（ui-guide 8節。2026-11-04 夜のユーザーの判断）。
 const INTRO = [
   '競技かるたの読みには、5-3-1-6 というシンプルなルールがあります。',
-  'このアプリでは、5-3-1-6 の感覚をつかむために、2つの仕組みを使います。',
   'お手本と一緒に、ルールを確かめてみましょう。',
   'では、読んでみませんか？',
 ];
 const INTRO_KEY = 'yomimasu.introDone';
 const LOAD_FAILED = 'お手本を読み込めませんでした。通信を確かめて、もう一度押してください。';
-// 帯は標準の 5・3・1・6 で進め、お手本の音には合わせない（ui-guide 7節）。音と食い違って見えるので、先に断る。
-const BAND_NOTE = '帯は標準の時間で進むので、お手本の音とはずれます。';
+// 字の時刻は標準の 5・3・1・6 の割り振りで、お手本の音には合わせない（ui-guide 7節「字の時刻」）。音と食い違って見えるので、先に断る。
+const TIMING_NOTE = '字の朱は標準の時間で進むので、お手本の音とはずれます。';
 
 function introDone() {
   try {
@@ -91,11 +84,9 @@ const Icon = ({ path }: { path: string }) => (
 const PLAY_ICON = 'M2 1l9 5-9 5z';
 const STOP_ICON = 'M2 2h8v8H2z';
 
-type Motion = { kind: 'idle' } | { kind: 'check'; t: number } | { kind: 'listen'; t: number };
-
-// 帯と枠の地を進める時計。お手本は音の文脈の時刻から、「確認する」は音を鳴らさないので画面の時刻から取る。
-function useMotion(total: number) {
-  const [motion, setMotion] = useState<Motion>({ kind: 'idle' });
+// 字の塗りと囲みを進める時計。お手本の音の文脈の時刻から取り、下の句の開始の予約時刻を 0 秒とする。鳴らしていないあいだは null である。
+function usePlayback(total: number) {
+  const [t, setT] = useState<number | null>(null);
   const playback = useRef<Playback | null>(null);
   const frame = useRef(0);
 
@@ -104,7 +95,7 @@ function useMotion(total: number) {
     const current = playback.current;
     playback.current = null;
     current?.stop();
-    setMotion({ kind: 'idle' });
+    setT(null);
   };
 
   useEffect(() => {
@@ -115,31 +106,14 @@ function useMotion(total: number) {
     };
   }, []);
 
-  function check(onEnd: () => void) {
-    halt();
-    const from = performance.now();
-    const tick = () => {
-      const t = (performance.now() - from) / 1000;
-      if (t >= total) {
-        setMotion({ kind: 'idle' });
-        onEnd();
-        return;
-      }
-      setMotion({ kind: 'check', t });
-      frame.current = requestAnimationFrame(tick);
-    };
-    tick();
-  }
-
   // 押した処理の中から同期で呼ぶ。play() が最初の await より前に AudioContext を作って resume() を呼ぶ。
   function listen(pair: Pair, onEnd: (outcome: 'ended' | 'failed') => void) {
     halt();
     const current = play(pairLoader(pair, storedAudioSource()));
     playback.current = current;
-    setMotion({ kind: 'listen', t: 0 });
     const tick = () => {
       if (playback.current !== current) return;
-      setMotion({ kind: 'listen', t: Math.min(current.elapsed() ?? 0, total) });
+      setT(Math.min(current.elapsed() ?? 0, total));
       frame.current = requestAnimationFrame(tick);
     };
     tick();
@@ -147,29 +121,12 @@ function useMotion(total: number) {
       if (playback.current !== current) return;
       cancelAnimationFrame(frame.current);
       playback.current = null;
-      setMotion({ kind: 'idle' });
+      setT(null);
       if (outcome !== 'stopped') onEnd(outcome);
     });
   }
 
-  return { motion, halt, check, listen };
-}
-
-// 段2で①②の行に対応させて、上の帯と歌の後ろの色を囲む。どちらも枠（stage.tsx）の中にあり、枠はこの Issue では変えないので、描いたあとに印を付ける。
-// 囲みは①②の行が流れ始めたときに付ける決まりだが、文を流す形（Y-12）がまだないので、段2を出したときに付ける。Y-18 で流れ始めにつなぐ。
-function useMarks(root: { current: HTMLElement | null }, on: boolean) {
-  useLayoutEffect(() => {
-    const targets: [string, string][] = [
-      ['.stage .band', '①'],
-      ['.stage .stage-body', '②'],
-    ];
-    for (const [selector, mark] of targets) {
-      const element = root.current?.querySelector<HTMLElement>(selector);
-      if (!element) continue;
-      if (on) element.dataset.mark = mark;
-      else delete element.dataset.mark;
-    }
-  });
+  return { t, halt, listen };
 }
 
 function Listen() {
@@ -180,29 +137,24 @@ function Listen() {
   const lines = useMemo(() => pairLines(cards, pair), [pair]);
   const total = segments.reduce((sum, s) => sum + s.sec, 0);
 
-  const [step, setStep] = useState(() => (chosen || introDone() ? 4 : 1));
-  const [checked, setChecked] = useState(false);
+  const [step, setStep] = useState(() => (chosen || introDone() ? 3 : 1));
   const [failed, setFailed] = useState(false);
-  const { motion, halt, check, listen } = useMotion(total);
-  const root = useRef<HTMLDivElement>(null);
+  const { t, halt, listen } = usePlayback(total);
+  const playing = t !== null;
 
-  useStep(step < 4 && !chosen ? `はじめに ${step} / 4` : '1 / 3 聞く');
-  useMarks(root, step === 2);
+  useStep(step < 3 ? `はじめに ${step} / 3` : '1 / 3 聞く');
   useEffect(() => {
-    if (step === 4 && !chosen) rememberIntro();
+    if (step === 3 && !chosen) rememberIntro();
   }, [step]);
 
   const go = (next: number) => {
     halt();
     setFailed(false);
-    setChecked(false);
     setStep(next);
   };
 
-  const t = motion.kind === 'idle' ? 0 : motion.t;
-
   const listenButton = (className: string) =>
-    motion.kind === 'listen' ? (
+    playing ? (
       <button class="btn btn--line" type="button" onClick={halt}>
         <Icon path={STOP_ICON} />
         やめる
@@ -215,7 +167,7 @@ function Listen() {
           setFailed(false);
           listen(pair, (outcome) => {
             if (outcome === 'failed') setFailed(true);
-            else if (step === 3) go(4);
+            else if (step === 2) go(3);
           });
         }}
       >
@@ -225,29 +177,19 @@ function Listen() {
     );
 
   return (
-    <div style={{ display: 'contents' }} ref={root}>
+    <>
       <style>{STYLE}</style>
       <p class="say">{INTRO[step - 1]}</p>
       {step === 1 ? (
         <div class="intro-rule">
           <div class="big-num">5-3-1-6</div>
-          <Band segments={segments} fixed />
+          <Band segments={segments} fixed tall />
         </div>
       ) : (
         <>
-          {step === 2 && (
-            <ol class="intro-points">
-              <li>
-                <b>① 上の帯</b>：全体の時間の進みがわかります
-              </li>
-              <li>
-                <b>② 歌の後ろの色</b>：下の句、余韻と間、上の句の、それぞれの中での進みがわかります
-              </li>
-            </ol>
-          )}
           <PairName pair={pair} />
-          {/* 歌詞の文字は進めない。文字の時刻は読手の測定値で、確認が取れるまでリポジトリに入れない */}
-          <Stage segments={segments} lines={lines} t={t} />
+          {/* 表記の切り替えは段3からで、再生中は読む画面の録音中と同じく歌を動かさないよう隠す（ui-guide 8節「まず1回読む の導入」） */}
+          <Stage segments={segments} lines={lines} t={t ?? 0} notationLocked={step < 3 || playing} />
         </>
       )}
       <div class="listen-controls">
@@ -261,54 +203,29 @@ function Listen() {
             次へ
           </button>
         )}
-        {/* 段2は文と①②の行で縦に長くなるので、2つのボタンを1行に並べて 393×659 に収める */}
-        {step === 2 && (
-          <div class="pair">
-            <button
-              class="btn"
-              type="button"
-              onClick={() => {
-                if (motion.kind === 'check') {
-                  halt();
-                  return;
-                }
-                check(() => setChecked(true));
-              }}
-            >
-              {motion.kind === 'check' ? 'やめる' : checked ? 'もう一度確認する' : '確認する'}
-            </button>
-            <button class="btn btn--fill" type="button" onClick={() => go(3)}>
-              次へ
-            </button>
-          </div>
-        )}
-        {step === 3 && listenButton('btn btn--fill')}
-        {/* 段4へは聞き終えたときに進むので、読み込めないと行き止まりになる。読み込めなかったときだけ、聞かずに進む道を出す */}
-        {step === 3 && failed && (
-          <button class="btn btn--line" type="button" onClick={() => go(4)}>
+        {step === 2 && listenButton('btn btn--fill')}
+        {/* 段3へは聞き終えたときに進むので、読み込めないと行き止まりになる。読み込めなかったときだけ、聞かずに進む道を出す */}
+        {step === 2 && failed && (
+          <button class="btn btn--line" type="button" onClick={() => go(3)}>
             聞かずに進む
           </button>
         )}
-        {step === 4 && (
-          <div class="pair">
+        {step === 3 && (
+          <>
             {listenButton('btn')}
             <a class="btn btn--fill" href={`/read/rec/${pairQuery(pair)}`}>
               読んでみる
             </a>
-          </div>
-        )}
-        {step >= 3 && (
-          <p class="fine">
-            {BAND_NOTE}
-            {step === 4 && !chosen && (
+            {!chosen && (
               <button class="link-btn" type="button" onClick={() => go(1)}>
                 はじめの説明をもう一度見る
               </button>
             )}
-          </p>
+          </>
         )}
+        {step >= 2 && <p class="fine">{TIMING_NOTE}</p>}
       </div>
-    </div>
+    </>
   );
 }
 
