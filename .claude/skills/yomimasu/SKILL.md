@@ -19,6 +19,8 @@ description: 競技かるたの読み（読唱）の知識と、1組の読みの
 
 ## 測定が要るとき
 
-定義はリポジトリの `docs/measure.md` だけにある。Web とスキルは同じコードの `${CLAUDE_SKILL_DIR}/scripts/measure.ts` を使う。定義とコードを別々に変えない。
+定義の文はリポジトリの `docs/measure.md` にあり、選べる定義と値（判定の幅の目安を含む）は `${CLAUDE_SKILL_DIR}/scripts/definition.ts` にある。Web とスキルは同じコードの `${CLAUDE_SKILL_DIR}/scripts/measure.ts` を使う。定義とコードを別々に変えない。
+
+判定の幅（`ranges`）を答えるときは「目安」と書き、出典は書かない。
 
 音声ファイルを渡して測る入口はまだない。頼まれたら、まだできないと伝える。その場で測定のコードを書かない。
