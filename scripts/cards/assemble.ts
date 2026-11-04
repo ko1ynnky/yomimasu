@@ -207,7 +207,7 @@ export function notationOnLine(phrases: Phrase[], offset: number, rubies: readon
 }
 
 // 別の読みは行の頭から始まり、伸ばしの印のほかは行の読みと同じ字である。
-// 長音のふりがな「ー」の位置で伸ばすときは、印が長音を兼ねて「ー」を1つだけ書く。99番の「思ふ」がこの形である。
+// 長音のふりがな「ー」のすぐ後ろで伸ばす読みは、一覧が長音の「ー」だけを書き、伸ばしの印を別に書かない。99番の「思ふ」がこの形で、線は長音である。
 export function alternativeOnLine(phrases: Phrase[], offset: number, reading: string, marked: string): AltReading {
   const marks: number[] = [];
   let cursor = 0;
