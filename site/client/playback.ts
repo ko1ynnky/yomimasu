@@ -97,6 +97,8 @@ export type PlaybackEnv = {
   createContext: () => AudioContext;
   audioSession?: AudioSessionLike;
   requestWakeLock?: () => Promise<WakeLockSentinelLike>;
+  // 画面がまた見えたときに呼ぶ。返す関数で呼ぶのをやめる。
+  watchVisible?: (listener: () => void) => () => void;
 };
 
 export function browserEnv(): PlaybackEnv {
@@ -109,6 +111,13 @@ export function browserEnv(): PlaybackEnv {
     createContext: () => new AudioContext(),
     audioSession: nav.audioSession,
     requestWakeLock: wakeLock ? () => wakeLock.request('screen') : undefined,
+    watchVisible: (listener) => {
+      const onChange = () => {
+        if (document.visibilityState === 'visible') listener();
+      };
+      document.addEventListener('visibilitychange', onChange);
+      return () => document.removeEventListener('visibilitychange', onChange);
+    },
   };
 }
 
@@ -142,14 +151,22 @@ export function play(load: Loader, env: PlaybackEnv = browserEnv()): Playback {
   const finished = new Promise<Outcome>((resolve) => (finish = resolve));
 
   // 画面が消えると歌を見ながら聞けない。取れない端末でも、再生は止めない。
+  // 端末は画面が隠れると Wake Lock を離すので、また見えたら取り直す（recorder.tsx の holdWakeLock と同じ動き）。
   let wake: WakeLockSentinelLike | null = null;
-  void env.requestWakeLock?.().then(
-    (sentinel) => {
-      if (settled) void sentinel.release().catch(() => {});
-      else wake = sentinel;
-    },
-    () => {},
-  );
+  const holdWake = () =>
+    void env.requestWakeLock?.().then(
+      (sentinel) => {
+        if (settled) {
+          void sentinel.release().catch(() => {});
+          return;
+        }
+        void wake?.release().catch(() => {});
+        wake = sentinel;
+      },
+      () => {},
+    );
+  holdWake();
+  const unwatchVisible = env.watchVisible?.(holdWake);
 
   const settle = (outcome: Outcome) => {
     if (settled) return;
@@ -163,6 +180,7 @@ export function play(load: Loader, env: PlaybackEnv = browserEnv()): Playback {
       }
     }
     if (env.audioSession) env.audioSession.type = 'auto';
+    unwatchVisible?.();
     void (wake as WakeLockSentinelLike | null)?.release().catch(() => {});
     wake = null;
     void context.close().catch(() => {});

@@ -14,6 +14,7 @@ import { audioSourceOf, clipUrl, GAP_SEC, pairLoader, play, scheduleOf, type Pla
 // - 文脈を作れない端末では、投げずに失敗にする。
 // - 途中で止められる。
 // - 鳴らす間だけ Wake Lock を取る。取れなくても止めない。
+// - 鳴らす間に画面がまた見えたら、Wake Lock を取り直す。端末は画面が隠れると Wake Lock を離すからである。
 
 type FakeSource = { buffer: FakeBuffer | null; startedAt: number | null; stopped: boolean; onended: (() => void) | null };
 type FakeBuffer = { duration: number; length: number; sampleRate: number; data: Float32Array };
@@ -66,6 +67,8 @@ function fakeEnv({ state = 'running', wake = 'ok' }: { state?: string; wake?: 'o
     },
   };
   const wakeLog: string[] = [];
+  const visible = new Set<() => void>();
+  const showAgain = () => visible.forEach((listener) => listener());
   const env: PlaybackEnv = {
     createContext: () => {
       log.push('create');
@@ -91,8 +94,12 @@ function fakeEnv({ state = 'running', wake = 'ok' }: { state?: string; wake?: 'o
           })
         : Promise.reject(new Error('取れない'));
     },
+    watchVisible: (listener) => {
+      visible.add(listener);
+      return () => visible.delete(listener);
+    },
   };
-  return { env, context, log, sources, sessionLog, wakeLog };
+  return { env, context, log, sources, sessionLog, wakeLog, showAgain };
 }
 
 const buffers = (...durations: number[]) => () => Promise.resolve(durations.map((duration) => ({ duration }) as AudioBuffer));
@@ -252,6 +259,23 @@ test('鳴らす間だけ Wake Lock を取り、終えたら離す', async () => 
   await playback.finished;
   await settle();
   assert.deepEqual(wakeLog, ['request', 'release']);
+});
+
+test('鳴らす間に画面がまた見えたら Wake Lock を取り直し、鳴り終えたら取ったものをすべて離して、もう取り直さない', async () => {
+  const { env, sources, wakeLog, showAgain } = fakeEnv();
+  const count = (line: string) => wakeLog.filter((logged) => logged === line).length;
+  const playback = play(buffers(8, 6), env);
+  await settle();
+  showAgain();
+  await settle();
+  assert.equal(count('request'), 2);
+  sources[1].onended?.();
+  await playback.finished;
+  await settle();
+  showAgain();
+  await settle();
+  assert.equal(count('request'), 2);
+  assert.equal(count('release'), 2);
 });
 
 test('Wake Lock を取れなくても鳴らす', async () => {
