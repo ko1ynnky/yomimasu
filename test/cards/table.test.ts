@@ -11,7 +11,6 @@ import {
   type Card,
   type Stretch,
 } from '../../.claude/skills/yomimasu/scripts/cards.ts';
-import { comparable } from '../../scripts/cards/assemble.ts';
 import { applyDiffs, soundDiffs, withListNotation } from '../../scripts/cards/sound.ts';
 
 const cards = deck.cards as unknown as Card[];
@@ -442,7 +441,7 @@ test('ふりがなと注は句の中で重ならずに並び、どれも発音�
   }
 });
 
-test('ふりがなと注の読みは、掛かる範囲の発音の列と同じ音である', () => {
+test('ふりがなと注の読みは、掛かる範囲の発音の列と字のとおり同じである', () => {
   for (const c of cards) {
     c.phrases.forEach((p, phrase) => {
       let read = '';
@@ -451,7 +450,7 @@ test('ふりがなと注の読みは、掛かる範囲の発音の列と同じ�
         read += p.sound.slice(cursor, soundOffset(p, f.at)) + f.reading;
         cursor = soundOffset(p, f.at + f.length);
       }
-      assert.equal(comparable(read + p.sound.slice(cursor)), comparable(p.sound), `${c.no} 番「${p.kana}」`);
+      assert.equal(read + p.sound.slice(cursor), p.sound, `${c.no} 番「${p.kana}」`);
     });
   }
 });
