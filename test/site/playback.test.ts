@@ -11,6 +11,7 @@ import { audioSourceOf, clipUrl, GAP_SEC, pairLoader, play, scheduleOf, type Pla
 // - 歌の枠の時計は、開始の予約時刻からの currentTime の差である。
 // - 鳴らす間だけ audioSession を playback にし、鳴らし終えたとき、止めたとき、失敗したときに auto に戻す。
 // - 文脈が running にならなければ鳴らさず、失敗にする。
+// - 文脈を作れない端末では、投げずに失敗にする。
 // - 途中で止められる。
 // - 鳴らす間だけ Wake Lock を取る。取れなくても止めない。
 
@@ -217,6 +218,21 @@ test('文脈が running にならなければ鳴らさず、failed で終わる'
   const playback = play(buffers(8, 6), env);
   assert.equal(await playback.finished, 'failed');
   assert.equal(sources.length, 0);
+});
+
+test('文脈を作れない端末では、投げずに failed で終わり、audioSession も Wake Lock も触らない', async () => {
+  const { env, sessionLog, wakeLog } = fakeEnv();
+  const playback = play(buffers(8, 6), {
+    ...env,
+    createContext: () => {
+      throw new ReferenceError('AudioContext is not defined');
+    },
+  });
+  assert.equal(await playback.finished, 'failed');
+  assert.equal(playback.elapsed(), null);
+  playback.stop();
+  assert.deepEqual(sessionLog, []);
+  assert.deepEqual(wakeLog, []);
 });
 
 test('audioSession がない端末でも鳴らせる', async () => {

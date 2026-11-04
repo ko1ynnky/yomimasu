@@ -283,6 +283,19 @@ test('導入の段2でお手本を読み込めなくても、聞かずに段3へ
   await expect(page.getByRole('link', { name: '読んでみる' })).toBeVisible();
 });
 
+test('音を鳴らす文脈を作れない端末でも、段2で行き止まりにせず、11節の文言と「聞かずに進む」を出す', async ({ page }) => {
+  await serveAudio(page);
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'AudioContext', { configurable: true, value: undefined });
+  });
+  await page.goto('/read/');
+  await page.getByRole('button', { name: '次へ' }).click();
+  await page.getByRole('button', { name: 'お手本を聞く' }).click();
+  await expect(page.getByRole('alert')).toHaveText('お手本を読み込めませんでした。通信を確かめて、もう一度押してください。');
+  await page.getByRole('button', { name: '聞かずに進む' }).click();
+  await expect(say(page)).toHaveText('では、読んでみませんか？');
+});
+
 test('取得先を合成音にすると、音声を取りに行かずに実行時に作った音を鳴らす', async ({ page }) => {
   const served = await serveAudio(page);
   await watchAudio(page, { introDone: true });

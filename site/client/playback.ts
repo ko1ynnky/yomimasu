@@ -124,7 +124,13 @@ export type Playback = {
 // 押した処理の中から同期で呼ぶ。iOS では、fetch を待ったあとの resume() が解決しないことがあるので、
 // 文脈を作って resume() を呼ぶまでを、最初の await より前に済ませる。
 export function play(load: Loader, env: PlaybackEnv = browserEnv()): Playback {
-  const context = env.createContext();
+  let context: AudioContext;
+  try {
+    context = env.createContext();
+  } catch {
+    // AudioContext がない端末や作れない端末で投げると、押した処理の外へ出て、失敗の文言も出せず行き止まりになる。
+    return { elapsed: () => null, stop: () => {}, finished: Promise.resolve('failed') };
+  }
   const resumed = context.resume();
   // 鳴らす間だけ、消音の切り替えに従わない再生の扱いにする。ほかの画面の録音の扱いを変えないよう、終えたら auto に戻す。
   if (env.audioSession) env.audioSession.type = 'playback';
