@@ -1,5 +1,5 @@
 // 定義は docs/measure.md に置き、選択と値は definition.ts に置く。ここを変えるときは定義も一緒に変える。
-import { definition as standard, type Definition, type VoicedSpanMethod } from './definition.ts';
+import { definition as standard, type Definition, type Range, type VoicedSpanMethod } from './definition.ts';
 
 export type Unmeasured = 'too-quiet' | 'no-gap' | 'cut-off';
 export type Seconds = { status: 'ok'; sec: number } | { status: 'unmeasured'; reason: Unmeasured };
@@ -259,4 +259,20 @@ export function measureKami(recording: Recording, use: Definition = standard): K
   const single = quiet ? null : methods[use.voicedSpan.method].single(analysis, use);
   if (!single) return { kami: unmeasured('too-quiet'), ...levelOf(recording, analysis, true, use) };
   return { kami: seconds(single.end - single.start, single.cut.start || single.cut.end), ...level };
+}
+
+// 見せる秒と判定は Web とスキルで同じにするので、ここで決める。Measurement は 0.01 秒のまま持ち、丸めるのは見せるときと判定するときだけである。
+// 10 倍して丸めると、1.15 のように2進数で表せない値が 1.1 になる。測った値は 0.01 秒の単位なので、100分の1秒の整数にしてから四捨五入する。
+export function tenthSec(sec: number): number {
+  return Math.round(Math.round(sec * 100) / 10) / 10;
+}
+
+export type Placement = 'inside' | 'above' | 'below';
+
+// 判定は見せる値と同じ 0.1 秒の秒で決め、幅は両端を含む。0.01 秒の値で決めると、「1.2秒」と出して「ちょっと長い」と付くことがある。
+export function rangePlacement(sec: number, range: Range): Placement {
+  const shown = tenthSec(sec);
+  if (shown > range.maxSec) return 'above';
+  if (shown < range.minSec) return 'below';
+  return 'inside';
 }
