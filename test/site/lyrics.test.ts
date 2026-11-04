@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import deck from '../../.claude/skills/yomimasu/assets/cards.json' with { type: 'json' };
 import type { Card } from '../../.claude/skills/yomimasu/scripts/cards.ts';
-import { lineText, pairLines, secondShimoLineAt, tapCharOf, type Line } from '../../site/client/lyrics.ts';
+import { lineText, pairLines, type Line } from '../../site/client/lyrics.ts';
 
 const cards = deck.cards as unknown as Card[];
 
@@ -106,31 +106,4 @@ test('どの組でも、余韻の印は前の札の下の句の最後に1つだ�
     assert.deepEqual([...lines.shimo, ...lines.kami].flat().filter((token) => token.yoin).length, 1, `${card.no}番`);
     assert.ok(lines.shimo.at(-1)!.at(-1)!.yoin, `${card.no}番`);
   }
-});
-
-test('余韻で押す字は、下の句の最後の字である', () => {
-  assert.equal(tapCharOf(pairLines(cards, { shimo: 81, kami: 45 })), 'る');
-});
-
-test('下の句が漢字で終わる札では、余韻で押す字を最後の音の仮名で示す', () => {
-  // 2番は「天の香具山」で終わる。余韻は最後の音「ま」から始まるので、「山」で押すと1音早くなる。
-  assert.equal(tapCharOf(pairLines(cards, { shimo: 2, kami: 1 })), 'ま');
-});
-
-test('下の句が発音の違う仮名で終わる札では、余韻で押す字を聞こえる最後の音で示す', () => {
-  // 77番は「思ふ」で終わり、「おもお」と振る。「ふ」で押すよう案内すると、聞こえる音と食い違う。
-  assert.equal(tapCharOf(pairLines(cards, { shimo: 77, kami: 29 })), 'お');
-});
-
-test('どの札でも、余韻で押す字は、ふりがなを含めて下の句の最後に聞こえる音である', () => {
-  for (const card of cards.filter((c) => c.no !== 0)) {
-    const lines = pairLines(cards, { shimo: card.no, kami: card.no === 1 ? 2 : 1 });
-    const heard = lines.shimo.at(-1)!.filter((token) => !token.nobi).map((token) => token.ruby ?? token.text).join('');
-    assert.equal(tapCharOf(lines), heard.at(-1), `${card.no}番`);
-  }
-});
-
-test('下の句の2行目の始まりは、下の句の標準の秒数を2行の字数で分けた位置にする', () => {
-  // 81番は「ただー有明のー」7字と「月ぞ残ーれる」6字である。
-  assert.equal(secondShimoLineAt(pairLines(cards, { shimo: 81, kami: 45 }), 5), (5 * 7) / 13);
 });

@@ -14,7 +14,7 @@ yomimasu-karuta-list, yomimasu-band { display: grid; gap: 8px; }
 /* 総論 */
 .big-num { font-family: var(--f-mono); font-size: 30px; font-weight: 600; line-height: 1.3; }
 yomimasu-band .band { height: 44px; }
-yomimasu-band .seg span { font-size: 13.5px; }
+yomimasu-band .seg > span { font-size: 13.5px; }
 .list > div { display: grid; grid-template-columns: 34px minmax(0, 1fr); padding: 12px 14px; }
 .list .n { font-family: var(--f-mono); font-size: 22px; font-weight: 600; line-height: 1.3; color: var(--shu-deep); }
 .list b { display: block; line-height: 1.5; }
