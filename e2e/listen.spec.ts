@@ -187,6 +187,20 @@ test('お手本を読み込めないときは11節の文言を出し、もう一
   await expect.poll(() => served.asked.length).toBe(4);
 });
 
+test('導入の段3でお手本を読み込めなくても、聞かずに段4へ進める', async ({ page }) => {
+  await serveAudio(page, { status: 404 });
+  await watchAudio(page);
+  await page.goto('/read/');
+  await page.getByRole('button', { name: '次へ' }).click();
+  await page.getByRole('button', { name: '次へ' }).click();
+  await expect(page.getByRole('button', { name: '聞かずに進む' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'お手本を聞く' }).click();
+  await expect(page.getByRole('alert')).toBeVisible();
+  await page.getByRole('button', { name: '聞かずに進む' }).click();
+  await expect(say(page)).toHaveText('では、読んでみませんか？');
+  await expect(page.getByRole('link', { name: '読んでみる' })).toBeVisible();
+});
+
 test('取得先を合成音にすると、音声を取りに行かずに実行時に作った音を鳴らす', async ({ page }) => {
   const served = await serveAudio(page);
   await watchAudio(page, { introDone: true });

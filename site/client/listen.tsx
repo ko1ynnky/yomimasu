@@ -283,6 +283,12 @@ function Listen() {
           </div>
         )}
         {step === 3 && listenButton('btn btn--fill')}
+        {/* 段4へは聞き終えたときに進むので、読み込めないと行き止まりになる。読み込めなかったときだけ、聞かずに進む道を出す */}
+        {step === 3 && failed && (
+          <button class="btn btn--line" type="button" onClick={() => go(4)}>
+            聞かずに進む
+          </button>
+        )}
         {step === 4 && (
           <div class="pair">
             {listenButton('btn')}
