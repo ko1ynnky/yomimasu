@@ -15,11 +15,32 @@ export type Capture = {
   now: () => number;
   // 画面の時計の時刻が、録音の頭から何秒目に当たるか。
   positionSec: (contextTime: number) => number;
-  stop: () => Recording;
+  // 画面の時計の untilSec までを録音にして、マイクを閉じる。
+  stop: (untilSec: number) => Promise<Recording>;
   cancel: () => void;
 };
 
-type Chunk = { frame: number; samples: Float32Array };
+export type Chunk = { frame: number; samples: Float32Array };
+
+// worklet の塊は、画面の時計が進んだあとに遅れて届く。手元の Chromium でも、止めたときに届いていない塊が 10ms 分あった。
+// 止めた時刻までの塊が届くのを待つが、音声の処理が止まって塊が来なくなっても確かめる画面へ進めるよう、待つのはここまでにする。
+const FLUSH_TIMEOUT_MS = 1000;
+
+// 塊は届いた順につなげず、currentFrame の位置に置く。入力にチャンネルが来ない塊（Chromium では最初の塊のすぐあとの2つ）は worklet が送らないので、
+// つなげると、そのあとの音が画面の時計より早い位置にずれ、録音も短くなる。抜けは無音で埋める。
+// 止めた時刻までの塊が届いていないときは、届いた塊の終わりで切る。届いていない区間を無音で足すと、読んだ声を無音に置き換えることになる。
+export function pcmOf(chunks: readonly Chunk[], untilFrame: number): Float32Array {
+  if (chunks.length === 0) return new Float32Array(0);
+  const first = chunks[0].frame;
+  const last = chunks.at(-1)!;
+  const pcm = new Float32Array(Math.max(0, Math.min(untilFrame, last.frame + last.samples.length) - first));
+  for (const { frame, samples } of chunks) {
+    const at = frame - first;
+    if (at >= pcm.length) break;
+    pcm.set(samples.subarray(0, pcm.length - at), at);
+  }
+  return pcm;
+}
 
 const pick = (source: object, keys: readonly VoiceKey[]) =>
   Object.fromEntries(keys.flatMap((key) => (key in source ? [[key, (source as Record<string, unknown>)[key]]] : []))) as Partial<Record<VoiceKey, boolean>>;
@@ -38,7 +59,10 @@ export async function startCapture(): Promise<Capture> {
   void context.resume();
 
   let stream: MediaStream | undefined;
+  let released = false;
   const release = () => {
+    if (released) return;
+    released = true;
     stream?.getTracks().forEach((track) => track.stop());
     void context.close();
   };
@@ -50,7 +74,11 @@ export async function startCapture(): Promise<Capture> {
     await context.audioWorklet.addModule('/recorder-worklet.js');
     const worklet = new AudioWorkletNode(context, 'recorder');
     const chunks: Chunk[] = [];
-    worklet.port.onmessage = ({ data }: MessageEvent<Chunk>) => chunks.push(data);
+    let arrived = () => {};
+    worklet.port.onmessage = ({ data }: MessageEvent<Chunk>) => {
+      chunks.push(data);
+      arrived();
+    };
 
     // 出力につながないノードを動かさないブラウザーに備えて、音量0で出力へつなぐ。
     const silence = context.createGain();
@@ -69,15 +97,22 @@ export async function startCapture(): Promise<Capture> {
       now: () => context.currentTime,
       positionSec: (contextTime) => Math.max(0, contextTime - firstSec()),
       cancel: release,
-      stop() {
-        release();
-        const pcm = new Float32Array(chunks.reduce((total, chunk) => total + chunk.samples.length, 0));
-        let offset = 0;
-        for (const { samples } of chunks) {
-          pcm.set(samples, offset);
-          offset += samples.length;
-        }
-        return { pcm, sampleRate: context.sampleRate, voiceProcessing };
+      stop(untilSec) {
+        const untilFrame = Math.round(untilSec * context.sampleRate);
+        const reached = () => chunks.length > 0 && chunks.at(-1)!.frame + chunks.at(-1)!.samples.length >= untilFrame;
+        return new Promise((resolve) => {
+          const done = () => {
+            clearTimeout(timer);
+            arrived = () => {};
+            release();
+            resolve({ pcm: pcmOf(chunks, untilFrame), sampleRate: context.sampleRate, voiceProcessing });
+          };
+          const timer = setTimeout(done, FLUSH_TIMEOUT_MS);
+          arrived = () => {
+            if (reached()) done();
+          };
+          arrived();
+        });
       },
     };
   } catch (error) {

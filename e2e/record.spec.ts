@@ -28,10 +28,20 @@ const launchWithFakeMic = (pcm: Float32Array = synthesize(reading), rate = readi
   });
 
 // マイクの開閉、求めた声の処理、鳴った音を、API の境界で記録する。
-async function openPage(browser: Browser, baseURL: string | undefined, path = '/read/rec/', { help = false } = {}) {
+// lateMs を渡すと、worklet から届く録音の塊をその分だけ遅らせて渡す。CI の遅い環境では、塊が画面の時計より遅れて届く。
+async function openPage(browser: Browser, baseURL: string | undefined, path = '/read/rec/', { help = false, lateMs = 0 } = {}) {
   const page = await (await browser.newContext({ baseURL })).newPage();
-  await page.addInitScript((help) => {
+  await page.addInitScript(({ help, lateMs }) => {
     if (!help) localStorage.setItem('yomimasu.recHelpDone', '1');
+    if (lateMs > 0) {
+      const onmessage = Object.getOwnPropertyDescriptor(MessagePort.prototype, 'onmessage')!;
+      Object.defineProperty(MessagePort.prototype, 'onmessage', {
+        ...onmessage,
+        set(this: MessagePort, handler: ((event: MessageEvent) => void) | null) {
+          onmessage.set!.call(this, handler && ((event: MessageEvent) => void setTimeout(() => handler.call(this, event), lateMs)));
+        },
+      });
+    }
     const opened: MediaStream[] = [];
     const constraints: MediaStreamConstraints[] = [];
     const getUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
@@ -57,7 +67,7 @@ async function openPage(browser: Browser, baseURL: string | undefined, path = '/
       return play.call(this);
     };
     Object.assign(window, { openedMicrophones: opened, askedConstraints: constraints, playedSounds: sounds });
-  }, help);
+  }, { help, lateMs });
   await page.goto(path);
   return page;
 }
@@ -269,10 +279,10 @@ for (const [name, leave] of [
   });
 }
 
-test('読み始めて 25 秒で、自動で止めて確かめる画面へ移る', async ({ baseURL }) => {
+test('読み始めて 25 秒で自動で止め、録音の塊が遅れて届いても読み始めから 25 秒を録って、確かめる画面へ移る', async ({ baseURL }) => {
   test.setTimeout(60_000);
   const browser = await launchWithFakeMic();
-  const page = await openPage(browser, baseURL);
+  const page = await openPage(browser, baseURL, '/read/rec/', { lateMs: 30 });
 
   await startButton(page).click();
   await waitForReading(page);
@@ -282,6 +292,12 @@ test('読み始めて 25 秒で、自動で止めて確かめる画面へ移る'
   const take = await takeOf(page);
   expect(take.lengthSec - take.readingStartSec).toBeGreaterThanOrEqual(25);
   expect(take.lengthSec - take.readingStartSec).toBeLessThan(25.5);
+
+  mkdirSync(ARTIFACTS_DIR, { recursive: true });
+  writeFileSync(
+    join(ARTIFACTS_DIR, 'limit.json'),
+    JSON.stringify({ lateMs: 30, recordedReadingStartSec: take.readingStartSec, recordedLengthSec: take.lengthSec }, null, 2),
+  );
   await browser.close();
 });
 

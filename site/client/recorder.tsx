@@ -131,6 +131,8 @@ function Recorder({ fix }: { fix?: string }) {
   const [tapLine, setTapLine] = useState<string | null>(null);
   const session = useRef<Session | null>(null);
   const opening = useRef(false);
+  // 止めた時刻までの録音の塊を待っている録音。待つ間に「やめる」を押すか画面を離れたら、確かめる画面へ進めない。
+  const stopping = useRef<Capture | null>(null);
   const startedAt = useRef(Number.NEGATIVE_INFINITY);
   const stoppedAt = useRef(Number.NEGATIVE_INFINITY);
 
@@ -149,14 +151,20 @@ function Recorder({ fix }: { fix?: string }) {
   }
 
   function cancel() {
+    stopping.current?.cancel();
+    stopping.current = null;
     end()?.capture.cancel();
   }
 
-  function finish() {
+  async function finish() {
     const current = end();
     if (!current) return;
-    const readingStartSec = current.capture.positionSec(current.countStart + COUNT_SEC);
-    const { pcm, sampleRate, voiceProcessing } = current.capture.stop();
+    const { capture } = current;
+    stopping.current = capture;
+    const readingStartSec = capture.positionSec(current.countStart + COUNT_SEC);
+    const { pcm, sampleRate, voiceProcessing } = await capture.stop(capture.now());
+    if (stopping.current !== capture) return;
+    stopping.current = null;
     const take: RecordedTake = {
       pcm,
       sampleRate,
@@ -179,7 +187,7 @@ function Recorder({ fix }: { fix?: string }) {
     if (elapsed < COUNT_SEC) {
       setView({ kind: 'count', beat: COUNT_FROM - Math.floor(elapsed / COUNT_BEAT_SEC), elapsed });
     } else if (elapsed - COUNT_SEC >= LIMIT_SEC) {
-      finish();
+      void finish();
       return;
     } else {
       setView({ kind: 'reading', t: elapsed - COUNT_SEC, elapsed });
@@ -227,7 +235,7 @@ function Recorder({ fix }: { fix?: string }) {
   // 画面が隠れたら、やめる扱いにしてマイクを閉じる。録音の画面を離れるときも同じである。
   useEffect(() => {
     const leave = () => {
-      if (!session.current && !opening.current) return;
+      if (!session.current && !opening.current && !stopping.current) return;
       cancel();
       setTapLine(null);
       setView({ kind: 'idle' });
