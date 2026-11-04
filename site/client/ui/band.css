@@ -1,17 +1,20 @@
-/* 帯の決まりは docs/ui-guide.md の7節にある。総論、聞く画面、読む画面で同じ部品を使う。 */
+/* 帯の決まりは docs/ui-guide.md の7節にある。総論などで使う部品で、読む画面の歌の枠には出さない。 */
 
 .band { display: flex; gap: 2px; height: 34px; }
 .seg { position: relative; min-width: 0; overflow: hidden; border-radius: 4px; background: var(--track); }
 .seg i { position: absolute; inset: 0 auto 0 0; width: 0; }
-.seg span { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 12.5px; line-height: 1.2; white-space: nowrap; }
-.seg span small { font-family: var(--f-mono); font-size: inherit; line-height: inherit; color: inherit; font-variant-numeric: tabular-nums; }
+/* 直下の span だけに当てる。中の「秒」の span まで重ねて置くと、名前の上に重なる（2026-11-04 に iOS の Safari で見つけた） */
+.seg > span { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 12.5px; line-height: 1.2; white-space: nowrap; }
+.seg > span small { font-family: var(--f-mono); font-size: inherit; line-height: inherit; color: inherit; font-variant-numeric: tabular-nums; }
+/* 間の区間は幅 320 で 18px ほどしかないので、「秒」だけを小さくして「1秒」を収める */
+.seg > span small .unit { font-family: var(--f-sans); font-size: 0.72em; letter-spacing: -0.02em; }
 .seg.is-now { box-shadow: inset 0 0 0 2px var(--ink); }
 [data-seg="shimo"] { --seg: var(--seg-shimo); }
 [data-seg="yoin"] { --seg: var(--seg-yoin); }
 [data-seg="ma"] { --seg: var(--seg-ma); }
 [data-seg="kami"] { --seg: var(--seg-kami); }
-.seg i, .drain { background: var(--seg); }
+.seg i { background: var(--seg); }
 .band--static .seg { background: var(--seg); }
 .band--tall { height: 44px; }
-.band--tall .seg span { font-size: 13.5px; }
+.band--tall .seg > span { font-size: 13.5px; }
 
