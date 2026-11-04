@@ -1,6 +1,6 @@
 # 札の読みの表
 
-Web とスキルが共通に使うための、序歌と100首の表の説明である。表の本体は `.claude/skills/yomimasu/assets/cards.json`、型と計算は同じスキルの `scripts/cards.ts` にある。今この表を読むのは `scripts/cards/`、テスト、画面の歌詞の部品（`site/client/lyrics.ts`）で、測定はまだ読んでいない。ふりがな、注、別の読み、余韻の印の4列を読む画面もまだない。
+Web とスキルが共通に使うための、序歌と100首の表の説明である。表の本体は `.claude/skills/yomimasu/assets/cards.json`、型と計算は同じスキルの `scripts/cards.ts` にある。今この表を読むのは `scripts/cards/`、テスト、画面の歌詞の部品（`site/client/lyrics.ts`）と録音の画面の決まり字（`site/client/recorder.tsx`）で、測定はまだ読んでいない。歌詞の部品は `yoin` の列の位置に余韻の印を置き、`sound` からふりがなを振る。`sound` には一覧のふりがなの「ー」と注の字が入っている。`furigana`、`notes`、`alternatives` の列をそのまま読む画面はまだない。
 
 ## 持っているもの
 
