@@ -110,9 +110,14 @@ test('取得先は既定で同じオリジンの /audio/v1/ で、設定で合�
 });
 
 test('外のオリジンの取得先は使わず、既定に戻す', () => {
-  for (const value of ['https://example.com/audio/', '//example.com/audio/', 'audio/']) {
+  // ブラウザーは「\」を「/」と読み、タブと改行を読み飛ばすので、先頭の字だけでは外のオリジンを見分けられない。
+  for (const value of ['https://example.com/audio/', '//example.com/audio/', 'audio/', '/\\example.com/audio/', '/\t/example.com/audio/', '/\n/example.com/audio/']) {
     assert.deepEqual(audioSourceOf(value), { kind: 'url', base: '/audio/v1/' }, value);
   }
+});
+
+test('URL として解けない取得先は、投げずに既定に戻す', () => {
+  assert.deepEqual(audioSourceOf('//['), { kind: 'url', base: '/audio/v1/' });
 });
 
 test('下の句の終わりから 1.0 秒あけて上の句を始め、上の句の終わりで鳴り終える', () => {

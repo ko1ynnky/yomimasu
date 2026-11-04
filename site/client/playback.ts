@@ -16,9 +16,21 @@ const DEFAULT_BASE = '/audio/v1/';
 export const AUDIO_SOURCE_KEY = 'yomimasu.audio';
 
 // 取得先は同じオリジンのパスに限る。外の配信から読むと、どの端末が聞いたかが外へ出るからである。
+// 先頭の字だけでは見分けない。ブラウザーは「\」を「/」と読み、タブと改行を読み飛ばすので、「/\example.com/」は外のオリジンになる。
+// 解き方はページのオリジンに依らないので、location の代わりに試しのオリジンで解く。URL.parse は iOS 17 の Safari にないので使わない。
+const PROBE_ORIGIN = 'https://yomimasu.invalid';
+function isSameOriginPath(setting: string) {
+  if (!setting.startsWith('/')) return false;
+  try {
+    return new URL(setting, PROBE_ORIGIN).origin === PROBE_ORIGIN;
+  } catch {
+    return false;
+  }
+}
+
 export function audioSourceOf(setting: string | null): AudioSource {
   if (setting === 'synth') return { kind: 'synth' };
-  if (setting && setting.startsWith('/') && !setting.startsWith('//')) return { kind: 'url', base: setting };
+  if (setting && isSameOriginPath(setting)) return { kind: 'url', base: setting };
   return { kind: 'url', base: DEFAULT_BASE };
 }
 
