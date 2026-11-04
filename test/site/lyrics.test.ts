@@ -70,6 +70,31 @@ test('伸ばす印を除いて読みと仮名をつなぐと、札の表の実�
   }
 });
 
+// 伸ばす印は「ー」、余韻の印は「▼」で書く。
+const withMarks = (line: Line) => line.map((token) => (token.yoin ? '▼' : token.text)).join('');
+const withYoin = (no: number, yoin: Card['yoin']) => cards.map((card) => (card.no === no ? { ...card, yoin } : card));
+
+test('余韻の印は、札の読みの表の余韻の印の位置に置く', () => {
+  assert.deepEqual(pairLines(cards, { shimo: 81, kami: 45 }).shimo.map(withMarks), ['ただー有明のー', '月ぞ残ーれる▼']);
+  // 表の位置を動かすと、印もその位置へ動く。漢字のかたまりの後ろと、仮名の字の間のどちらにも置ける。
+  assert.deepEqual(pairLines(withYoin(81, { phrase: 4, after: 3 }), { shimo: 81, kami: 45 }).shimo.map(withMarks), ['ただー有明のー', '月ぞ▼残ーれる']);
+  assert.deepEqual(pairLines(withYoin(81, { phrase: 4, after: 6 }), { shimo: 81, kami: 45 }).shimo.map(withMarks), ['ただー有明のー', '月ぞ残ーれ▼る']);
+});
+
+test('表に余韻の印がない札には、余韻の印を置かない', () => {
+  const lines = pairLines(withYoin(81, null), { shimo: 81, kami: 45 });
+  assert.ok([...lines.shimo, ...lines.kami].flat().every((token) => !token.yoin));
+});
+
+test('どの組でも、余韻の印は前の札の下の句の最後に1つだけ置き、次の札の上の句には置かない', () => {
+  // 表の余韻の印は、序歌と100首のどれも下の句の終わりを指す。
+  for (const card of cards.filter((c) => c.no !== 0)) {
+    const lines = pairLines(cards, { shimo: card.no, kami: card.no === 1 ? 2 : 1 });
+    assert.deepEqual([...lines.shimo, ...lines.kami].flat().filter((token) => token.yoin).length, 1, `${card.no}番`);
+    assert.ok(lines.shimo.at(-1)!.at(-1)!.yoin, `${card.no}番`);
+  }
+});
+
 test('余韻で押す字は、下の句の最後の字である', () => {
   assert.equal(tapCharOf(pairLines(cards, { shimo: 81, kami: 45 })), 'る');
 });

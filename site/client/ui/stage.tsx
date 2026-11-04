@@ -2,7 +2,7 @@ import { render, type ComponentChildren } from 'preact';
 import { useLayoutEffect, useRef } from 'preact/hooks';
 import deck from '../../../.claude/skills/yomimasu/assets/cards.json' with { type: 'json' };
 import type { Card } from '../../../.claude/skills/yomimasu/scripts/cards.ts';
-import { pairLines, type Line, type PairLines, type Token } from '../lyrics.ts';
+import { lastSoundAt, pairLines, type Line, type PairLines, type Token } from '../lyrics.ts';
 import { DEFAULT_PAIR, pairFromSearch, segmentsOf, type Pair, type Segment, type SegmentKey } from '../pair.ts';
 import { Band } from './band.tsx';
 import './stage.css';
@@ -54,7 +54,15 @@ export function phasesOf(segments: readonly Segment[]): Phase[] {
 
 const phaseAt = (phases: readonly Phase[], t: number) => phases.find((p) => t < p.from + p.sec) ?? phases.at(-1)!;
 
+// ▼の字は書体で形が変わり縦に伸ばせないので、全角の空白を入れた箱に三角を描く（ui-guide 7節「歌に出すもの」）。
+const YoinMark = () => (
+  <span class="yoin" role="img" aria-label="余韻">
+    {'　'}
+  </span>
+);
+
 function TokenView({ token }: { token: Token }) {
+  if (token.yoin) return <YoinMark />;
   if (token.nobi) return <span class="nobi">ー</span>;
   if (token.ruby)
     return (
@@ -66,28 +74,18 @@ function TokenView({ token }: { token: Token }) {
   return <>{token.text}</>;
 }
 
-// ▼の字は書体で形が変わり縦に伸ばせないので、全角の空白を入れた箱に三角を描く（ui-guide 7節「歌に出すもの」）。
-// どの札に印を付けるかの列は札の読みの表にまだない。列ができるまでは、どの組も下の句の最後の字のあとに置く。
-const YoinMark = () => (
-  <span class="yoin" role="img" aria-label="余韻">
-    {'　'}
-  </span>
-);
-
 function LineView({ line, className, last }: { line: Line; className: string; last?: boolean }) {
-  const body = last ? line.slice(0, -1) : line;
+  const cue = last ? lastSoundAt(line) : -1;
   return (
     <div class={className}>
-      {body.map((token) => (
-        <TokenView token={token} />
-      ))}
-      {last && (
-        <>
+      {line.map((token, i) =>
+        i === cue ? (
           <span class="cue">
-            <TokenView token={line.at(-1)!} />
+            <TokenView token={token} />
           </span>
-          <YoinMark />
-        </>
+        ) : (
+          <TokenView token={token} />
+        ),
       )}
     </div>
   );
