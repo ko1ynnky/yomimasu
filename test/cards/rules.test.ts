@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
-  heard,
   kimarijiLengths,
   markedText,
   ruleStretchesOf,
@@ -66,30 +65,19 @@ test('決まり字は、ほかの札と区別できるまでの字数である',
   ]);
 });
 
-test('「おう」と「おお」は同じ音なので、決まり字では区別しない', () => {
-  assert.equal(heard('おうことの'), 'おおことの');
-  const lengths = kimarijiLengths(
-    new Map([
-      [44, heard('おうことの')],
-      [60, heard('おおえやま')],
-    ]),
-  );
-  assert.equal(lengths.get(44), 3);
-});
-
 test('発音の差を越えて、仮名の位置を発音の位置へ移せる', () => {
-  const samples = phrase('ころもほすてふ', 'ころもほすてふ', 'ころもほすちょう', [{ at: 5, kana: 'てふ', sound: 'ちょう', rule: '長音' }]);
+  const samples = phrase('ころもほすてふ', 'ころもほすてふ', 'ころもほすちょー', [{ at: 5, kana: 'てふ', sound: 'ちょー', rule: '長音' }]);
   assert.equal(soundOffset(samples, 5), 5);
   assert.equal(soundOffset(samples, 7), 8);
 });
 
 test('字数の変わらない読み替えの途中は、字ごとに発音の位置へ移せる', () => {
-  const samples = phrase('いふべき', 'いふべき', 'ゆうべき', [{ at: 0, kana: 'いふ', sound: 'ゆう', rule: '長音' }]);
+  const samples = phrase('いふべき', 'いふべき', 'ゆーべき', [{ at: 0, kana: 'いふ', sound: 'ゆー', rule: '長音' }]);
   assert.equal(soundOffset(samples, 1), 1);
 });
 
 test('読み替えの途中の位置には移せない', () => {
-  const samples = phrase('けふ', 'けふ', 'きょう', [{ at: 0, kana: 'けふ', sound: 'きょう', rule: '長音' }]);
+  const samples = phrase('けふ', 'けふ', 'きょー', [{ at: 0, kana: 'けふ', sound: 'きょー', rule: '長音' }]);
   assert.throws(() => soundOffset(samples, 1), /読み替えの途中/);
 });
 

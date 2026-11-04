@@ -57,7 +57,7 @@ function place(lines: readonly Mora[][], from: number, sec: number): { lines: Ti
 }
 
 // かなの表記は発音どおりに書き、1拍ずつに分ける。朱の進みを1拍ずつ動かすためである。
-// 1字ずつには分けない。拗音の小さい字に拍を配ると、「ちょう」の「ち」と「ょ」が別の拍のように進む。
+// 1字ずつには分けない。拗音の小さい字に拍を配ると、「ちょー」の「ち」と「ょ」が別の拍のように進む。
 function glyphsOf(line: readonly TimedMora[], notation: Notation): { glyph: Glyph; morae: TimedMora[] }[] {
   const groups: TimedMora[][] = [];
   for (const mora of line) {

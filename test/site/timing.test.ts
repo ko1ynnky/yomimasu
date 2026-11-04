@@ -50,8 +50,23 @@ test('字の時間は字数で等分せず、拍の数で割り振る。伸ば�
   close(sec(of(kami, '人')), (2 * 6) / 25);
 });
 
+test('発音の長音の「ー」は1拍、伸ばす印の「ー」は2拍に数え、取り違えない', () => {
+  // 45番の二句「いふべき人は」の「ふ」は、発音の表で「ー」と読む（いふ→ゆー）。句の終わりの「ー」は伸ばす印である。
+  for (const notation of ['kanji', 'kana'] as const) {
+    const [, second] = timed(READ, notation).kami;
+    const be = second.find((glyph) => glyph.text === 'べ')!;
+    const sounded = second[1];
+    const stretched = second.at(-1)!;
+    assert.equal(notation === 'kanji' ? sounded.ruby : sounded.text, 'ー', notation);
+    assert.equal(sounded.nobi, undefined, notation);
+    close(sec(sounded), sec(be), notation);
+    assert.deepEqual([stretched.text, stretched.nobi], ['ー', true], notation);
+    close(sec(stretched), 2 * sec(be), notation);
+  }
+});
+
 test('拗音の小さい字は前の字と1拍に数え、かなの表記でも前の字と一緒に進める', () => {
-  // 2番の下の句の「てふ」は「ちょう」と読み、2拍である。
+  // 2番の下の句の「てふ」は「ちょー」と読み、2拍である。
   const kanji = timed({ shimo: 2, kami: 1 }).shimo.flat();
   const tefu = kanji.find((glyph) => glyph.text === 'てふ')!;
   const su = kanji.find((glyph) => glyph.text === 'す')!;
@@ -61,7 +76,7 @@ test('拗音の小さい字は前の字と1拍に数え、かなの表記でも�
   const at = kana.findIndex((glyph) => glyph.text === 'ちょ');
   assert.deepEqual(
     kana.slice(at, at + 2).map((glyph) => glyph.text),
-    ['ちょ', 'う'],
+    ['ちょ', 'ー'],
   );
   close(sec(kana[at]), sec(kana.find((glyph) => glyph.text === 'す')!));
 });
@@ -91,7 +106,7 @@ test('かなの表記は、ふりがなのある字をふりがなの音で、�
   const { shimo, last, kami } = timed(READ, 'kana');
   assert.deepEqual(text(shimo), ['ただーありあけのー', 'つきぞのこーれ']);
   assert.equal(last.text, 'る');
-  assert.deepEqual(text(kami), ['あわれともー', 'ゆうべきひとわー', 'おもおえーでー']);
+  assert.deepEqual(text(kami), ['あわれともー', 'ゆーべきひとわー', 'おもおえーでー']);
   assert.ok([...shimo, ...kami].flat().every((glyph) => glyph.ruby === undefined));
   assert.deepEqual(
     shimo[0].filter((glyph) => glyph.nobi).map((glyph) => glyph.text),

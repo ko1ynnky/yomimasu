@@ -80,7 +80,7 @@ test('最初はかなの表記で出し、左上の切り替えで漢字まじ�
   const notation = page.getByRole('group', { name: '歌の表記' });
   await expect(notation.getByRole('button')).toHaveText(['漢字', 'かな']);
   await expect(notation.getByRole('button', { name: 'かな' })).toHaveAttribute('aria-pressed', 'true');
-  expect(await bodyTexts(page)).toEqual(['ただーありあけのーつきぞのこーれ', 'る　', 'あわれともーゆうべきひとわーおもおえーでー']);
+  expect(await bodyTexts(page)).toEqual(['ただーありあけのーつきぞのこーれ', 'る　', 'あわれともーゆーべきひとわーおもおえーでー']);
   await expect(page.getByTestId('lyrics').locator('rt')).toHaveCount(0);
 
   await notation.getByRole('button', { name: '漢字' }).click();
@@ -100,7 +100,12 @@ test('URL の組の指定で、出す歌が替わる', async ({ page }) => {
 
 test('漢字の表記では、漢字と発音の違う仮名に、実際の発音のふりがなを振る', async ({ page }) => {
   await openIn(page, 'kanji');
-  await expect(page.getByTestId('lyrics').locator('rt')).toHaveText(['ありあけ', 'つき', 'のこ', 'わ', 'ゆ', 'う', 'ひと', 'わ', 'おも', 'お']);
+  await expect(page.getByTestId('lyrics').locator('rt')).toHaveText(['ありあけ', 'つき', 'のこ', 'わ', 'ゆ', 'ー', 'ひと', 'わ', 'おも', 'お']);
+});
+
+test('54番の下の句の四句は、一覧のふりがなの「きょー」に代えて、ユーザーの判断で「今日」に「きょ」、「を」に「お」と振る', async ({ page }) => {
+  await openIn(page, 'kanji', '/read/rec/?shimo=54&kami=1');
+  await expect(page.locator('.blk[data-phase="shimo"] .ln').first().locator('rt')).toHaveText(['きょ', 'お']);
 });
 
 test('余韻の印は最後の字のすぐ下に置いて、「余韻」と読み上げさせる', async ({ page }) => {
