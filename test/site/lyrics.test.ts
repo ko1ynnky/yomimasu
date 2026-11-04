@@ -57,6 +57,22 @@ test('ふりがなは、読手テキストの一覧のふりがなの「ー」�
   assert.equal(withRuby(pairLines(cards, { shimo: 2, kami: 1 }).shimo[0]), '{衣|ころも}ー{干|ほ}す{てふ|ちょー}ー');
 });
 
+test('54番の四句の「今日」は、一覧のふりがなの「きょー」に代えて、ユーザーの判断で「きょ」と振る', () => {
+  const [fourth] = pairLines(cards, { shimo: 54, kami: 1 }).shimo;
+  assert.deepEqual(fourth, [
+    { text: '今日', ruby: 'きょ' },
+    { text: 'を', ruby: 'お' },
+    { text: 'ー', nobi: true },
+    { text: 'か' },
+    { text: 'ぎ' },
+    { text: 'り' },
+    { text: 'の' },
+    { text: 'ー', nobi: true },
+  ]);
+  // 伸ばす印の前は「きょお」の2拍である。
+  assert.equal(fourth.map((token) => token.ruby ?? token.text).join(''), 'きょおーかぎりのー');
+});
+
 test('どの札でも、伸ばす印を除いて読みと仮名をつなぐと、札の表の発音と字のとおり同じになる', () => {
   const sounds = (line: Line) => line.filter((token) => !token.nobi).map((token) => token.ruby ?? token.text).join('');
   for (const card of cards.filter((c) => c.no !== 0)) {

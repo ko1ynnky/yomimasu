@@ -17,9 +17,9 @@ import {
   type Stretch,
   type TextFix,
 } from '../../.claude/skills/yomimasu/scripts/cards.ts';
-import { KANJI_HINTS, KANJI_SPLITS, LINE_FIXES, PHRASE_LENGTHS, keptOf, type LineKey } from './corrections.ts';
+import { KANJI_HINTS, KANJI_SPLITS, LINE_FIXES, PHRASE_LENGTHS, keptOf, soundExceptionsOf, type LineKey } from './corrections.ts';
 import type { ListCard, ListLine, ListRuby } from './list.ts';
-import { applyDiffs, soundDiffs, withListNotation } from './sound.ts';
+import { applyDiffs, soundDiffs, withListNotation, withoutSoundExceptions, withSoundExceptions } from './sound.ts';
 
 const STANDARD_LENGTHS = [5, 7, 5, 7, 7];
 const KANJI_RUN = /[\u4e00-\u9fff々]+/;
@@ -252,7 +252,8 @@ export function buildCard(no: number, lines: Lines, fixes: TextFix[], list: List
   return {
     no,
     phrases: phrases.map((phrase, index) => {
-      const diffs = withListNotation(phrase.kana, phrase.diffs, { furigana: onPhrase(furigana, index), notes: onPhrase(notes, index) });
+      const listed = withListNotation(phrase.kana, phrase.diffs, { furigana: onPhrase(furigana, index), notes: onPhrase(notes, index) });
+      const diffs = withSoundExceptions(listed, soundExceptionsOf(no, index));
       return { ...phrase, sound: applyDiffs(phrase.kana, diffs), diffs };
     }),
     ruleStretches,
@@ -339,9 +340,14 @@ export function compareWithList(cards: readonly Card[], list: readonly ListCard[
     if (!entry) throw new Error(`${card.no} 番が一覧にない`);
     result.notation.yoin += entry.yoin ? 1 : 0;
     if (JSON.stringify(yoinOf(card.phrases, entry)) !== JSON.stringify(card.yoin)) result.notationMismatches.yoin.push(`${card.no} 番`);
+    // 一覧の読みと印の位置は、札ごとの例外を当てる前の発音で数えてあるので、例外を戻して比べる。例外そのものは資料から作り直した表との比較で確かめる。
+    const listed = card.phrases.map((phrase, index) => {
+      const diffs = withoutSoundExceptions(phrase.diffs, soundExceptionsOf(card.no, index));
+      return { ...phrase, sound: applyDiffs(phrase.kana, diffs), diffs };
+    });
     const sides = [
-      { name: '上の句', phrases: card.phrases.slice(0, 3), line: entry.upper, first: 0 },
-      { name: '下の句', phrases: card.phrases.slice(3), line: entry.lower, first: 3 },
+      { name: '上の句', phrases: listed.slice(0, 3), line: entry.upper, first: 0 },
+      { name: '下の句', phrases: listed.slice(3), line: entry.lower, first: 3 },
     ];
     for (const { name, phrases, line, first } of sides) {
       result.lines += 1;

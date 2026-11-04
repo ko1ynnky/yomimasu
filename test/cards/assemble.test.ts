@@ -118,6 +118,53 @@ test('札の句の発音は、規則の読み替えに一覧のふりがなの�
   assert.deepEqual(built.stretches, [{ phrase: 4, after: 5 }]);
 });
 
+// 54番は、四句の「けふ」が札ごとの例外である。一覧の読みと印の位置は、例外を当てる前の発音「きょー」で数える。
+const lines54 = {
+  upperText: 'わすれじのゆくすゑまではかたければ',
+  upperKana: 'わすれじのゆくすゑまではかたければ',
+  lowerText: '今日をかぎりの命ともがな',
+  lowerKana: 'けふをかぎりのいのちともがな',
+};
+const listLine = (plain: string, reading: string, extra: Partial<ListLine> = {}): ListLine => ({ plain, marked: plain, reading, marks: [], rubies: [], alternative: null, ...extra });
+const list54: ListCard = {
+  no: 54,
+  page: 8,
+  upper: listLine('わすれじのゆくすゑまではかたければ', 'わすれじのゆくすえまでわかたければ'),
+  lower: listLine('今日をかぎりの命ともがな', 'きょーおかぎりのいのちともがな', {
+    marks: [4, 8, 12],
+    rubies: [
+      { start: 0, text: 'きょー', base: '今日' },
+      { start: 8, text: 'いのち', base: '命' },
+    ],
+  }),
+  yoin: true,
+};
+
+test('例外のある句の発音は、一覧の表記を当てたあとに例外の発音にし、伸ばす位置とふりがなの位置は当てる前と同じに置く', () => {
+  const built = buildCard(54, lines54, [], list54);
+  assert.equal(built.phrases[3].sound, 'きょおかぎりの');
+  assert.deepEqual(built.phrases[3].diffs, [
+    { at: 0, kana: 'けふ', sound: 'きょ', rule: 'ユーザーの判断' },
+    { at: 2, kana: 'を', sound: 'お', rule: 'ワ行' },
+  ]);
+  assert.deepEqual(built.stretches, [
+    { phrase: 3, after: 3 },
+    { phrase: 3, after: 7 },
+    { phrase: 4, after: 4 },
+  ]);
+  assert.deepEqual(built.furigana, [
+    { phrase: 3, at: 0, length: 2, reading: 'きょー' },
+    { phrase: 4, at: 0, length: 3, reading: 'いのち' },
+  ]);
+});
+
+test('照合では、例外の所を一覧の表記を当てた発音に戻して一覧と比べる', () => {
+  const card: Card = { ...buildCard(54, lines54, [], list54), kimariji: null };
+  const result = compareWithList([card], [list54]);
+  assert.deepEqual([...result.textMismatches, ...result.soundMismatches, ...result.stretchMismatches, ...Object.values(result.notationMismatches).flat()], []);
+  assert.deepEqual(result.notation, { furigana: 2, notes: 0, alternatives: 0, yoin: 1 });
+});
+
 test('別の読みは、行の読みと字を照らし、伸ばす位置を句の仮名の字数で返す', () => {
   const upper = [phrase('あさぼらけ'), phrase('ありあけのつきと'), phrase('みるまでに')];
   assert.deepEqual(alternativeOnLine(upper, 0, 'あさぼらけありあけのつきとみるまでに', 'あさぼらけありあけのーつきとー'), {

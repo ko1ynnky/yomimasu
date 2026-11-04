@@ -1,6 +1,7 @@
 // 歴史的仮名遣いの仮名を、読むときの音の仮名へ読み替える規則。
 
 import type { Furigana, SoundDiff, SoundRule } from '../../.claude/skills/yomimasu/scripts/cards.ts';
+import type { SoundException } from './corrections.ts';
 
 // 長音は読手テキストの一覧の表記に合わせて「ー」で書く（2026-11-04 のユーザーの判断）。
 const LONG_VOWELS: readonly (readonly [string, string])[] = [
@@ -84,4 +85,27 @@ export function withListNotation(kana: string, diffs: readonly SoundDiff[], nota
   for (const span of notation.furigana) overwrite(span, (char) => char === 'ー', '一覧のふりがな');
   for (const span of notation.notes) overwrite(span, () => true, '一覧の注');
   return [...result.values()].sort((a, b) => a.at - b.at);
+}
+
+type Exception = Pick<SoundException, 'at' | 'kana' | 'listed' | 'sound'>;
+
+// 札ごとの例外は withListNotation のあとに当てる。字数を変えてよいのは、伸ばす位置とふりがなの位置が仮名の位置で、当てる前に求め終えているからである。
+// 例外の所が一覧の表記を当てた発音と合わなければ止める。一覧か規則が変わったときに、例外が黙って別の読みを上書きしないようにするためである。
+export function withSoundExceptions(diffs: readonly SoundDiff[], exceptions: readonly Exception[]): SoundDiff[] {
+  for (const e of exceptions) {
+    const diff = diffs.find((d) => d.at === e.at);
+    if (diff?.kana !== e.kana || diff.sound !== e.listed) throw new Error(`例外の「${e.kana}」が、${e.at} 字目の読み替え「${diff?.kana}→${diff?.sound}」に合わない`);
+  }
+  return diffs.map((diff) => {
+    const exception = exceptions.find((e) => e.at === diff.at);
+    return exception ? { at: diff.at, kana: diff.kana, sound: exception.sound, rule: 'ユーザーの判断' } : diff;
+  });
+}
+
+// 一覧と照合するときに、例外の所を一覧の表記を当てた発音へ戻す。rule は戻さない。照合は発音の字と位置だけを見る。
+export function withoutSoundExceptions(diffs: readonly SoundDiff[], exceptions: readonly Exception[]): SoundDiff[] {
+  return diffs.map((diff) => {
+    const exception = exceptions.find((e) => e.at === diff.at && e.kana === diff.kana && e.sound === diff.sound);
+    return exception ? { ...diff, sound: exception.listed } : diff;
+  });
 }

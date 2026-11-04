@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { applyDiffs, soundDiffs, withListNotation } from '../../scripts/cards/sound.ts';
+import { applyDiffs, soundDiffs, withListNotation, withSoundExceptions } from '../../scripts/cards/sound.ts';
 
 const read = (kana: string, heads: number[] = [0]) => applyDiffs(kana, soundDiffs(kana, new Set(heads)));
 
@@ -28,7 +28,7 @@ test('ゐ、ゑ、を、ぢ、づ は今の仮名の音で読む', () => {
 test('長音になる綴りは、読手テキストの一覧の表記のとおり「ー」で読む', () => {
   assert.equal(read('あふことの'), 'おーことの');
   assert.equal(read('いふべき'), 'ゆーべき');
-  assert.equal(read('けふを'), 'きょーお');
+  assert.equal(read('けふここのへに'), 'きょーここのえに');
   assert.equal(read('すてふ'), 'すちょー');
   assert.equal(read('まがふ'), 'まごー');
 });
@@ -110,16 +110,37 @@ test('規則で読み替えない字に一覧の「ー」があるときは、�
 });
 
 test('字数の変わる読み替えも、一覧と同じ字なら、そのまま残す', () => {
-  const { sound, diffs } = listed('けふを', { ...none, furigana: [{ at: 0, length: 2, reading: 'きょー' }] });
-  assert.equal(sound, 'きょーお');
-  assert.deepEqual(diffs, soundDiffs('けふを', new Set([0])));
+  // 61番の「けふ」。一覧も「きょー」と振る。
+  const { sound, diffs } = listed('けふここのへに', { ...none, furigana: [{ at: 0, length: 2, reading: 'きょー' }] });
+  assert.equal(sound, 'きょーここのえに');
+  assert.deepEqual(diffs, soundDiffs('けふここのへに', new Set([0])));
 });
 
 test('字数の変わる読み替えの途中で一覧と食い違うときは止まる', () => {
-  assert.throws(() => listed('けふを', { ...none, notes: [{ at: 0, length: 2, reading: 'きょお' }] }), /読み替えの途中/);
+  // 一覧の注は1字ずつ当てるので、「てふ」→「ちょー」の途中の字だけを代えられない。
+  assert.throws(() => listed('すてふ', { ...none, notes: [{ at: 1, length: 2, reading: 'ちょう' }] }), /読み替えの途中/);
 });
 
 test('一覧の読みの字数が、掛かる範囲の発音の字数と合わないときは止まる', () => {
   assert.throws(() => listed('かよふ', { ...none, furigana: [{ at: 2, length: 1, reading: 'ーう' }] }), /字数/);
   assert.throws(() => listed('おもふ', { ...none, notes: [{ at: 1, length: 2, reading: 'も' }] }), /字数/);
+});
+
+// 54番の四句の「けふ」は、一覧のふりがなの「きょー」に代えて、ユーザーの判断で「きょ」と読む。
+const kyo = { at: 0, kana: 'けふ', listed: 'きょー', sound: 'きょ' };
+
+test('札ごとの例外の所は、一覧の表記を当てた読み替えに代えて例外の発音で読み、字数が変わってよい', () => {
+  const diffs = withSoundExceptions(soundDiffs('けふを', new Set([0])), [kyo]);
+  assert.equal(applyDiffs('けふを', diffs), 'きょお');
+  assert.deepEqual(diffs, [
+    { at: 0, kana: 'けふ', sound: 'きょ', rule: 'ユーザーの判断' },
+    { at: 2, kana: 'を', sound: 'お', rule: 'ワ行' },
+  ]);
+});
+
+test('例外の所の読み替えが、例外の仮名と一覧の表記を当てた発音に合わないときは止まる', () => {
+  const rule = soundDiffs('けふを', new Set([0]));
+  assert.throws(() => withSoundExceptions(rule, [{ ...kyo, listed: 'きょう' }]), /例外/);
+  assert.throws(() => withSoundExceptions(rule, [{ ...kyo, kana: 'てふ' }]), /例外/);
+  assert.throws(() => withSoundExceptions(rule, [{ ...kyo, at: 1 }]), /例外/);
 });

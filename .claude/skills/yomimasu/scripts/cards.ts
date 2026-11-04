@@ -12,7 +12,8 @@ const UPPER_TAIL_TWO_BEFORE: ReadonlySet<number> = new Set([
 const LOWER_TAIL_THREE_BEFORE = ['もがな', 'おもへ', 'おもふ', 'なくに', 'ものを'];
 
 // 「一覧のふりがな」と「一覧の注」は、規則の読み替えに代えて、読み方一覧のふりがなの「ー」と注の字で書いた箇所である。
-export type SoundRule = '語中のハ行' | 'ワ行' | '四つ仮名' | '長音' | 'む' | '一覧のふりがな' | '一覧の注';
+// 「ユーザーの判断」は、一覧の表記に代えて、ユーザーが聞いて決めた読みで書いた札ごとの例外である（2026-11-04。54番の四句の1か所）。
+export type SoundRule = '語中のハ行' | 'ワ行' | '四つ仮名' | '長音' | 'む' | '一覧のふりがな' | '一覧の注' | 'ユーザーの判断';
 
 export type SoundDiff = { at: number; kana: string; sound: string; rule: SoundRule };
 
