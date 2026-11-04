@@ -33,7 +33,13 @@ dir=$(cd "$dir" && pwd -P) || exit 0
 # 書き換えてから Skill で使えば許可を広げられるので、設定と同じく守る。入れ子の SKILL.md と .claude/ の下も、
 # Claude がそのフォルダーを触るとスキルとして読まれるので、深さによらず守る。
 # 大文字と小文字を区別しないファイルシステムでは、名前の綴りが違っても同じファイルに書く。
-inside=$(tr '[:upper:]' '[:lower:]' <<<"${path##*/.claude/skills/yomimasu/}")
+# 入れ子に同じ並びがあっても .claude の部分が見えるよう、最初の並びまでだけを取り除く。
+inside=$(tr '[:upper:]' '[:lower:]' <<<"${path#*/.claude/skills/yomimasu/}")
 [[ /$inside/ != */.claude/* && ${inside##*/} != skill.md ]] || exit 0
+
+# 書く前に Claude Code が整える綴り（最後の空白など）を1つずつ追わず、スキルの下で使う文字に絞る。
+# スキルのファイル名は英数字で書いているので、日本語の名前のファイルも書かせない。
+safe_chars='^[a-z0-9._/-]+$'
+[[ $inside =~ $safe_chars ]] || exit 0
 
 printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow"}}}'
