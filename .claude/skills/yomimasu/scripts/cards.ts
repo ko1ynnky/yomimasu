@@ -60,9 +60,6 @@ export type Card = {
   };
 };
 
-// 「あふ」は「おう」と書くが、聞こえる音は「おほ」の「おお」と同じである。
-export const heard = (sound: string) => sound.replaceAll('おう', 'おお');
-
 export function kimarijiLengths(uppers: ReadonlyMap<number, string>): Map<number, number> {
   const all = [...uppers.values()];
   return new Map(

@@ -4,7 +4,6 @@ import { readFileSync } from 'node:fs';
 import {
   GRAND_CARDS,
   JOKA,
-  heard,
   kanaOffset,
   kimarijiLengths,
   markedText,
@@ -291,8 +290,9 @@ function kanaOfSoundPrefix(card: Omit<Card, 'kimariji'>, length: number): string
   throw new Error(`${card.no} 番の決まり字が上の句に収まらない`);
 }
 
+// 上の句の発音は「おう」を「おお」に揃えずに比べる。表は一覧の表記に合わせてあり、上の句に「おう」が残るのは16番の「生ふる」だけで、一覧の注が（う）だからである。
 export function withKimariji(cards: Omit<Card, 'kimariji'>[]): Card[] {
-  const upperSound = (card: Omit<Card, 'kimariji'>) => heard(card.phrases.slice(0, 3).map((p) => p.sound).join(''));
+  const upperSound = (card: Omit<Card, 'kimariji'>) => card.phrases.slice(0, 3).map((p) => p.sound).join('');
   const lengths = kimarijiLengths(new Map(cards.filter((c) => c.no !== JOKA).map((c) => [c.no, upperSound(c)])));
   return cards.map((card) => {
     const length = lengths.get(card.no);

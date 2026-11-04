@@ -4,7 +4,6 @@ import deck from '../../.claude/skills/yomimasu/assets/cards.json' with { type: 
 import {
   GRAND_CARDS,
   JOKA,
-  heard,
   kimarijiLengths,
   markedText,
   ruleStretchesOf,
@@ -270,11 +269,11 @@ test('本文と読みは、かたまりをつないだものと一致する', ()
 });
 
 test('決まり字はすべての札で一意である', () => {
-  const lengths = kimarijiLengths(new Map(poems.map((c) => [c.no, heard(upperSound(c))])));
+  const lengths = kimarijiLengths(new Map(poems.map((c) => [c.no, upperSound(c)])));
   for (const c of poems) {
     assert.ok(c.kimariji);
-    assert.equal(c.kimariji.sound, heard(upperSound(c)).slice(0, lengths.get(c.no)), `${c.no} 番`);
-    const sharing = poems.filter((other) => heard(upperSound(other)).startsWith(c.kimariji!.sound));
+    assert.equal(c.kimariji.sound, upperSound(c).slice(0, lengths.get(c.no)), `${c.no} 番`);
+    const sharing = poems.filter((other) => upperSound(other).startsWith(c.kimariji!.sound));
     assert.deepEqual(sharing.map((o) => o.no), [c.no]);
   }
   assert.equal(new Set(poems.map((c) => c.kimariji!.sound)).size, 100);
