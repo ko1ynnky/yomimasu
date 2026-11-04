@@ -7,11 +7,12 @@
 | ソースコード、スクリプト、設定ファイル、開発の文書 | リポジトリ全体 | MIT License |
 | スキルの `SKILL.md` | スキルのフォルダー | MIT License |
 | 測定の定義 | `docs/measure.md` | MIT License |
-| 知識の文章 | `content/`（1首のページの文 `content/karuta/rules.ts` を含みます）、スキル `yomimasu` の `references/`。`test/site/karuta.test.ts` と `e2e/textbook.spec.ts` の期待値にも、その文の一部があります | 権利を留保します。読むことと、個人の練習で使うことだけを認めます |
+| 知識の文章 | `content/`（1首のページの文 `content/karuta/rules.ts` を含みます）、スキル `yomimasu` の `references/`。`test/site/karuta.test.ts`、`test/site/mouth.test.ts`、`e2e/textbook.spec.ts`、`e2e/mouth.spec.ts` の期待値にも、その文の一部があります | 権利を留保します。読むことと、個人の練習で使うことだけを認めます |
 | 札の文字のデータ | `.claude/skills/yomimasu/assets/cards.json` の本文の列 | 再利用を認めません。元のデータの権利は[外部のデータ](#外部のデータ)のとおりです |
 | そのほかのデータ | 置くときにここへ書きます | 再利用を認めません。出典と権利は、置くときにここへ書きます |
-| 札ごとの読みの表 | `.claude/skills/yomimasu/assets/cards.json`。同じ値を含む `scripts/cards/corrections.ts`、`.claude/skills/yomimasu/scripts/cards.ts` の札の番号、`test/cards/` の期待値（ふりがな、注、別の読み、余韻の印の値は `test/cards/table.test.ts`、`test/cards/assemble.test.ts`、`test/cards/sound.test.ts`）、`docs/ui-sample.html` の見本の3首と100首の決まり字、`test/site/lyrics.test.ts`、`test/site/karuta.test.ts`、`e2e/stage.spec.ts`、`e2e/textbook.spec.ts` の期待値。教科書の1首のページと100首の一覧は、組み立てのときにこの表から作ります | 再利用を認めません。伸ばす箇所は抜粋版の、ふりがな、注、別の読み、余韻の印は完全版の内容として、全日本かるた協会の回答の範囲で使っています |
+| 札ごとの読みの表 | `.claude/skills/yomimasu/assets/cards.json`。同じ値を含む `scripts/cards/corrections.ts`、`.claude/skills/yomimasu/scripts/cards.ts` の札の番号、`test/cards/` の期待値（ふりがな、注、別の読み、余韻の印の値は `test/cards/table.test.ts`、`test/cards/assemble.test.ts`、`test/cards/sound.test.ts`）、`docs/ui-sample.html` の見本の3首と100首の決まり字、`test/site/lyrics.test.ts`、`test/site/karuta.test.ts`、`test/site/mouth.test.ts`、`e2e/stage.spec.ts`、`e2e/textbook.spec.ts`、`e2e/mouth.spec.ts` の期待値。教科書の1首のページと100首の一覧は、組み立てのときにこの表から作ります | 再利用を認めません。伸ばす箇所は抜粋版の、ふりがな、注、別の読み、余韻の印は完全版の内容として、全日本かるた協会の回答の範囲で使っています |
 | ロゴ、図、画像 | 置くときにここへ書きます | 再利用を認めません |
+| 口の形と「ん」の位置の図 | `content/karuta/mouth.ts`（教科書の「ポイントを知る」と1首のページに出ます） | 再利用を認めません。このアプリが一般の音声学の資料と研究をもとに描いたもので、ほかの図を写していません。出典は `.claude/skills/yomimasu/references/mouth-shapes.md` の「出典」にあります。読手テキストの調音点・調音法の一覧と口腔断面図は使っていません |
 | 音声 | リポジトリには置きません | 録音した人の権利のままです。再利用を認めません。出典は[音声](#音声)に書きます |
 
 ## 外部のデータ
@@ -46,12 +47,13 @@
 
 ## そのほかの資料
 
-知識の文章（`content/` とスキル `yomimasu` の `references/`）は、読手テキストのほかに次の資料を使います。使うと決めた日は 2026-11-04 です。
+知識の文章（`content/` とスキル `yomimasu` の `references/`）は、読手テキストのほかに次の資料を使います。使うと決めた日は、講習資料とメモが 2026-11-04、一般の音声学の資料と研究の論文が 2026-11-05 です。
 
 | 資料 | 版 | 使う範囲 |
 | --- | --- | --- |
 | 全日本かるた協会『読手講習ビデオ（PDF版）』 | 2020年10月。協会のサイトで公開されている PDF | 解説の材料にします。文は自分の言葉で書き、項目ごとにスライドの番号を記録します |
 | A級公認読手が書いたメモ2本。初めて読む人向けのものと、大会で読む人向けのもの | 前者は2018年作成、後者は2020年作成で、どちらも2022年更新 | 解説の材料にします。協会の基準ではなく、読手個人のやり方として書きます。著者から使う許可を得ています。著者の名前は書きません |
+| 一般の音声学の公開の資料：Wikipedia 英語版の「Japanese phonology」「Vowel」「Nasal consonant」「Uvular nasal」、日本語版の「日本語の音韻」、国際音声記号の表。「ん」を実測した研究の論文と報告書：Maekawa 2019（ICPhS）、前川ほか 2018（日本音響学会）、科研費 17H02339 の研究成果報告書、Hashi ほか 2016（音声研究）、Mizoguchi 2019（博士論文の要旨）、Youngberg 2021（Glossa）、渡辺・山田・中山「撥音／ん／の歌唱時における周波数下降を決める要因について」（大阪芸術大学の紀要論文） | URL と参照した日は `.claude/skills/yomimasu/references/mouth-shapes.md` の「出典」にあります。論文は、調査で保存した原文を 2026-11-05 に読みました（Mizoguchi 2019 は要旨だけ） | 余韻で伸ばす最後の音（口の形、「ん」の位置と伸ばし方）の文と図にだけ使います。文は自分の言葉で書き、資料の文と図を写しません。研究の結論、このアプリの解釈、作者の見解を分けて書き、競技かるたの読みで確かめたようには書きません。論文の著者名は、出典の表示にだけ書きます |
 
 - どの資料も、ページをそのまま載せません。
 - この資料から来た内容も MIT License の対象外で、再利用を認めません。
