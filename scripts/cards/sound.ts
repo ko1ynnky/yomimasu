@@ -1,13 +1,14 @@
 // 歴史的仮名遣いの仮名を、読むときの音の仮名へ読み替える規則。
 
-import type { SoundDiff, SoundRule } from '../../.claude/skills/yomimasu/scripts/cards.ts';
+import type { Furigana, SoundDiff, SoundRule } from '../../.claude/skills/yomimasu/scripts/cards.ts';
 
+// 長音は読手テキストの一覧の表記に合わせて「ー」で書く（2026-11-04 のユーザーの判断）。
 const LONG_VOWELS: readonly (readonly [string, string])[] = [
-  ['あふ', 'おう'],
-  ['いふ', 'ゆう'],
-  ['けふ', 'きょう'],
-  ['てふ', 'ちょう'],
-  ['がふ', 'ごう'],
+  ['あふ', 'おー'],
+  ['いふ', 'ゆー'],
+  ['けふ', 'きょー'],
+  ['てふ', 'ちょー'],
+  ['がふ', 'ごー'],
 ];
 
 const SINGLE: Readonly<Record<string, { sound: string; rule: SoundRule }>> = {
@@ -32,8 +33,11 @@ export function soundDiffs(kana: string, heads: ReadonlySet<number>): SoundDiff[
   for (let at = 0; at < kana.length; at++) {
     const long = LONG_VOWELS.find(([from]) => kana.startsWith(from, at));
     if (long) {
-      diffs.push({ at, kana: long[0], sound: long[1], rule: '長音' });
-      at += long[0].length - 1;
+      const [from, sound] = long;
+      // 字数の同じ綴りを1字ずつに分けるのは、一覧のふりがなが字ごとに付き（45番の い→ゆ、ふ→ー）、44番の「逢ふ」のように漢字と仮名の部分にまたがるからである。
+      if (from.length === sound.length) diffs.push(...[...from].map((char, i) => ({ at: at + i, kana: char, sound: sound[i], rule: '長音' as const })));
+      else diffs.push({ at, kana: from, sound, rule: '長音' });
+      at += from.length - 1;
       continue;
     }
     const single = SINGLE[kana[at]];
@@ -52,4 +56,32 @@ export function applyDiffs(kana: string, diffs: readonly SoundDiff[]): string {
     cursor = diff.at + diff.kana.length;
   }
   return sound + kana.slice(cursor);
+}
+
+type Span = Pick<Furigana, 'at' | 'length' | 'reading'>;
+
+// 表の発音は一覧の表記に合わせる。一覧のふりがなは「ー」の字だけを、注は字のすべてを、規則の読み替えに代えて書く（2026-11-04 のユーザーの判断）。
+// 字数は変えないので、伸ばす位置とふりがなの位置は、当てる前の句で求めたものをそのまま使える。
+// 範囲が読み替えの途中で始まるか終わるふりがなは、notationOnLine が止めるので、ここでは見ない。
+export function withListNotation(kana: string, diffs: readonly SoundDiff[], notation: { furigana: readonly Span[]; notes: readonly Span[] }): SoundDiff[] {
+  const result = new Map(diffs.map((diff) => [diff.at, diff]));
+  const overwrite = (span: Span, applies: (char: string) => boolean, rule: SoundRule) => {
+    let read = 0;
+    for (let at = span.at; at < span.at + span.length; ) {
+      const diff = diffs.find((d) => d.at <= at && at < d.at + d.kana.length);
+      const sound = diff?.sound ?? kana[at];
+      const listed = span.reading.slice(read, read + sound.length);
+      if (listed.length < sound.length) throw new Error(`一覧の読み「${span.reading}」の字数が「${kana}」の発音の字数より少ない`);
+      if ([...sound].some((char, i) => applies(listed[i]) && listed[i] !== char)) {
+        if (sound.length !== 1 || (diff && diff.kana.length !== 1)) throw new Error(`「${kana}」の「${diff?.kana}」の読み替えの途中で、一覧の読み「${span.reading}」と食い違う`);
+        result.set(at, { at, kana: kana[at], sound: listed, rule });
+      }
+      read += sound.length;
+      at += diff?.kana.length ?? 1;
+    }
+    if (read !== span.reading.length) throw new Error(`一覧の読み「${span.reading}」の字数が「${kana}」の発音の字数より多い`);
+  };
+  for (const span of notation.furigana) overwrite(span, (char) => char === 'ー', '一覧のふりがな');
+  for (const span of notation.notes) overwrite(span, () => true, '一覧の注');
+  return [...result.values()].sort((a, b) => a.at - b.at);
 }

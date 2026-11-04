@@ -20,7 +20,7 @@ import {
 } from '../../.claude/skills/yomimasu/scripts/cards.ts';
 import { KANJI_HINTS, KANJI_SPLITS, LINE_FIXES, PHRASE_LENGTHS, keptOf, type LineKey } from './corrections.ts';
 import type { ListCard, ListLine, ListRuby } from './list.ts';
-import { applyDiffs, soundDiffs } from './sound.ts';
+import { applyDiffs, soundDiffs, withListNotation } from './sound.ts';
 
 const STANDARD_LENGTHS = [5, 7, 5, 7, 7];
 const KANJI_RUN = /[\u4e00-\u9fff々]+/;
@@ -247,17 +247,23 @@ export function buildCard(no: number, lines: Lines, fixes: TextFix[], list: List
   const ruleStretches = ruleStretchesOf(no, phrases, GRAND_CARDS.has(no));
   const upperNotation = notationOfLine(upper, 0, list.upper);
   const lowerNotation = notationOfLine(lower, 3, list.lower);
+  const furigana = [...upperNotation.furigana, ...lowerNotation.furigana];
+  const notes = [...upperNotation.notes, ...lowerNotation.notes];
+  const onPhrase = (spans: Furigana[], index: number) => spans.filter((s) => s.phrase === index);
   return {
     no,
-    phrases,
+    phrases: phrases.map((phrase, index) => {
+      const diffs = withListNotation(phrase.kana, phrase.diffs, { furigana: onPhrase(furigana, index), notes: onPhrase(notes, index) });
+      return { ...phrase, sound: applyDiffs(phrase.kana, diffs), diffs };
+    }),
     ruleStretches,
     stretches,
     marked: {
       upper: markedText(upper, stretches.filter((s) => s.phrase <= 2)),
       lower: markedText(lower, stretches.filter((s) => s.phrase >= 3).map((s) => ({ ...s, phrase: s.phrase - 3 }))),
     },
-    furigana: [...upperNotation.furigana, ...lowerNotation.furigana],
-    notes: [...upperNotation.notes, ...lowerNotation.notes],
+    furigana,
+    notes,
     alternatives: [...upperNotation.alternatives, ...lowerNotation.alternatives],
     yoin: yoinOf(phrases, list),
     origin: {

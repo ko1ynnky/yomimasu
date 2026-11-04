@@ -13,6 +13,7 @@ import {
   type Stretch,
 } from '../../.claude/skills/yomimasu/scripts/cards.ts';
 import { comparable } from '../../scripts/cards/assemble.ts';
+import { applyDiffs, soundDiffs, withListNotation } from '../../scripts/cards/sound.ts';
 
 const cards = deck.cards as unknown as Card[];
 const card = (no: number) => {
@@ -79,12 +80,12 @@ test('語の切れ目で読み替えが変わる札の発音', () => {
 });
 
 test('語の形で読み替わる発音', () => {
-  assert.equal(card(2).phrases[3].sound, 'ころもほすちょう');
-  assert.ok(card(54).phrases[3].sound.startsWith('きょうお'));
-  assert.ok(card(45).phrases[1].sound.startsWith('ゆうべき'));
-  assert.ok(card(76).phrases[3].sound.endsWith('まごう'));
-  assert.equal(card(95).phrases[2].sound, 'おおうかな');
-  assert.equal(card(8).phrases[4].sound, 'ひとわゆうなり');
+  assert.equal(card(2).phrases[3].sound, 'ころもほすちょー');
+  assert.ok(card(54).phrases[3].sound.startsWith('きょーお'));
+  assert.ok(card(45).phrases[1].sound.startsWith('ゆーべき'));
+  assert.ok(card(76).phrases[3].sound.endsWith('まごー'));
+  assert.equal(card(95).phrases[2].sound, 'おおおかな');
+  assert.equal(card(8).phrases[4].sound, 'ひとわゆーなり');
   assert.equal(card(3).phrases[4].sound, 'ひとりかもねん');
   assert.equal(card(15).phrases[2].sound, 'わかなつむ');
   assert.equal(card(8).phrases[2].sound, 'しかぞすむ');
@@ -102,6 +103,135 @@ test('発音の列は、仮名に読み替えを当てたものと一致する',
       }
       assert.equal(rebuilt + p.kana.slice(cursor), p.sound, `${c.no} 番「${p.kana}」`);
     }
+  }
+});
+
+// 規則の読み替えは、句の頭、漢字のかたまりの頭、由来に書いた字を語の頭として当てる。表を作るときと同じである。
+const ruleDiffs = (c: Card, index: number) => {
+  const p = c.phrases[index];
+  const heads = new Set([0, ...c.origin.sound.kept.filter((k) => k.phrase === index).map((k) => k.at)]);
+  let offset = 0;
+  for (const [text, kana] of p.parts) {
+    if (text !== kana) heads.add(offset);
+    offset += kana.length;
+  }
+  return soundDiffs(p.kana, heads);
+};
+const onPhrase = (spans: Card['furigana'], index: number) => spans.filter((s) => s.phrase === index);
+// 一覧のふりがなの「ー」の字が掛かる、発音の位置である。
+const listedLongs = (c: Card, index: number) =>
+  onPhrase(c.furigana, index).flatMap((f) => [...f.reading].flatMap((char, i) => (char === 'ー' ? [soundOffset(c.phrases[index], f.at) + i] : [])));
+const notedPositions = (c: Card, index: number) =>
+  onPhrase(c.notes, index).flatMap((n) => Array.from({ length: n.reading.length }, (_, i) => soundOffset(c.phrases[index], n.at) + i));
+
+test('一覧のふりがなが「ー」の所は、表の発音も「ー」である', () => {
+  for (const c of cards) {
+    c.phrases.forEach((p, index) => {
+      for (const at of listedLongs(c, index)) assert.equal(p.sound[at], 'ー', `${c.no} 番「${p.sound}」の ${at} 字目`);
+    });
+  }
+});
+
+test('表の発音の「ー」は、一覧のふりがなの「ー」の所にしかない', () => {
+  for (const c of cards) {
+    c.phrases.forEach((p, index) => {
+      const longs = [...p.sound].flatMap((char, at) => (char === 'ー' ? [at] : []));
+      assert.deepEqual(longs, listedLongs(c, index), `${c.no} 番「${p.sound}」`);
+    });
+  }
+});
+
+test('一覧の注の所は、表の発音が注の字である', () => {
+  for (const c of cards) {
+    c.phrases.forEach((p, index) => {
+      for (const n of onPhrase(c.notes, index)) {
+        assert.equal(p.sound.slice(soundOffset(p, n.at), soundOffset(p, n.at + n.length)), n.reading, `${c.no} 番「${p.sound}」`);
+      }
+    });
+  }
+  // 16番の「生ふる」は、一覧の注が（う）である。
+  assert.equal(card(16).phrases[2].sound, 'みねにおうる');
+});
+
+test('一覧に「ー」も注もない所は、表の発音が規則の読み替えのとおりである', () => {
+  for (const c of cards) {
+    c.phrases.forEach((p, index) => {
+      const rule = applyDiffs(p.kana, ruleDiffs(c, index));
+      const listed = new Set([...listedLongs(c, index), ...notedPositions(c, index)]);
+      assert.equal(p.sound.length, rule.length, `${c.no} 番「${p.sound}」`);
+      for (const [at, char] of [...p.sound].entries()) {
+        if (!listed.has(at)) assert.equal(char, rule[at], `${c.no} 番「${p.sound}」の ${at} 字目`);
+      }
+    });
+  }
+});
+
+test('表の句の読み替えは、規則の読み替えに一覧のふりがなの「ー」と注を当てたものである', () => {
+  for (const c of cards) {
+    c.phrases.forEach((p, index) => {
+      const expected = withListNotation(p.kana, ruleDiffs(c, index), { furigana: onPhrase(c.furigana, index), notes: onPhrase(c.notes, index) });
+      assert.deepEqual(p.diffs, expected, `${c.no} 番「${p.kana}」`);
+    });
+  }
+});
+
+test('一覧の表記に合わせて、長音を「ー」、注の所を注の字で書いた31句の発音', () => {
+  const expected: [no: number, phrase: number, sound: string][] = [
+    // 一覧のふりがなが「ー」の27句。お段に続く「ふ」
+    [40, 3, 'ものやおもーと'],
+    [40, 4, 'ひとのとーまで'],
+    [48, 4, 'おもーころかな'],
+    [78, 1, 'かよーちどりの'],
+    [85, 1, 'ものおもーころわ'],
+    [96, 0, 'はなさそー'],
+    [99, 3, 'よおおもーゆえに'],
+    [99, 4, 'ものおもーみわ'],
+    // あふ
+    [10, 4, 'おーさかのせき'],
+    [25, 1, 'おーさかやまの'],
+    [56, 4, 'おーこともがな'],
+    [62, 3, 'よにおーさかの'],
+    // がふ
+    [76, 3, 'くもいにまごー'],
+    // てふ、けふ
+    [2, 3, 'ころもほすちょー'],
+    [41, 0, 'こいすちょー'],
+    [54, 3, 'きょーおかぎりの'],
+    [61, 3, 'きょーここのえに'],
+    // いふ
+    [8, 4, 'ひとわゆーなり'],
+    [22, 4, 'あらしとゆーらん'],
+    [45, 1, 'ゆーべきひとわ'],
+    [63, 4, 'ゆーよしもがな'],
+    // そのほか
+    [21, 1, 'いーしばかりに'],
+    [60, 2, 'とーければ'],
+    [70, 4, 'あきのゆーぐれ'],
+    [87, 4, 'あきのゆーぐれ'],
+    [97, 2, 'ゆーなぎに'],
+    [98, 2, 'ゆーぐれわ'],
+    // 一覧の注が（お）の4句
+    [20, 4, 'あわんとぞおもお'],
+    [77, 4, 'あわんとぞおもお'],
+    [44, 0, 'おおことの'],
+    [95, 2, 'おおおかな'],
+  ];
+  assert.equal(expected.length, 31);
+  for (const [no, phrase, sound] of expected) assert.equal(card(no).phrases[phrase].sound, sound, `${no} 番の${phrase + 1}句`);
+});
+
+test('一覧の注が規則の読み替えと同じ字の7句は、規則の読み替えのままである', () => {
+  for (const [no, phrase] of [
+    [16, 2],
+    [39, 0],
+    [45, 2],
+    [60, 0],
+    [62, 0],
+    [71, 0],
+    [95, 0],
+  ]) {
+    assert.ok(onPhrase(card(no).notes, phrase).length > 0, `${no} 番の${phrase + 1}句`);
+    assert.deepEqual(card(no).phrases[phrase].diffs, ruleDiffs(card(no), phrase), `${no} 番の${phrase + 1}句`);
   }
 });
 

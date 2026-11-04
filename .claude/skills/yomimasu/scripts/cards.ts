@@ -11,7 +11,8 @@ const UPPER_TAIL_TWO_BEFORE: ReadonlySet<number> = new Set([
 
 const LOWER_TAIL_THREE_BEFORE = ['もがな', 'おもへ', 'おもふ', 'なくに', 'ものを'];
 
-export type SoundRule = '語中のハ行' | 'ワ行' | '四つ仮名' | '長音' | 'む';
+// 「一覧のふりがな」と「一覧の注」は、規則の読み替えに代えて、読み方一覧のふりがなの「ー」と注の字で書いた箇所である。
+export type SoundRule = '語中のハ行' | 'ワ行' | '四つ仮名' | '長音' | 'む' | '一覧のふりがな' | '一覧の注';
 
 export type SoundDiff = { at: number; kana: string; sound: string; rule: SoundRule };
 
@@ -89,7 +90,6 @@ export function ruleStretchesOf(no: number, phrases: readonly { kana: string }[]
   ];
 }
 
-// 字数の変わらない読み替え（「いふ」と「ゆう」など）の途中は、字ごとに対応させる。ふりがなが「ゆ」と「ー」のように字ごとに付くからである。
 export function soundOffset(phrase: Phrase, kanaOffset: number): number {
   let offset = kanaOffset;
   for (const diff of phrase.diffs) {
