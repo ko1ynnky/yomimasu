@@ -99,7 +99,7 @@ test('かなの表記は、ふりがなのある字をふりがなの音で、�
   );
 });
 
-test('かなの表記では、読みが2拍以上の字を1拍ずつに分けて時間を等分する。最後の字が1拍の組では、どの字の時刻も漢字の表記と同じになる', () => {
+test('かなの表記では、読みが2拍以上の字を1拍ずつに分けて時間を等分する', () => {
   const kanji = timed(READ, 'kanji');
   const kana = timed(READ, 'kana');
   const ariake = kanji.shimo[0].find((glyph) => glyph.text === '有明')!;
@@ -112,31 +112,48 @@ test('かなの表記では、読みが2拍以上の字を1拍ずつに分けて
   close(split[3].to, ariake.to);
   split.forEach((glyph) => close(sec(glyph), sec(ariake) / 4));
   assert.deepEqual(kana.last, kanji.last);
-  const starts = (lines: Glyph[][]) => lines.flat().map((glyph) => glyph.at);
-  for (const part of ['shimo', 'kami'] as const) {
-    for (const at of starts(kanji[part])) assert.ok(starts(kana[part]).some((other) => Math.abs(other - at) < 1e-9), `${part} ${at}`);
+});
+
+test('下の句が漢字で終わる札では、最後の拍を 5.0秒に置き、漢字の表記の最後の字は自分の拍の範囲で塗る', () => {
+  // 29番は「置きまどはせる白菊の花」で終わる。「花」は「は」と「な」の2拍である。
+  const kanji = timed({ shimo: 29, kami: 1 }, 'kanji');
+  const kana = timed({ shimo: 29, kami: 1 }, 'kana');
+  assert.equal(kana.last.text, 'な');
+  assert.equal(kana.last.at, 5);
+  const ha = kana.shimo.at(-1)!.at(-1)!;
+  assert.equal(ha.text, 'は');
+  close(ha.to, 5);
+
+  assert.deepEqual([kanji.last.text, kanji.last.ruby], ['花', 'はな']);
+  close(kanji.last.at, ha.at);
+  close(kanji.last.to, kana.last.to);
+  assert.ok(kanji.last.at < 5);
+  // 漢字の表記の下の句は、「花」の「は」の分を残して、5.0秒より前に終わる。
+  close(kanji.shimo.flat().at(-1)!.to, ha.at);
+  assert.deepEqual(kanji.yoin, kana.yoin);
+});
+
+test('どの組でも、表記を切り替えても同じ拍は同じ時刻に読む', () => {
+  const edges = (lyrics: ReturnType<typeof timed>) => [...lyrics.shimo.flat(), lyrics.last, ...lyrics.kami.flat()].flatMap((glyph) => [glyph.at, glyph.to]);
+  for (const card of cards.filter((c) => c.no !== 0)) {
+    for (const pair of [
+      { shimo: card.no, kami: card.no === 1 ? 2 : 1 },
+      { shimo: card.no === 1 ? 2 : 1, kami: card.no },
+    ]) {
+      const kana = edges(timed(pair, 'kana'));
+      for (const edge of edges(timed(pair, 'kanji'))) assert.ok(kana.some((other) => Math.abs(other - edge) < 1e-9), `${pair.shimo}→${pair.kami} ${edge}`);
+    }
   }
 });
 
-test('下の句が漢字で終わる札は、漢字の表記ではその字を、かなの表記では最後の音だけを余韻へ移す', () => {
-  // 2番は「天の香具山」で終わる。
-  const kanji = timed({ shimo: 2, kami: 1 }, 'kanji');
-  const kana = timed({ shimo: 2, kami: 1 }, 'kana');
-  assert.equal(kanji.last.text, '山');
-  assert.equal(kanji.last.ruby, 'やま');
-  assert.equal(kana.last.text, 'ま');
-  assert.equal(kana.shimo.at(-1)!.at(-1)!.text, 'や');
-  assert.equal(kanji.last.at, 5);
-  assert.equal(kana.last.at, 5);
-  close(kana.shimo.flat().at(-1)!.to, 5);
-});
-
-test('どの組でも、最後の字は余韻の始まりから始まり、余韻の終わりより前に読み終える', () => {
+test('どの組でも、最後の拍は余韻の始まりの 5.0秒から始まり、余韻の終わりより前に読み終える', () => {
   for (const card of cards.filter((c) => c.no !== 0)) {
-    for (const notation of ['kanji', 'kana'] as const) {
-      const { last, yoin } = timed({ shimo: card.no, kami: card.no === 1 ? 2 : 1 }, notation);
-      assert.equal(last.at, 5, `${card.no}番 ${notation}`);
-      assert.ok(last.to < yoin.to, `${card.no}番 ${notation}`);
-    }
+    const pair = { shimo: card.no, kami: card.no === 1 ? 2 : 1 };
+    const kana = timed(pair, 'kana');
+    const kanji = timed(pair, 'kanji');
+    assert.equal(kana.last.at, 5, `${card.no}番`);
+    assert.ok(kanji.last.at <= 5, `${card.no}番`);
+    close(kanji.last.to, kana.last.to, `${card.no}番`);
+    assert.ok(kana.yoin.from < kana.yoin.to, `${card.no}番`);
   }
 });
