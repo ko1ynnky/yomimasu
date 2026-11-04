@@ -1,4 +1,4 @@
-export type SourcePage = { title: string; command?: string; readName?: string; tool?: boolean; markdown: string };
+export type SourcePage = { title: string; command?: string; readName?: string; tool?: boolean; slug?: string; markdown: string };
 export type DocumentParts = {
   title: string;
   bodyHtml: string;
@@ -20,17 +20,23 @@ export function parseSource(source: string): SourcePage {
   if (!match || !title) throw new Error('先頭に title の行がない Markdown は組み立てられません');
   const command = fields.get('command');
   const readName = fields.get('read');
+  const slug = fields.get('slug');
+  if (slug !== undefined && !SLUG.test(slug)) throw new Error(`slug「${slug}」は英小文字、数字、ハイフンを / で区切って書きます`);
   return {
     title,
     ...(command ? { command } : {}),
     ...(readName ? { readName } : {}),
     ...(fields.get('tool') === 'true' ? { tool: true } : {}),
+    ...(slug ? { slug } : {}),
     markdown: match[2],
   };
 }
 
-export function outputPathOf(contentPath: string): string {
-  const route = contentPath.replace(/\.md$/, '');
+// 読んだ行にはファイルの名前を日本語のまま出すが、URL は共有しやすい英字にする（docs/ui-guide.md の8節）。
+const SLUG = /^[a-z0-9-]+(\/[a-z0-9-]+)*$/;
+
+export function outputPathOf(contentPath: string, slug?: string): string {
+  const route = slug ?? contentPath.replace(/\.md$/, '');
   return route === 'index' ? 'index.html' : `${route}/index.html`;
 }
 

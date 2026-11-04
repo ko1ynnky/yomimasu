@@ -32,6 +32,17 @@ test('ほかのファイルは固有の URL を持つ', () => {
   assert.equal(outputPathOf('kaku/001.md'), 'kaku/001/index.html');
 });
 
+test('日本語の名前のファイルは、先頭の slug の英字の URL に置く', () => {
+  const source = parseSource('---\ntitle: 総論を学ぶ\ncommand: 総論を学ぶ\nread: 総論.md\nslug: soron\n---\n本文\n');
+  assert.equal(source.slug, 'soron');
+  assert.equal(outputPathOf('総論.md', source.slug), 'soron/index.html');
+});
+
+test('slug に英小文字、数字、ハイフン、区切りの / のほかを使うと組み立てを止める', () => {
+  assert.throws(() => parseSource('---\ntitle: 総論\nslug: 総論\n---\n本文\n'), /slug/);
+  assert.throws(() => parseSource('---\ntitle: 総論\nslug: ../soron\n---\n本文\n'), /slug/);
+});
+
 const page = { title: '総論', bodyHtml: '<p>本文です。</p>', scriptPath: '/assets/main.js', stylePaths: ['/assets/main.css'] };
 
 test('HTML には本文が入るので、JS なしで読める', () => {
