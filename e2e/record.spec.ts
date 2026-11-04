@@ -216,7 +216,7 @@ test('補助を外すと、字の朱と区切りの囲みを出さずに「補�
   await expect(page.locator('.count')).toBeVisible();
   await expect(page.locator('.count')).toBeHidden({ timeout: 5000 });
   await expect(page.locator('.now b')).toHaveText('補助なし');
-  // 余韻を弱め始める 7 秒を過ぎるまで待つ。余韻の印の塗りは、その前後で式が変わる。
+  // 下の句を読み終えて、余韻の印を塗る時間に入るまで待つ。
   await page.waitForTimeout(7500);
   await expect(page.locator('.blk.is-now')).toHaveCount(0);
   expect(new Set(await paintOf(page, '.lyric [data-at]'))).toEqual(new Set(['0.00%']));

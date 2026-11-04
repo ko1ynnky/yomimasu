@@ -61,8 +61,6 @@ function rememberNotation(notation: Notation) {
   }
 }
 
-// 余韻の印の上の四角は声を保つ所、下の三角は声を弱め始めてよい余韻の最後の1秒である。形の境目と塗りの境目をそろえる。
-const holdRatioOf = ({ last, yoin }: TimedLyrics) => (yoin.hold - last.at) / (yoin.to - last.at);
 const pct = (ratio: number) => `${(ratio * 100).toFixed(2)}%`;
 
 const GlyphView = ({ glyph }: { glyph: Glyph }) => (
@@ -94,7 +92,7 @@ const LinesView = ({ lines }: { lines: Glyph[][] }) => (
 const YoinLine = ({ timed }: { timed: TimedLyrics }) => (
   <div class="ln">
     <GlyphView glyph={timed.last} />
-    <span class="yoin" role="img" aria-label="余韻" style={{ '--yoin-hold': pct(holdRatioOf(timed)) }}>
+    <span class="yoin" role="img" aria-label="余韻">
       {'　'}
     </span>
   </div>
@@ -130,10 +128,7 @@ function paint(root: HTMLElement, t: number, assisted: boolean, timed: TimedLyri
   };
   root.querySelectorAll<HTMLElement>('[data-at]').forEach((element) => set(element, '--p', pct(progress(Number(element.dataset.at), Number(element.dataset.to)))));
   const { yoin } = timed;
-  const hold = holdRatioOf(timed);
-  // 四角は最後の字を塗り終えてから弱め始めるまで、三角は余韻の最後の1秒で塗る。
-  const yoinDone = !assisted ? 0 : t < yoin.hold ? hold * progress(yoin.from, yoin.hold) : hold + (1 - hold) * progress(yoin.hold, yoin.to);
-  set(root.querySelector<HTMLElement>('.lyric .yoin'), '--yoin-done', pct(yoinDone));
+  set(root.querySelector<HTMLElement>('.lyric .yoin'), '--yoin-done', pct(progress(yoin.from, yoin.to)));
   // 読む前（t=0）は囲まない。まだどこも読んでいないからである。
   const now = phaseAt(phases, t).key;
   root.querySelectorAll<HTMLElement>('.blk').forEach((element) => element.classList.toggle('is-now', assisted && t > 0 && element.dataset.phase === now));

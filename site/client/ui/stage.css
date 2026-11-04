@@ -8,9 +8,9 @@
 .tate rt { font-family: var(--f-sans); font-size: 0.42em; letter-spacing: 0; color: var(--ink-3); }
 /* 歌の中の朱は「すでに読み上げた字」だけに使う。伸ばす印、余韻の印、決まり字も字と同じ色にする（2026-11-04 のユーザーの判断）。
    中に全角の空白を入れて字と同じ基準線に乗せる。空の箱は行の幅の中央に寄り、ふりがなのぶん右へずれる。
-   上の四角は声を保つ所、下の三角は声を弱め始めてよい余韻の最後の1秒である。全部を三角にすると、余韻の始めから弱めると読めてしまう（2026-11-04 のユーザーの判断）。
-   四角と三角の境目（--yoin-hold）は、stage.tsx が余韻の時刻から渡す */
-.yoin { display: inline-block; width: 1em; height: 1.5em; margin-top: 0.2em; line-height: 1; color: transparent; background: var(--ink); clip-path: polygon(25% 0, 75% 0, 75% var(--yoin-hold, 66.7%), 50% 100%, 25% var(--yoin-hold, 66.7%)); }
+   三角は、余韻に入ったら早めに弱め始める形（にんじん型）を表す。講習資料はこれを理想の消え方とする（スキルの references/timing.md、講習資料 s.25）。
+   上が四角、下が三角の五角形は採らない。音量を保ったまま続ける形（だいこん型）に近く読める（2026-11-04 のユーザーの判断） */
+.yoin { display: inline-block; width: 1em; height: 1.5em; margin-top: 0.2em; line-height: 1; color: transparent; background: var(--ink); clip-path: polygon(25% 0, 75% 0, 50% 100%); }
 .poem { display: grid; grid-template-columns: minmax(0, 1fr) 72px; gap: 8px; padding: 16px 14px; }
 .poem .tate { justify-self: center; --lyric: clamp(22px, 6.4vw, 28px); }
 .poem aside { display: flex; flex-direction: column; justify-content: space-between; text-align: right; }

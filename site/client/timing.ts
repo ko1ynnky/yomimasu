@@ -10,13 +10,11 @@ export type TimedLyrics = {
   shimo: Glyph[][];
   // 下の句の最後の字。余韻の3秒は最後の字を含めて数えるので、余韻の始まりに置く（スキルの references/timing.md の「余韻」。完全版 p.3、講習資料 s.8）。
   last: Glyph;
-  // 余韻の印は from から hold までを保ち、hold から to までで弱める。間の1秒に塗るものは置かない。「（間）」の字を置いた形は、実機で読みづらかった（2026-11-04 のユーザーの判断）。
-  yoin: { from: number; hold: number; to: number };
+  // 余韻の印は from から to までを同じ速さで塗る。保つ所と弱める所に分けて塗ると、音量を保ったまま続ける形（だいこん型）に読める（2026-11-04 のユーザーの判断）。
+  // 間の1秒に塗るものは置かない。「（間）」の字を置いた形は、実機で読みづらかった（同日のユーザーの判断）。
+  yoin: { from: number; to: number };
   kami: Glyph[][];
 };
-
-// 余韻の最後の1秒は、声を弱め始めてよい範囲である（2026-11-03 のユーザーの判断）。
-const FADE_SEC = 1;
 
 // 伸ばす印は2拍に数える。見本と同じ値で、読手の読みから測った長さではない。
 const NOBI_WEIGHT = 2;
@@ -93,7 +91,7 @@ export function timeLyrics(lines: PairLines, segments: readonly Segment[], notat
   return {
     shimo: shimo.lines,
     last,
-    yoin: { from: last.to, hold: yoinSpan.to - FADE_SEC, to: yoinSpan.to },
+    yoin: { from: last.to, to: yoinSpan.to },
     kami: kami.lines,
   };
 }

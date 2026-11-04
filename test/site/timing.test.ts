@@ -74,9 +74,9 @@ test('句の中の行の分かれ目は時刻に関わらず、句全体で割�
   close(kami[1][0].at, 9 + (6 * 7) / 25);
 });
 
-test('余韻の印は、最後の字を読み終えてから 7.0秒までを保ち、7.0〜8.0秒で弱める', () => {
+test('余韻の印は、最後の字を読み終えてから余韻の終わりの 8.0秒までを塗る', () => {
   const { last, yoin } = timed(READ);
-  assert.deepEqual(yoin, { from: last.to, hold: 7, to: 8 });
+  assert.deepEqual(yoin, { from: last.to, to: 8 });
 });
 
 test('間の 8〜9秒には、塗る字を置かない', () => {
@@ -131,12 +131,12 @@ test('下の句が漢字で終わる札は、漢字の表記ではその字を�
   close(kana.shimo.flat().at(-1)!.to, 5);
 });
 
-test('どの組でも、最後の字は余韻の始まりから始まり、余韻を弱め始める前に読み終える', () => {
+test('どの組でも、最後の字は余韻の始まりから始まり、余韻の終わりより前に読み終える', () => {
   for (const card of cards.filter((c) => c.no !== 0)) {
     for (const notation of ['kanji', 'kana'] as const) {
       const { last, yoin } = timed({ shimo: card.no, kami: card.no === 1 ? 2 : 1 }, notation);
       assert.equal(last.at, 5, `${card.no}番 ${notation}`);
-      assert.ok(last.to < yoin.hold, `${card.no}番 ${notation}`);
+      assert.ok(last.to < yoin.to, `${card.no}番 ${notation}`);
     }
   }
 });
