@@ -169,18 +169,24 @@ function tomofuda(card: Card, cards: readonly Card[]): Point[] {
 
 type Spot = { phrase: number; at: number };
 
-// 字を指すときは、その字を含む語で示す。1字の助詞などは、前の語と続けて示す。漢字の語には仮名を添える。
+// 字を指すときは、その字を含む語で示す。漢字の語には仮名を添える。
+// 1字の助詞と、漢字のすぐ後ろに続く仮名（逢ふ、別れては）は、前の語と続けて示す。
 function wordAt(phrase: Phrase, at: number): string {
   let cursor = 0;
   for (const [i, [text, kana]] of phrase.parts.entries()) {
     if (at < cursor + kana.length) {
-      const word = text === kana ? text : `${text}（${kana}）`;
-      return kana.length > 1 || i === 0 ? word : phrase.parts[i - 1][0] + text;
+      const [prevText, prevKana] = phrase.parts[i - 1] ?? ['', ''];
+      const afterKanji = text === kana && prevText !== prevKana;
+      if (i > 0 && (kana.length === 1 || afterKanji)) return prevText + text;
+      return text === kana ? text : `${text}（${kana}）`;
     }
     cursor += kana.length;
   }
   throw new Error(`「${phrase.kana}」の ${at} 字目が語の中にない`);
 }
+
+// 表は長音を「ー」で書くことがある（#24 のあと）。「ー」とだけ書くと字に見えないので、伸ばすことを言葉で添える。
+const soundText = (sound: string) => (sound === 'ー' ? '前の音を伸ばす「ー」' : quote(sound));
 
 const spotText = (phrase: Phrase, at: number, length: number) => `${quote(wordAt(phrase, at))}の${quote(phrase.kana.slice(at, at + length))}`;
 
@@ -239,7 +245,7 @@ const isHaShift = (phrase: Phrase, diff: Phrase['diffs'][number]) => {
 
 function hagyo(card: Card): Point[] {
   const shifted = card.phrases.flatMap((p) =>
-    p.diffs.filter((d) => isHaShift(p, d)).map((d) => `${spotText(p, d.at, 1)}は${quote(soundAt(p, d.at, 1))}`),
+    p.diffs.filter((d) => isHaShift(p, d)).map((d) => `${spotText(p, d.at, 1)}は${soundText(soundAt(p, d.at, 1))}`),
   );
   const kept = card.origin.sound.kept
     .filter((k) => k.why === '語の頭' && HA_ROW.has(k.kana))
@@ -260,7 +266,8 @@ function choon(card: Card): Point[] {
     p.diffs
       .filter((d) => d.rule === '長音' && d.kana !== 'ふ')
       .map((d) => {
-        const length = d.kana.length + (p.diffs.some((n) => n.at === d.at + d.kana.length && n.kana === 'ふ' && n.rule === '長音') ? 1 : 0);
+        // 44番の「逢ふ」の「ふ」は、表では一覧の注として記録されている（#24 のあと）ので、規則の名前によらず続く「ふ」を含める。
+        const length = d.kana.length + (p.diffs.some((n) => n.at === d.at + d.kana.length && n.kana === 'ふ') ? 1 : 0);
         return `${quote(p.kana.slice(d.at, d.at + length))}は${quote(soundAt(p, d.at, length))}`;
       }),
   );
