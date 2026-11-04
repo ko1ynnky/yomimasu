@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Card, Phrase } from '../../.claude/skills/yomimasu/scripts/cards.ts';
-import { alternativeOnLine, compareWithList, notationOnLine } from '../../scripts/cards/assemble.ts';
+import { alternativeOnLine, buildCard, compareWithList, notationOnLine } from '../../scripts/cards/assemble.ts';
 import type { ListCard, ListLine } from '../../scripts/cards/list.ts';
 import { applyDiffs, soundDiffs } from '../../scripts/cards/sound.ts';
 
@@ -95,6 +95,74 @@ test('漢字のかたまりの読みの範囲が決まらないときは止ま�
 
 test('読み替えの途中で切れるふりがなは、仮名の範囲へ移せないので止まる', () => {
   assert.throws(() => notationOnLine([phrase('けふ')], 0, [{ start: 0, text: 'き', base: 'け' }]), /仮名の字の切れ目/);
+});
+
+test('札の句の発音は、規則の読み替えに一覧のふりがなの「ー」と注を当て、位置は当てる前と同じに置く', () => {
+  const plain = (text: string, reading: string, extra: Partial<ListLine> = {}): ListLine => ({ plain: text, marked: text, reading, marks: [], rubies: [], alternative: null, ...extra });
+  const built = buildCard(
+    77,
+    { upperText: 'せをはやみいはにせかるるたきがはの', upperKana: 'せをはやみいはにせかるるたきがはの', lowerText: 'われてもすゑにあはむとぞ思ふ', lowerKana: 'われてもすゑにあはむとぞおもふ' },
+    [],
+    {
+      no: 77,
+      page: 15,
+      upper: plain('', ''),
+      lower: plain('', '', { marks: [12], rubies: [{ start: 12, text: 'おも(お)', base: '思ふ' }] }),
+      yoin: true,
+    },
+  );
+  assert.equal(built.phrases[4].sound, 'あわんとぞおもお');
+  assert.deepEqual(built.phrases[4].diffs.at(-1), { at: 7, kana: 'ふ', sound: 'お', rule: '一覧の注' });
+  assert.deepEqual(built.furigana, [{ phrase: 4, at: 5, length: 2, reading: 'おも' }]);
+  assert.deepEqual(built.notes, [{ phrase: 4, at: 7, length: 1, reading: 'お' }]);
+  assert.deepEqual(built.stretches, [{ phrase: 4, after: 5 }]);
+});
+
+// 54番は、四句の「けふ」が札ごとの例外である。一覧の読みと印の位置は、例外を当てる前の発音「きょー」で数える。
+const lines54 = {
+  upperText: 'わすれじのゆくすゑまではかたければ',
+  upperKana: 'わすれじのゆくすゑまではかたければ',
+  lowerText: '今日をかぎりの命ともがな',
+  lowerKana: 'けふをかぎりのいのちともがな',
+};
+const listLine = (plain: string, reading: string, extra: Partial<ListLine> = {}): ListLine => ({ plain, marked: plain, reading, marks: [], rubies: [], alternative: null, ...extra });
+const list54: ListCard = {
+  no: 54,
+  page: 8,
+  upper: listLine('わすれじのゆくすゑまではかたければ', 'わすれじのゆくすえまでわかたければ'),
+  lower: listLine('今日をかぎりの命ともがな', 'きょーおかぎりのいのちともがな', {
+    marks: [4, 8, 12],
+    rubies: [
+      { start: 0, text: 'きょー', base: '今日' },
+      { start: 8, text: 'いのち', base: '命' },
+    ],
+  }),
+  yoin: true,
+};
+
+test('例外のある句の発音は、一覧の表記を当てたあとに例外の発音にし、伸ばす位置とふりがなの位置は当てる前と同じに置く', () => {
+  const built = buildCard(54, lines54, [], list54);
+  assert.equal(built.phrases[3].sound, 'きょおかぎりの');
+  assert.deepEqual(built.phrases[3].diffs, [
+    { at: 0, kana: 'けふ', sound: 'きょ', rule: 'ユーザーの判断' },
+    { at: 2, kana: 'を', sound: 'お', rule: 'ワ行' },
+  ]);
+  assert.deepEqual(built.stretches, [
+    { phrase: 3, after: 3 },
+    { phrase: 3, after: 7 },
+    { phrase: 4, after: 4 },
+  ]);
+  assert.deepEqual(built.furigana, [
+    { phrase: 3, at: 0, length: 2, reading: 'きょー' },
+    { phrase: 4, at: 0, length: 3, reading: 'いのち' },
+  ]);
+});
+
+test('照合では、例外の所を一覧の表記を当てた発音に戻して一覧と比べる', () => {
+  const card: Card = { ...buildCard(54, lines54, [], list54), kimariji: null };
+  const result = compareWithList([card], [list54]);
+  assert.deepEqual([...result.textMismatches, ...result.soundMismatches, ...result.stretchMismatches, ...Object.values(result.notationMismatches).flat()], []);
+  assert.deepEqual(result.notation, { furigana: 2, notes: 0, alternatives: 0, yoin: 1 });
 });
 
 test('別の読みは、行の読みと字を照らし、伸ばす位置を句の仮名の字数で返す', () => {

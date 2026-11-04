@@ -11,7 +11,9 @@ const UPPER_TAIL_TWO_BEFORE: ReadonlySet<number> = new Set([
 
 const LOWER_TAIL_THREE_BEFORE = ['もがな', 'おもへ', 'おもふ', 'なくに', 'ものを'];
 
-export type SoundRule = '語中のハ行' | 'ワ行' | '四つ仮名' | '長音' | 'む';
+// 「一覧のふりがな」と「一覧の注」は、規則の読み替えに代えて、読み方一覧のふりがなの「ー」と注の字で書いた箇所である。
+// 「ユーザーの判断」は、一覧の表記に代えて、ユーザーが聞いて決めた読みで書いた札ごとの例外である（2026-11-04。54番の四句の1か所）。
+export type SoundRule = '語中のハ行' | 'ワ行' | '四つ仮名' | '長音' | 'む' | '一覧のふりがな' | '一覧の注' | 'ユーザーの判断';
 
 export type SoundDiff = { at: number; kana: string; sound: string; rule: SoundRule };
 
@@ -59,9 +61,6 @@ export type Card = {
   };
 };
 
-// 「あふ」は「おう」と書くが、聞こえる音は「おほ」の「おお」と同じである。
-export const heard = (sound: string) => sound.replaceAll('おう', 'おお');
-
 export function kimarijiLengths(uppers: ReadonlyMap<number, string>): Map<number, number> {
   const all = [...uppers.values()];
   return new Map(
@@ -89,7 +88,6 @@ export function ruleStretchesOf(no: number, phrases: readonly { kana: string }[]
   ];
 }
 
-// 字数の変わらない読み替え（「いふ」と「ゆう」など）の途中は、字ごとに対応させる。ふりがなが「ゆ」と「ー」のように字ごとに付くからである。
 export function soundOffset(phrase: Phrase, kanaOffset: number): number {
   let offset = kanaOffset;
   for (const diff of phrase.diffs) {
