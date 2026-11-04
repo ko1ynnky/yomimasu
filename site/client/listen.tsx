@@ -1,5 +1,6 @@
 import { render } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import type { Card } from '../../.claude/skills/yomimasu/scripts/cards.ts';
 import { pairLines } from './lyrics.ts';
 import { DEFAULT_PAIR, pairFromSearch, segmentsOf, type CardNo, type Pair } from './pair.ts';
 import { pairLoader, play, storedAudioSource, type Playback } from './playback.ts';
@@ -242,7 +243,12 @@ export function randomPair(random: () => number = Math.random): Pair {
 }
 
 // 選手は札を決まり字で呼ぶので、選ぶ欄も決まり字で並べる。歌番号は出さない（ui-guide 7節「歌に出すもの」）。
-const BY_KIMARIJI = [...HUNDRED].sort((a, b) => (a.kimariji?.kana ?? '').localeCompare(b.kimariji?.kana ?? '', 'ja'));
+// 並びは 7節「100首の一覧」の決まり字順にする。仮名の順だと、「お」の札が あ・お・を の3か所に分かれる。
+// 決まり字の最初の音で分け、その音で始まる札の多い順に並べる。札の数が同じ音は読み方一覧の順で、札の数からは出せないので並びを持つ。
+// 分けるのは発音の音（44番「あふこ」と26番「をぐ」は「お」）で、音の中は決まり字の仮名の順にする。
+const SOUND_ORDER = 'あなおわたこみはやよかいちひきうつしもゆむすめふさほせ';
+const soundRank = (card: Card) => SOUND_ORDER.indexOf(card.kimariji?.sound[0] ?? '');
+const BY_KIMARIJI = [...HUNDRED].sort((a, b) => soundRank(a) - soundRank(b) || (a.kimariji?.kana ?? '').localeCompare(b.kimariji?.kana ?? '', 'ja'));
 
 function CardSelect({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
   return (

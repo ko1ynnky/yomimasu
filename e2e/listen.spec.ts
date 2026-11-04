@@ -340,6 +340,38 @@ test('練習モードで自分で選んだ組は、聞く画面と録音の画�
   await page.screenshot({ path: join(ARTIFACTS_DIR, 'practice-choose.png') });
 });
 
+test('練習モードの札の欄は、ガイドの決まり字順（音ごとに札の多い順、同じ数は読み方一覧の順、音の中は仮名の順）で並ぶ', async ({ page }) => {
+  // 分けるのは発音の音なので、44番「あふこ」と26番「をぐ」は「お」に入る。並びは見本（docs/ui-sample.html の LIST）と同じである。
+  const bySound = [
+    'あきか あきの あけ あさぢ あさぼらけあ あさぼらけう あし あはぢ あはれ あひ あまつ あまの あらざ あらし ありあ ありま',
+    'ながか ながら なげき なげけ なつ なにし なにはえ なにはが',
+    'あふこ おく おと おほえ おほけ おも をぐ',
+    'わがい わがそ わすら わすれ わたのはらこ わたのはらや わび',
+    'たか たき たご たち たま たれ',
+    'こころあ こころに こぬ この こひ これ',
+    'みかき みかの みせ みち みよ',
+    'はなさ はなの はるす はるの',
+    'やす やへ やまが やまざ',
+    'よのなかは よのなかよ よも よを',
+    'かく かさ かぜそ かぜを',
+    'いに いまこ いまは',
+    'ちぎりお ちぎりき ちは',
+    'ひさ ひとは ひとも',
+    'きみがためは きみがためを きり',
+    'うか うら',
+    'つき つく',
+    'しの しら',
+    'もも もろ',
+    'ゆふ ゆら',
+    'む す め ふ さ ほ せ',
+  ];
+  await page.goto('/practice/');
+  await page.getByRole('button', { name: '自分で選ぶ' }).click();
+  for (const label of ['下の句の札', '上の句の札']) {
+    await expect(page.getByLabel(label).locator('option')).toHaveText(['選んでください', ...bySound.flatMap((line) => line.split(' '))]);
+  }
+});
+
 test('練習モードで同じ札を下の句と上の句に選ぶと、進めない', async ({ page }) => {
   await page.goto('/practice/');
   await page.getByRole('button', { name: '自分で選ぶ' }).click();
