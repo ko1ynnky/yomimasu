@@ -204,8 +204,6 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
 .lyric [data-at] { color: transparent; background-image: linear-gradient(to bottom, var(--shu) var(--p, 0%), var(--ink) var(--p, 0%)); -webkit-background-clip: text; background-clip: text; }
 /* 余韻の印は、「る」を塗り終えてから余韻の終わりまでに上から朱にする。読み上げた所を朱にする決まりの、余韻の分である（同日のユーザーの判断） */
 .lyric .yoin { background: linear-gradient(to bottom, var(--shu) var(--yoin-done, 0%), var(--ink) var(--yoin-done, 0%)); }
-/* 「（間）」は間の1秒で上から朱にする。字ごとに一気に朱にすると最後の字が 0.67 秒で終わり、9 秒の上の句の頭まで何も動かない間ができる */
-.lyric .ma-mark { color: transparent; background: linear-gradient(to bottom, var(--shu) var(--ma-done, 0%), var(--ink) var(--ma-done, 0%)); -webkit-background-clip: text; background-clip: text; }
 .count { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; background: rgba(32, 29, 25, 0.78); color: var(--card); font-family: var(--f-mono); font-size: 92px; font-weight: 600; }
 /* 読む前の説明。枠の上に重ねて、読む画面の高さを増やさない */
 .rec-help { position: absolute; inset: 0; z-index: 3; overflow: auto; padding: 14px; display: grid; align-content: start; gap: 8px; background: var(--card); font-size: 14px; line-height: 1.65; }
@@ -826,9 +824,9 @@ function blocksHtml(lines) {
   const last = shimo.at(-1);
   const shimoLines = [...shimo.slice(0, -1), { ...last, chars: last.chars.filter((c) => !c[3]) }];
   const [shimoSeg, yoinSeg, maSeg, kamiSeg] = SEGMENTS;
-  // ▼ のあとに「（間）」と書き、間の1秒で上から朱にする（同日のユーザーの判断）。塗る割合は paintStage が --ma-done で渡す
+  // ▼ のあとに「（間）」とは書かない。間の1秒は何も塗らない。書いて塗る形をユーザーが試し、かえって読みづらかった（2026-11-04 夜のユーザーの判断）
   const lastUnit = (last.to - last.at) / last.chars.reduce((sum, [, w = 1, , cue]) => sum + (cue ? 0 : w), 0);
-  const yoinLine = { at: last.to, to: last.to, unit: lastUnit, yoin: true, tail: '<span class="ma-mark">（間）</span>', chars: last.chars.filter((c) => c[3]) };
+  const yoinLine = { at: last.to, to: last.to, unit: lastUnit, yoin: true, chars: last.chars.filter((c) => c[3]) };
   const head = (seg) => `${seg.name}<span class="tcy">${seg.sec}</span>秒`;
   const block = (phase, title, blockLines) => `<div class="blk" data-phase="${phase}">
       <div class="blk-head">${title}</div>
@@ -886,7 +884,7 @@ function lineHtml(line) {
     return `<span data-at="${at.toFixed(3)}" data-to="${to.toFixed(3)}"${ch === 'ー' ? ' class="nobi"' : ''}>${body}</span>`;
   }).join('');
   const yoin = line.yoin ? YOIN.replace('<span class="yoin"', `<span class="yoin" data-from="${cueEnd.toFixed(3)}"`) : '';
-  return `<div class="ln">${spans}${yoin}${line.tail ?? ''}</div>`;
+  return `<div class="ln">${spans}${yoin}</div>`;
 }
 
 function paintStage(root, t) {
@@ -898,7 +896,7 @@ function paintStage(root, t) {
     const p = pct(progress(Number(el.dataset.at), Number(el.dataset.to)));
     if (el.style.getPropertyValue('--p') !== p) el.style.setProperty('--p', p);
   });
-  const [, yoinSeg, maSeg] = SEGMENTS;
+  const [, yoinSeg] = SEGMENTS;
   const yoinEnd = YOIN_START + yoinSeg.sec;
   const fadeFrom = yoinEnd - FADE_SEC;
   const hold = 1 - FADE_SEC / yoinSeg.sec;
@@ -906,7 +904,6 @@ function paintStage(root, t) {
   // 四角（声を保つ所）は「る」を塗り終えてから fadeFrom まで、三角（弱め始めてよい最後の1秒）は fadeFrom から余韻の終わりまでに塗る。形の境目と塗りの境目をそろえるためである
   const yoinDone = !assist ? 0 : t < fadeFrom ? hold * progress(markFrom, fadeFrom) : hold + (1 - hold) * progress(fadeFrom, yoinEnd);
   root.style.setProperty('--yoin-done', pct(yoinDone));
-  root.style.setProperty('--ma-done', pct(progress(yoinEnd, yoinEnd + maSeg.sec)));
   // 待機（t=0）では囲まない。まだどこも読んでいないからである
   const phase = phaseAt(t);
   root.querySelectorAll('.blk').forEach((el) => el.classList.toggle('is-now', assist && t > 0 && el.dataset.phase === phase.key));
