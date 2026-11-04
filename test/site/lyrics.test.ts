@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import deck from '../../.claude/skills/yomimasu/assets/cards.json' with { type: 'json' };
-import type { Card } from '../../.claude/skills/yomimasu/scripts/cards.ts';
+import { heard, type Card } from '../../.claude/skills/yomimasu/scripts/cards.ts';
 import { lineText, pairLines, secondShimoLineAt, tapCharOf, type Line, type Token } from '../../site/client/lyrics.ts';
 
 const cards = deck.cards as unknown as Card[];
@@ -54,19 +54,24 @@ test('お段に続く語中・語尾の「ふ」には、「う」ではなく�
   // 単独の「ふ」に限る。い段に続く「いふ」や、字数の違う「てふ」は表のとおりに振る。
   assert.equal(withRuby(pairLines(cards, { shimo: 81, kami: 45 }).kami[1]), '{い|ゆ}{ふ|う}べき{人|ひと}{は|わ}ー');
   assert.equal(withRuby(pairLines(cards, { shimo: 2, kami: 1 }).shimo[0]), '{衣|ころも}ー{干|ほ}す{てふ|ちょう}ー');
-  // 10番の「逢坂」（あふ→おう）は仮名では「あ」に続くので、ユーザーが決めるまで表のとおりに振る。
-  assert.match(withRuby(pairLines(cards, { shimo: 10, kami: 1 }).shimo[1]), /おうさか/u);
 });
 
-test('伸ばす印を除いて読みと仮名をつなぐと、札の表の実際の発音と同じになる（お段に続く「ふ」を除く）', () => {
-  // 表の sound に戻して比べる。お段に続く「ふ」だけが表と違うことを確かめる。
+test('あふ には、「おう」ではなく「おお」を振る', () => {
+  // 2026-11-04 のユーザーの判断。札の表の sound は「おう」のままである。
+  assert.equal(withRuby(pairLines(cards, { shimo: 10, kami: 1 }).shimo[1]), '{逢坂|おおさか}のー{関|せき}');
+  // 44番の「逢ふ」は、漢字の「逢」と仮名の「ふ」にまたがる。
+  assert.equal(withRuby(pairLines(cards, { shimo: 1, kami: 44 }).kami[0]), '{逢|お}{ふ|お}ことのー');
+});
+
+test('伸ばす印を除いて読みと仮名をつなぐと、札の表の実際の発音と同じになる（お段に続く「ふ」と あふ を除く）', () => {
+  // 表の sound に戻して比べる。お段に続く「ふ」は「う」に戻し、あふ の「おお」と表の「おう」は、どちらも聞こえる音（heard）にそろえる。
   const asTable = (token: Token) => (token.text === 'ふ' && token.ruby === 'お' ? 'う' : (token.ruby ?? token.text));
-  const heard = (line: Line) => line.filter((token) => !token.nobi).map(asTable).join('');
+  const sounds = (line: Line) => heard(line.filter((token) => !token.nobi).map(asTable).join(''));
   for (const card of cards.filter((c) => c.no !== 0)) {
     const other = card.no === 1 ? 2 : 1;
     const { shimo } = pairLines(cards, { shimo: card.no, kami: other });
     const { kami } = pairLines(cards, { shimo: other, kami: card.no });
-    assert.deepEqual([...kami, ...shimo].map(heard), card.phrases.map((p) => p.sound), `${card.no}番`);
+    assert.deepEqual([...kami, ...shimo].map(sounds), card.phrases.map((p) => heard(p.sound)), `${card.no}番`);
   }
 });
 
