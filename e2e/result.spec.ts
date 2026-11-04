@@ -80,7 +80,7 @@ const rowsOf = (page: Page): Promise<ShownRow[]> =>
       };
     }),
   );
-const secondsOf = (row: ShownRow) => Number(row.value.match(/^(\d+\.\d\d)秒$/)?.[1] ?? NaN);
+const secondsOf = (row: ShownRow) => Number(row.value.match(/^(\d+\.\d)秒$/)?.[1] ?? NaN);
 
 test('間の長い読みを録ると、下の句＋余韻、間、上の句の3行だけを決まった順に出し、測った秒、目安の幅、判定を出す', async ({ baseURL }) => {
   const browser = await launchWithFakeMic(synthesize(longMa), longMa.sampleRate);

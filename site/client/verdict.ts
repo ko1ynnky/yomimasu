@@ -1,5 +1,5 @@
 import { definition, type RangeItem } from '../../.claude/skills/yomimasu/scripts/definition.ts';
-import { rangePlacement, type Measurement, type Placement, type Unmeasured } from '../../.claude/skills/yomimasu/scripts/measure.ts';
+import { rangePlacement, tenthSec, type Measurement, type Placement, type Unmeasured } from '../../.claude/skills/yomimasu/scripts/measure.ts';
 
 export type Verdict = 'ちょうどよい' | 'ちょっと長い' | 'ちょっと短い';
 export type Row = { item: RangeItem; label: string; reference: string; value: string | null; verdict: Verdict | null; unmeasured: boolean };
@@ -20,9 +20,7 @@ export function resultRows(measurement: Measurement, ranges: Partial<typeof defi
     const reference = range ? `目安 ${range.minSec}〜${range.maxSec}秒` : standard;
     const seconds = measurement[item];
     if (seconds.status !== 'ok') return { item, label, reference, value: null, verdict: null, unmeasured: true };
-    // 判定と同じ 0.01 秒の値を出す。0.1 秒に丸めて出すと、「1.2秒」と出して「ちょっと長い」と付くことがある。
-    // 0.1 秒に丸めた値で判定する案は採らなかった。判定の決め方が Web だけのものになり、スキルの答えと食い違う。
-    return { item, label, reference, value: `${seconds.sec.toFixed(2)}秒`, verdict: range ? VERDICTS[rangePlacement(seconds.sec, range)] : null, unmeasured: false };
+    return { item, label, reference, value: `${tenthSec(seconds.sec).toFixed(1)}秒`, verdict: range ? VERDICTS[rangePlacement(seconds.sec, range)] : null, unmeasured: false };
   });
 }
 

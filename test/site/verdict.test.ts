@@ -26,11 +26,13 @@ test('幅の中は「ちょうどよい」、上は「ちょっと長い」、�
   assert.equal(kami.verdict, 'ちょっと短い');
 });
 
-test('測った秒は判定に使う 0.01 秒の値のまま出すので、表示と判定が食い違わない', () => {
-  const [, edge] = resultRows(measured(8, 1.2, 6));
-  assert.deepEqual([edge.value, edge.verdict], ['1.20秒', 'ちょうどよい']);
-  const [, outside] = resultRows(measured(8, 1.21, 6));
-  assert.deepEqual([outside.value, outside.verdict], ['1.21秒', 'ちょっと長い']);
+test('測った秒は 0.1 秒に四捨五入して出し、判定も同じ値で付けるので、表示と判定が食い違わない', () => {
+  const [, inside] = resultRows(measured(8, 1.24, 6));
+  assert.deepEqual([inside.value, inside.verdict], ['1.2秒', 'ちょうどよい']);
+  const [, outside] = resultRows(measured(8, 1.25, 6));
+  assert.deepEqual([outside.value, outside.verdict], ['1.3秒', 'ちょっと長い']);
+  const [shimo] = resultRows(measured(8.04, 1, 6));
+  assert.equal(shimo.value, '8.0秒');
 });
 
 test('幅のない項目には判定を付けず、標準の値を出す', () => {
