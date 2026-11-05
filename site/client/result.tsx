@@ -1,9 +1,10 @@
 import { render } from 'preact';
-import { useEffect, useMemo } from 'preact/hooks';
-import { measure } from '../../.claude/skills/yomimasu/scripts/measure.ts';
+import { useEffect, useState } from 'preact/hooks';
+import type { Measurement } from '../../.claude/skills/yomimasu/scripts/measure.ts';
 import { nextPoint } from '../../.claude/skills/yomimasu/scripts/next-point.ts';
 import { NextPoint } from './next-point.tsx';
-import { lastTake, type Take } from './take.ts';
+import { latestKept } from './records.ts';
+import { lastTake, measurementOf, type Take } from './take.ts';
 import { levelSentence, noticeOf, resultRows } from './verdict.ts';
 import './result.css';
 
@@ -20,9 +21,8 @@ function Assist({ assisted }: { assisted: boolean }) {
   return null;
 }
 
-// Take は声の処理の設定を持たないので、自動の音量調整が切れているかは分からない。声の大きさは、設定が Take に入るまで出さない。
-function Result({ take, example }: { take: Take; example: boolean }) {
-  const measurement = useMemo(() => measure(take), [take]);
+// Take は声の処理の設定を持つが、measure に autoGainControl を渡していない。iPhone で設定の値を信じられるかを実機で確かめるまで渡さない（docs/measure.md）ので、声の大きさは出さない。
+function Result({ take, measurement, example }: { take: Take; measurement: Measurement; example: boolean }) {
   const notice = noticeOf(measurement);
   const level = levelSentence(measurement);
   return (
@@ -54,17 +54,29 @@ function Result({ take, example }: { take: Take; example: boolean }) {
   );
 }
 
-// 録音は端末の中にしかないので、URL だけでは結果を開けない。例の録音は、要素に example を付けて示す。
+type Shown = { take: Take; measurement: Measurement };
+
+// 録音は端末の中にしかないので、URL だけでは結果を開けない。開いている画面の録音がなければ、端末に残した最後の録音を出す。
+// 例の録音は、要素に example を付けて示す。例の画面に利用者の録音を出さないよう、端末に残した録音は読まない。
 function Screen({ example }: { example: boolean }) {
-  const take = lastTake();
-  if (!take) {
+  const [shown, setShown] = useState<Shown | null | undefined>(() => {
+    const take = lastTake();
+    return take ? { take, measurement: measurementOf(take) } : undefined;
+  });
+  useEffect(() => {
+    if (shown !== undefined) return;
+    if (example) setShown(null);
+    else latestKept().then(setShown, () => setShown(null));
+  }, []);
+  if (shown === undefined) return null;
+  if (!shown) {
     return (
       <p role="status">
         まだ録音がありません。<a href="/read/">まず1回読む</a>
       </p>
     );
   }
-  return <Result take={take} example={example} />;
+  return <Result take={shown.take} measurement={shown.measurement} example={example} />;
 }
 
 export function mountResult(element: HTMLElement) {
