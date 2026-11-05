@@ -5,7 +5,7 @@ import { chromium, expect, test, type Locator, type Page } from '@playwright/tes
 import { standardReading, synthesize } from '../test/support/synth.ts';
 import { encodeWav } from '../test/support/wav.ts';
 
-const PAGES = ['/', '/read/', '/read/rec/', '/practice/', '/result/'];
+const PAGES = ['/', '/read/', '/read/rec/', '/practice/', '/result/', '/result/compare/'];
 const ARTIFACTS_DIR = 'e2e-artifacts';
 
 test('JS なしでも、入口の題と一覧を読め、一覧から移れる', async ({ browser, baseURL }) => {
