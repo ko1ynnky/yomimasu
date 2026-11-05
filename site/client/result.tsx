@@ -3,10 +3,12 @@ import { useEffect, useState } from 'preact/hooks';
 import type { Measurement } from '../../.claude/skills/yomimasu/scripts/measure.ts';
 import { nextPoint } from '../../.claude/skills/yomimasu/scripts/next-point.ts';
 import { NextPoint } from './next-point.tsx';
-import { latestKept } from './records.ts';
+import { latestKept, listRecords } from './records.ts';
 import { lastTake, measurementOf, type Take } from './take.ts';
 import { levelSentence, noticeOf, resultRows } from './verdict.ts';
 import './result.css';
+
+const COMPARE = { label: '前回と比べる', url: '/result/compare/' };
 
 // 補助の有無は上の帯の右に出す。帯は画面の組み立て（render.ts）が置き、この部品の外にある。
 function Assist({ assisted }: { assisted: boolean }) {
@@ -21,10 +23,21 @@ function Assist({ assisted }: { assisted: boolean }) {
   return null;
 }
 
+// 録音が1件でも残っていれば「前回と比べる」を出す。録音を消す操作はその画面にしかないので、前回がないうちも出す。
+// 残っていないとき（残せなかったとき、例の録音のとき）は出さない。開いても何もない。
+function useHasKept(example: boolean) {
+  const [hasKept, setHasKept] = useState(false);
+  useEffect(() => {
+    if (!example) listRecords().then((records) => setHasKept(records.length > 0), () => {});
+  }, []);
+  return hasKept;
+}
+
 // Take は声の処理の設定を持つが、measure に autoGainControl を渡していない。iPhone で設定の値を信じられるかを実機で確かめるまで渡さない（docs/measure.md）ので、声の大きさは出さない。
 function Result({ take, measurement, example }: { take: Take; measurement: Measurement; example: boolean }) {
   const notice = noticeOf(measurement);
   const level = levelSentence(measurement);
+  const hasKept = useHasKept(example);
   return (
     <>
       <Assist assisted={take.assisted} />
@@ -48,7 +61,7 @@ function Result({ take, measurement, example }: { take: Take; measurement: Measu
         {(notice ?? level) && <br />}
         明瞭さは測っていません。お手本と聴き比べてください。
       </p>
-      <NextPoint answer={nextPoint(measurement, take.pair)} pair={take.pair} />
+      <NextPoint answer={nextPoint(measurement, take.pair)} pair={take.pair} more={hasKept ? [COMPARE] : []} />
       <p class="fine">録音は端末の外へ出ません。</p>
     </>
   );

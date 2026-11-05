@@ -39,3 +39,9 @@ test('再利用の節は、資料から来た内容がどこにあっても MIT 
 test('録音を端末の外へ出さないことを書く', () => {
   assert.match(source().markdown, /録音は端末の外へ出ません。/);
 });
+
+test('録音と結果がこのブラウザーに残ることと、消せる場所を書く', () => {
+  const recording = source().markdown.match(/<div><b>録音<\/b>.*<\/div>/)?.[0] ?? '';
+  assert.match(recording, /このブラウザーに残り/);
+  assert.match(recording, /前回と比べる/);
+});

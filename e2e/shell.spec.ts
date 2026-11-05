@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const PAGES = ['/', '/read/', '/read/rec/', '/practice/', '/result/'];
+const PAGES = ['/', '/read/', '/read/rec/', '/practice/', '/result/', '/result/compare/'];
 
 test('JS なしでも本文を読める', async ({ browser, baseURL }) => {
   const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
