@@ -208,6 +208,40 @@ if [[ $history != *公式の指摘* || $history != *修正の答え* || $history
   ng "review-comments: 答えも渡すときは Claude の答えだけを足す（出力 $history）"
 fi
 
+# 実行の記録の見本。本文、コマンドの出力、最後の答えは、要約にも、取り出した記録にも出さない。
+execution=$(mktemp "$work/execution.XXXXXX")
+cat >"$execution" <<'EOF'
+[
+  {"type": "system", "subtype": "init", "cwd": "/home/runner/work/yomimasu"},
+  {"type": "assistant", "message": {"content": [{"type": "text", "text": "非公開の本文"}, {"type": "tool_use", "name": "Skill", "input": {"skill": "verify"}}]}},
+  {"type": "user", "message": {"content": [{"type": "tool_result", "content": "非公開の出力"}]}},
+  {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Bash", "input": {"command": "npm run check"}}, {"type": "tool_use", "name": "Skill", "input": {"skill": "yomimasu"}}]}},
+  {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Skill", "input": {"skill": "verify"}}]}},
+  {"type": "result", "num_turns": 3, "result": "非公開の答え", "modelUsage": {"claude-x": {"inputTokens": 1, "outputTokens": 1}}},
+  {"type": "result", "num_turns": 12, "result": "非公開の答え", "modelUsage": {"claude-opus-5-5": {"inputTokens": 10, "cacheReadInputTokens": 200, "cacheCreationInputTokens": 30, "outputTokens": 40}, "claude-haiku": {"inputTokens": 5, "outputTokens": 6}}}
+]
+EOF
+summary_want='<!-- run-summary -->
+実行の要約
+
+- モデル：claude-haiku、claude-opus-5-5
+- ターン数：12
+- トークン：入力 245、出力 46
+- スキル：verify、yomimasu'
+summary=$(bash "$scripts/run-summary.sh" "$execution" 2>&1)
+if [[ $summary != "$summary_want" ]]; then
+  ng "run-summary: 最後の結果のモデル、ターン数、トークンと、使ったスキルを書く（出力 $summary）"
+fi
+extracted=$(mktemp "$work/extracted.XXXXXX")
+bash "$scripts/run-summary.sh" --extract "$execution" >"$extracted" 2>&1
+summary=$(bash "$scripts/run-summary.sh" "$extracted" 2>&1)
+if [[ $summary != "$summary_want" ]]; then
+  ng "run-summary: 取り出した記録から同じ要約を作る（出力 $summary）"
+fi
+if grep -q '非公開' "$extracted"; then
+  ng 'run-summary: 取り出した記録に本文、コマンドの出力、答えを残さない'
+fi
+
 # 偽の gh は、呼ばれた引数を記録し、場面ごとの JSON を返す。
 gh_bin=$(mktemp -d "$work/gh.XXXXXX")
 cat >"$gh_bin/gh" <<'EOF'
@@ -692,6 +726,97 @@ for sample in \
   "anthropics/claude-code-action@abc|          github_token: \${{ secrets.PAT }}"; do
   claude_step "${sample%%|*}" "$(printf '%b' "${sample#*|}")" >"$bad_workflow"
   [[ -n $(token_problems "$bad_workflow") ]] || ng "token: 通してはいけない Workflow を通した（${sample%%|*}、${sample#*|}）"
+done
+
+# Claude を動かす job の GITHUB_TOKEN に、書き込みの権限を持たせないことを、Workflow の書き方で確かめる。
+# action は Claude の環境に GITHUB_TOKEN を DEFAULT_WORKFLOW_TOKEN として渡し、Claude のあとの step も同じ runner で動く。
+# id-token は、action が App のトークンを取るのに要る。
+# Claude を動かす job ごとに「名前=権限」を1行で出す。job に権限がなければ Workflow の権限を、どちらもなければ unset を出す。
+claude_job_permissions() {
+  awk '
+    function indent_of(line) { match(line, /^ */); return RLENGTH }
+    function flush() {
+      if (job != "" && claude) print job "=" (job_set ? job_perms : (top_set ? top_perms : "unset"))
+      job = ""; claude = 0; job_set = 0; job_perms = ""
+    }
+    function add(value) {
+      if (target == "top") top_perms = (top_perms == "") ? value : top_perms "," value
+      else job_perms = (job_perms == "") ? value : job_perms "," value
+    }
+    function start(value) {
+      sub(/^permissions:[[:space:]]*/, "", value)
+      if (value == "") { block = 1; block_indent = current } else add(value)
+    }
+    /^[[:space:]]*(#.*)?$/ { next }
+    {
+      current = indent_of($0)
+      line = $0
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", line)
+      sub(/[[:space:]]+#.*$/, "", line)
+      if (block && current > block_indent) { add(line); next }
+      block = 0
+    }
+    current == 0 { flush(); in_jobs = (line == "jobs:") }
+    current == 0 && line ~ /^permissions:/ { top_set = 1; target = "top"; start(line); next }
+    in_jobs && current == 2 { flush(); job = line; sub(/:.*$/, "", job); next }
+    in_jobs && current == 4 && line ~ /^permissions:/ { job_set = 1; target = "job"; start(line); next }
+    /uses:[[:space:]]*["\047]?anthropics\/claude-code-action(\/base-action)?@/ { claude = 1 }
+    END { flush() }
+  ' "$1"
+}
+
+# 問題を1行ずつ出す。問題がなければ何も出さない。
+claude_job_problems() {
+  local entries entry job item items
+  entries=$(claude_job_permissions "$1")
+  if grep -qE "uses:[[:space:]]*[\"']?anthropics/claude-code-action(/base-action)?@" "$1" && [[ -z $entries ]]; then
+    echo 'Claude を動かす job を読めない'
+  fi
+  while IFS= read -r entry; do
+    [[ -z $entry ]] && continue
+    job=${entry%%=*}
+    if [[ ${entry#*=} == unset ]]; then
+      echo "$job の GITHUB_TOKEN の権限が書かれていない"
+      continue
+    fi
+    # 読めない書き方（YAML の別名など）も止める側に倒すので、通す形を並べる。
+    IFS=, read -ra items <<<"${entry#*=}"
+    for item in "${items[@]}"; do
+      if [[ ! $item =~ ^([a-z-]+:\ (read|none)|id-token:\ write|read-all|\{\})$ ]]; then
+        echo "Claude を動かす $job の GITHUB_TOKEN に、読み取りと id-token のほかの $item がある"
+      fi
+    done
+  done <<<"$entries"
+}
+
+for workflow in "$scripts"/../workflows/*.yml; do
+  while IFS= read -r problem; do
+    [[ -z $problem ]] || ng "job: $(basename "$workflow") の $problem"
+  done <<<"$(claude_job_problems "$workflow")"
+done
+
+# 第1引数は Workflow の権限、第2引数は Claude の job の権限である。書き込みの権限を持つ後ろの job は、Claude を動かさない。
+claude_job() {
+  printf '%bjobs:\n  work:\n%b    steps:\n      - uses: anthropics/claude-code-action@abc\n  finish:\n    needs: work\n    permissions:\n      issues: write\n    steps:\n      - run: echo done\n' "$1" "$2"
+}
+job_workflow=$(mktemp "$work/job.XXXXXX")
+for sample in \
+  '|    permissions:\n      contents: read\n      issues: write\n' \
+  '|' \
+  'permissions:\n  contents: write\n|' \
+  '|    permissions: write-all\n' \
+  '|    permissions: # 理由\n      contents: write\n' \
+  '|    permissions: *perms\n'; do
+  claude_job "${sample%%|*}" "${sample#*|}" >"$job_workflow"
+  [[ -n $(claude_job_problems "$job_workflow") ]] || ng "job: 通してはいけない Workflow を通した（$sample）"
+done
+for sample in \
+  'permissions:\n  contents: write\n|    permissions:\n      contents: read\n      id-token: write\n' \
+  '|    permissions: # 理由\n      contents: read # 理由\n      id-token: write\n' \
+  'permissions: read-all\n|'; do
+  claude_job "${sample%%|*}" "${sample#*|}" >"$job_workflow"
+  problems=$(claude_job_problems "$job_workflow")
+  [[ -z $problems ]] || ng "job: 読み取りと id-token だけの Claude の job を止めた（$sample、$problems）"
 done
 
 # 自走の実行で .claude/ の下の書き込みを確かめる PermissionRequest の hook。許すときだけ allow を出し、
