@@ -1,7 +1,7 @@
 import type { CardNo, Pair } from './pair.ts';
 import type { Take } from './take.ts';
 
-// お手本と自分の読みの再生。聞く画面（C1）と、結果の画面の聴き比べ（C6）が使う。
+// お手本と自分の読みの再生。聞く画面（C1）、結果の画面の聴き比べ（C6）、前回と比べる画面（C8）が使う。
 // 2本を AudioBuffer にしてから、両方を start(when) で予約する。ended でつなぐと端末ごとに遅れが乗り、
 // <audio> は再生の開始の時刻を予約できないので、どちらも使わない。
 
