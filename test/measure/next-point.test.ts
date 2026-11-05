@@ -160,6 +160,16 @@ test('文はどの項目と向きにもあり、文ごとに、もとにした�
   }
 });
 
+// 測って判定しているのは長さだけで、どこを伸ばしたかは判定していない。伸ばし方に触れる文は、原因の見込みか、試す勧めの形にする。
+test('直し方の文は、判定していない伸ばし方を原因として言い切らない', () => {
+  for (const [name, text] of allTexts()) {
+    for (const sentence of text.how.split(/(?<=。)/)) {
+      if (!/伸ばし|間延び/.test(sentence)) continue;
+      assert.match(sentence, /(かもしれません|みてください)。$/, `${name}: ${sentence}`);
+    }
+  }
+});
+
 test('文に判定の幅の値を書き写さず、測っていない明瞭さ、発音、声の大きさ、余韻の消え方に触れない', () => {
   const widths = Object.values(ranges).flatMap(({ minSec, maxSec }) => [minSec, maxSec]).map(String);
   for (const [name, text] of allTexts()) {
