@@ -20,7 +20,7 @@ import { standardReading, synthesize } from '../support/synth.ts';
 // - 判定は表示と同じ 0.1 秒の値で、幅は定義のデータから読む
 // - 同じ入力からは同じ答え
 // - 合成音で間を崩した1組を measure から通すと、間を選ぶ
-// - 文はどの項目と向きにもあり、もとにした知識のファイルと見出しがある
+// - 文はどの項目と向きにもあり、もとにした知識のファイルと見出しと、その見出しの中にある資料の版とページがある
 // - 文に幅の値を書き写さず、明瞭さ、発音、声の大きさに触れない
 
 const ok = (sec: number): Seconds => ({ status: 'ok', sec });
@@ -126,19 +126,35 @@ test('合成音で間を目安より長くした1組を measure から通すと�
 });
 
 const REFERENCES = '.claude/skills/yomimasu/references';
-type Text = { fix: string; reason: string; how: string; basis: Record<'fix' | 'reason' | 'how', { file: string; heading: string }[]> };
+type Basis = { file: string; heading: string; source: string };
+type Text = { fix: string; reason: string; how: string; basis: Record<'fix' | 'reason' | 'how', Basis[]> };
+
+// 見出しの行から、同じ深さか浅い次の見出しの手前までを、その見出しの節とする。
+function sectionOf(markdown: string, heading: string): string | undefined {
+  const lines = markdown.split('\n');
+  const start = lines.findIndex((line) => /^#+ /.test(line) && line.replace(/^#+ /, '') === heading);
+  if (start < 0) return undefined;
+  const depth = lines[start].indexOf(' ');
+  const end = lines.findIndex((line, index) => index > start && /^#+ /.test(line) && line.indexOf(' ') <= depth);
+  return lines.slice(start + 1, end < 0 ? undefined : end).join('\n');
+}
 const allTexts = (): [string, Text][] =>
   ITEMS.flatMap((item) => (['above', 'below'] as const).map((placement): [string, Text] => [`${item}.${placement}`, texts.points[item][placement]]));
 
-test('文はどの項目と向きにもあり、文ごとに、もとにした知識のファイルと見出しがある', () => {
+// REVIEW.md の「資料の範囲」は、資料から入れる項目ごとに版とページ（講習資料はスライドの番号）を記録すると決めている。
+// 見出しの下には出典の違う項目が並ぶので、見出しだけでは由来が1つに決まらない。
+test('文はどの項目と向きにもあり、文ごとに、もとにした知識のファイルと見出しと、資料の版とページがある', () => {
   for (const [name, text] of allTexts()) {
     for (const field of ['fix', 'reason', 'how'] as const) {
       assert.ok(text[field].length > 0, `${name}.${field}`);
       assert.ok(text.basis[field].length > 0, `${name}.${field} のもと`);
-      for (const { file, heading } of text.basis[field]) {
+      for (const { file, heading, source } of text.basis[field]) {
         const path = join(REFERENCES, file);
         assert.ok(existsSync(path), `${name}.${field}: ${file}`);
-        assert.match(readFileSync(path, 'utf8'), new RegExp(`^#+ ${heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'm'), `${name}.${field}: ${file} の ${heading}`);
+        const section = sectionOf(readFileSync(path, 'utf8'), heading);
+        assert.ok(section !== undefined, `${name}.${field}: ${file} の ${heading}`);
+        assert.match(source ?? '', /^(完全版 p\.\d+(-\d+)?|講習資料 s\.\d+(-\d+)?)$/, `${name}.${field}: ${file} の ${heading} の出典`);
+        assert.ok(new RegExp(`${source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![\\d-])`).test(section), `${name}.${field}: ${source} が ${file} の ${heading} にない`);
       }
     }
   }
