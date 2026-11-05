@@ -39,19 +39,29 @@ async function recordAndShowResult(browser: Browser, baseURL: string | undefined
   await page.waitForTimeout(endSec * 1000 + 300);
   await page.getByRole('button', { name: '読み終えた' }).click();
   await expect(page.getByTestId('take')).toBeAttached();
+  const [shimo, kami] = (await page.getByTestId('take').getAttribute('data-pair'))!.split('-');
   await page.evaluate(async () => {
     const next = new DOMParser().parseFromString(await (await fetch('/result/')).text(), 'text/html');
     document.querySelector('main')!.replaceWith(document.adoptNode(next.querySelector('main')!));
   });
   await expect(page.locator('yomimasu-result .res')).toBeVisible();
-  return { page, sent };
+  return { page, sent, again: `/read/rec/?shimo=${shimo}&kami=${kami}` };
 }
 
 const cards = (page: Page) => page.locator('main .one');
 
+// 結果の画面の「次は？」の塗りのボタンは、録音した組をもう一度読む（docs/ui-guide.md の10節）。
+async function expectAgain(page: Page, label: string, again: string) {
+  const fill = page.locator('main .ask .next .btn--fill');
+  await expect(page.locator('main .ask .ask-q')).toHaveText('次は？');
+  await expect(fill).toHaveCount(1);
+  await expect(fill).toHaveText(label);
+  await expect(fill).toHaveAttribute('href', again);
+}
+
 test('間の長い読みでは、結果の行の下に次に直す1点のカードを1枚だけ出し、間を選び、次は？に総論へのリンクを置く', async ({ baseURL }) => {
   const browser = await launchWithFakeMic(synthesize(longMa), longMa.sampleRate);
-  const { page, sent } = await recordAndShowResult(browser, baseURL, longMa);
+  const { page, sent, again } = await recordAndShowResult(browser, baseURL, longMa);
 
   await expect(cards(page)).toHaveCount(1);
   const card = cards(page);
@@ -70,6 +80,7 @@ test('間の長い読みでは、結果の行の下に次に直す1点のカー�
   const ask = page.locator('main .ask');
   await expect(ask.locator('.ask-q')).toHaveText('次は？');
   await expect(ask.getByRole('link', { name: texts.points.ma.link })).toHaveAttribute('href', '/soron/');
+  await expectAgain(page, 'もう1回読む', again);
 
   await expect(page.locator('main')).not.toContainText(/Claude|AI/);
   expect(sent).toEqual([]);
@@ -85,22 +96,24 @@ test('間の長い読みでは、結果の行の下に次に直す1点のカー�
 
 test('どの項目も目安の幅の中なら、今回はありませんと出し、補助を外して読むことを勧める', async ({ baseURL }) => {
   const browser = await launchWithFakeMic(synthesize(standard), standard.sampleRate);
-  const { page } = await recordAndShowResult(browser, baseURL, standard);
+  const { page, again } = await recordAndShowResult(browser, baseURL, standard);
 
   await expect(cards(page)).toHaveCount(1);
   await expect(cards(page).locator('.t')).toHaveText(texts.clear.fix);
   await expect(cards(page)).toContainText(texts.clear.reason);
+  await expectAgain(page, 'もう1回読む', again);
   await page.screenshot({ path: join(ARTIFACTS_DIR, 'next-point-clear.png'), fullPage: true });
   await browser.close();
 });
 
-test('声のない録音では、カードを出さない', async ({ baseURL }) => {
+test('声のない録音では、カードを出さず、次は？に読み直すボタンだけを置く', async ({ baseURL }) => {
   const silence = new Float32Array(20 * standard.sampleRate);
   const browser = await launchWithFakeMic(silence, standard.sampleRate);
-  const { page } = await recordAndShowResult(browser, baseURL, standard);
+  const { page, again } = await recordAndShowResult(browser, baseURL, standard);
 
   await expect(page.locator('yomimasu-result')).toContainText('声を聞き取れず、測れませんでした。');
   await expect(cards(page)).toHaveCount(0);
-  await expect(page.locator('main .ask .ask-q')).toHaveCount(0);
+  await expectAgain(page, '読み直す', again);
+  await expect(page.locator('main .ask .next .btn')).toHaveCount(1);
   await browser.close();
 });

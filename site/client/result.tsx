@@ -48,7 +48,7 @@ function Result({ take, example }: { take: Take; example: boolean }) {
         {(notice ?? level) && <br />}
         明瞭さは測っていません。お手本と聴き比べてください。
       </p>
-      <NextPoint answer={nextPoint(measurement, take.pair)} />
+      <NextPoint answer={nextPoint(measurement, take.pair)} pair={take.pair} />
       <p class="fine">録音は端末の外へ出ません。</p>
     </>
   );
