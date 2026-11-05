@@ -203,6 +203,12 @@ function Recorder({ fix }: { fix?: string }) {
     if (take) setView({ kind: 'result', take });
   }
 
+  async function retry() {
+    await typeRun('読み直す');
+    setTyped(null);
+    setView({ kind: 'idle' });
+  }
+
   function tick() {
     const current = session.current;
     if (!current) return;
@@ -298,26 +304,27 @@ function Recorder({ fix }: { fix?: string }) {
     return (
       <>
         {run}
-        <div class="result-take">
-          <Result take={take} example={false} progress={RESULT_PROGRESS} />
-        </div>
-        {/* 再生は Y-17 で動かす。それまでは場所だけを取り、押せない理由を下に書く */}
-        <div class="pair">
-          <button class="btn" type="button" disabled>
-            <Icon path={PLAY_ICON} />
-            自分の読み
-          </button>
-          <button class="btn" type="button" disabled>
-            <Icon path={PLAY_ICON} />
-            お手本
-          </button>
-        </div>
-        <p class="fine">再生はまだ使えません。</p>
-        <div class="result-next">
-          <button class="btn btn--fill" type="button" onClick={() => setView({ kind: 'idle' })}>
-            読み直す
-          </button>
-        </div>
+        <Result take={take} example={false} progress={RESULT_PROGRESS}>
+          {/* 再生は Y-17 で動かす。それまでは場所だけを取り、押せない理由を下に書く */}
+          <div class="pair">
+            <button class="btn" type="button" disabled>
+              <Icon path={PLAY_ICON} />
+              自分の読み
+            </button>
+            <button class="btn" type="button" disabled>
+              <Icon path={PLAY_ICON} />
+              お手本
+            </button>
+          </div>
+          <p class="fine">再生はまだ使えません。</p>
+          {/* ガイドの10節では、塗りのボタンは「次は？」の「もう1回読む」で、測れなかったときだけ「読み直す」にする。
+              「次は？」と次に直す1点（C7）がまだないので、どちらの場合も、同じ組をもう一度読む「読み直す」を置く（Issue #23 の完了の条件） */}
+          <div class="result-next">
+            <button class="btn btn--fill" type="button" disabled={sending} onClick={retry}>
+              読み直す
+            </button>
+          </div>
+        </Result>
         <div
           hidden
           data-testid="take"

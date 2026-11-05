@@ -1,4 +1,4 @@
-import { render } from 'preact';
+import { render, type ComponentChildren } from 'preact';
 import { useEffect, useMemo } from 'preact/hooks';
 import { measure } from '../../.claude/skills/yomimasu/scripts/measure.ts';
 import { lastTake, type Take } from './take.ts';
@@ -21,7 +21,8 @@ function Assist({ assisted, progress }: { assisted: boolean; progress?: string }
 }
 
 // Take は声の処理の設定を持たないので、自動の音量調整が切れているかは分からない。声の大きさは、設定が Take に入るまで出さない。
-export function Result({ take, example, progress }: { take: Take; example: boolean; progress?: string }) {
+// children は再生と次の操作で、「録音は端末の外へ出ません。」より上に置く。この文は画面の一番下に出す（docs/ui-guide.md の10節）。
+export function Result({ take, example, progress, children }: { take: Take; example: boolean; progress?: string; children?: ComponentChildren }) {
   const measurement = useMemo(() => measure(take), [take]);
   const notice = noticeOf(measurement);
   const level = levelSentence(measurement);
@@ -48,6 +49,7 @@ export function Result({ take, example, progress }: { take: Take; example: boole
         {(notice ?? level) && <br />}
         明瞭さは測っていません。お手本と聴き比べてください。
       </p>
+      {children}
       <p class="fine">録音は端末の外へ出ません。</p>
     </>
   );

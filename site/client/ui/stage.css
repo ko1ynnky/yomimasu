@@ -61,9 +61,7 @@
 .alert b { line-height: 1.6; }
 .link-inline { min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink-2); font-size: inherit; text-decoration: underline; cursor: pointer; }
 .rec-state-time { font-variant-numeric: tabular-nums; }
-/* 読み終えたあとの結果。結果の部品（result.css）の yomimasu-result と同じ間隔で並べる */
-.result-take { display: grid; gap: 12px; }
-.result-next { display: grid; margin-top: auto; }
+.result-next { display: grid; }
 yomimasu-recorder { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; }
 
 /* 枠を差し込む要素は箱を作らず、枠を画面の縦の flex に直接並べる */

@@ -187,6 +187,7 @@ test('読み終えたは上の句の区間から押せ、押すと「読み終�
   await expect(page.getByRole('button', { name: 'お手本' })).toBeVisible();
   await expect(page.getByRole('button', { name: '読み直す' })).toBeVisible();
   await expect(page.getByRole('link', { name: '結果を見る' })).toHaveCount(0);
+  await expect(page.locator('yomimasu-recorder > :not([hidden])').last()).toHaveText('録音は端末の外へ出ません。');
 
   mkdirSync(ARTIFACTS_DIR, { recursive: true });
   await page.screenshot({ path: join(ARTIFACTS_DIR, 'result-after-reading.png'), fullPage: true });
@@ -197,6 +198,7 @@ test('読み終えたは上の句の区間から押せ、押すと「読み終�
 
   await page.getByRole('button', { name: '読み直す' }).click();
   await expect(startButton(page)).toBeVisible();
+  expect(await runLineSeen(page)).toContain('> /yomimasu 読み直す');
   await expect(lyrics).toBeVisible();
   await expect(page.locator('.bar .step')).toHaveText('2 / 3 読む');
   await expect(page.locator('.run')).toHaveText('> /yomimasu 読む ほ あはれ');
@@ -405,6 +407,25 @@ test('画面を消さない設定を取れなくても、録音は止めない',
   await expect(block(page, 'kami')).toHaveClass(/is-now/, { timeout: 12_000 });
   await finishButton(page).click();
   await expect(page.getByTestId('take')).toBeAttached();
+  await browser.close();
+});
+
+test('動きを減らす設定では、読み終えたを押しても打ち込まずに、すぐ結果の画面へ移る', async ({ baseURL }) => {
+  const browser = await launchWithFakeMic();
+  const page = await openPage(browser, baseURL);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+
+  await startButton(page).click();
+  await waitForReading(page);
+  await expect(block(page, 'kami')).toHaveClass(/is-now/, { timeout: 12_000 });
+  await watchRunLine(page);
+  await finishButton(page).click();
+  await showsResult(page);
+  expect(await runLineSeen(page)).not.toContain('> /yomimasu 読み終えた');
+
+  await page.getByRole('button', { name: '読み直す' }).click();
+  await expect(startButton(page)).toBeVisible();
+  expect(await runLineSeen(page)).not.toContain('> /yomimasu 読み直す');
   await browser.close();
 });
 
