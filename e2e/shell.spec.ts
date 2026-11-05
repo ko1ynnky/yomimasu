@@ -230,6 +230,21 @@ test('ブラウザーの戻る・進む操作では、前の内容に動きな�
   expect(await reloads(page)).toBe(false);
 });
 
+test('戻る・進む操作を続けて押しても、URL と本文が食い違わない', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: /\/総論を学ぶ/ }).click();
+  await expect(page.getByRole('img', { name: /下の句 5秒/ })).toBeVisible();
+  // 戻った画面を取ってくる前に進む。
+  await page.evaluate(() => {
+    addEventListener('popstate', () => history.forward(), { once: true });
+    history.back();
+  });
+  await page.waitForTimeout(1000);
+  await expect(page).toHaveURL(/\/soron\/$/);
+  await expect(page.getByRole('img', { name: /下の句 5秒/ })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'やれること' })).toHaveCount(0);
+});
+
 test('動きを減らす設定では、打ち込みも流す動きもなく、すぐに入れ替える', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');

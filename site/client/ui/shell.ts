@@ -151,6 +151,7 @@ async function load(url: URL): Promise<Document | null> {
 }
 
 // 画面の部品はカスタム要素なので、差し込んだ時点で動き出し、外した時点で止まる（client/main.ts）。
+// 表示している画面か、戻る・進む操作で表示しようとしている画面。続けて戻る・進むを押したとき、URL と本文が食い違わないようにする。
 let shown = pathOf(location);
 let generation = 0;
 let busy = false;
@@ -318,6 +319,7 @@ document.addEventListener('click', (event) => {
 // ブラウザーの戻る・進む操作では動きを出さない。「戻る」の質問から選んだときだけ、押して開いたときと同じに出す。
 addEventListener('popstate', () => {
   if (pathOf(location) === shown) return;
+  shown = pathOf(location);
   const url = new URL(location.href);
   const motion = backWithMotion && !reduced();
   backWithMotion = false;
