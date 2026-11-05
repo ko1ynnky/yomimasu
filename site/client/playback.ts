@@ -1,6 +1,7 @@
 import type { CardNo, Pair } from './pair.ts';
+import type { Take } from './take.ts';
 
-// お手本の再生。聞く画面（C1）と聴き比べ（Y-17）が使う。
+// お手本と自分の読みの再生。聞く画面（C1）と、結果の画面の聴き比べ（C6）が使う。
 // 2本を AudioBuffer にしてから、両方を start(when) で予約する。ended でつなぐと端末ごとに遅れが乗り、
 // <audio> は再生の開始の時刻を予約できないので、どちらも使わない。
 
@@ -88,6 +89,24 @@ export function pairLoader(pair: Pair, source: AudioSource, fetcher: Fetcher = (
         return context.decodeAudioData(await response.arrayBuffer());
       }),
     );
+}
+
+// 自分の読みは、合図の間の音を鳴らさず、読み始めの位置から最後までを鳴らす（docs/ui-guide.md の9節）。
+function takeBuffer(context: BaseAudioContext, take: Take): AudioBuffer {
+  const samples = take.pcm.subarray(Math.min(take.pcm.length, Math.round(take.readingStartSec * take.sampleRate)));
+  // 長さ 0 の AudioBuffer は作れずに投げる。
+  const buffer = context.createBuffer(1, Math.max(1, samples.length), take.sampleRate);
+  buffer.getChannelData(0).set(samples);
+  return buffer;
+}
+
+// 端末に残した録音は IndexedDB から読むので、取り出す処理を受け取り、play() が文脈を作ったあとに呼ぶ。
+export function takeLoader(load: () => Promise<Take | null>): Loader {
+  return async (context) => {
+    const take = await load();
+    if (!take) throw new Error('録音が端末に残っていない');
+    return [takeBuffer(context, take)];
+  };
 }
 
 type AudioSessionLike = { type: string };
