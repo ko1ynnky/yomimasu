@@ -88,8 +88,8 @@ test('どの項目も目安の幅の中なら、今回はありませんと出�
   const { page } = await recordAndShowResult(browser, baseURL, standard);
 
   await expect(cards(page)).toHaveCount(1);
-  await expect(cards(page).locator('.t')).toHaveText('今回はありません');
-  await expect(cards(page)).toContainText('補助を外して読んで');
+  await expect(cards(page).locator('.t')).toHaveText(texts.clear.fix);
+  await expect(cards(page)).toContainText(texts.clear.reason);
   await page.screenshot({ path: join(ARTIFACTS_DIR, 'next-point-clear.png'), fullPage: true });
   await browser.close();
 });

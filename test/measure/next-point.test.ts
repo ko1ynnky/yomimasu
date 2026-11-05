@@ -14,7 +14,7 @@ import { standardReading, synthesize } from '../support/synth.ts';
 // - 1点は、直す内容、理由、直し方、関わる教科書のページの URL を持つ
 // - 間は総論、下の句＋余韻は下の句の札、上の句は上の句の札の1首のページへ案内する。序歌は序歌のページへ
 // - 幅の外が2つ以上なら、優先の表の順で選ぶ
-// - すべて幅の中なら「直す点なし」
+// - すべて幅の中なら「直す点なし」と、補助を外して読む勧めの文
 // - too-quiet と no-gap は「出さない」
 // - 測れなかった項目は選ばない。測れた項目がどれも幅の中なら「直す点なし」
 // - 判定は表示と同じ 0.1 秒の値で、幅は定義のデータから読む
@@ -30,6 +30,7 @@ const { ranges } = definition;
 const inside = (): Measurement => ({ shimoPlusYoin: ok(middle(ranges.shimoPlusYoin)), ma: ok(middle(ranges.ma)), kami: ok(middle(ranges.kami)) });
 const pair: Pair = { shimo: 77, kami: 29 };
 const ITEMS: readonly RangeItem[] = ['shimoPlusYoin', 'ma', 'kami'];
+const clear = { kind: 'clear', fix: texts.clear.fix, reason: texts.clear.reason };
 
 const longer = (item: RangeItem) => Math.round((ranges[item].maxSec + 0.3) * 100) / 100;
 const shorter = (item: RangeItem) => Math.round((ranges[item].minSec - 0.3) * 100) / 100;
@@ -63,8 +64,11 @@ test('1首のページの URL は、教科書の組み立てと同じ規則で�
   }
 });
 
-test('すべての項目が幅の中なら、直す点なしを返す', () => {
-  assert.deepEqual(nextPoint(inside(), pair), { kind: 'clear' });
+// 直す点なしの文も、Web とスキルが同じ文を出すようにライブラリの答えに持たせる。
+test('すべての項目が幅の中なら、直す点なしと、補助を外して読む勧めの文を返す', () => {
+  assert.match(texts.clear.fix, /^今回はありません$/);
+  assert.match(texts.clear.reason, /補助を外して読/);
+  assert.deepEqual(nextPoint(inside(), pair), clear);
 });
 
 for (const reason of ['too-quiet', 'no-gap'] as const) {
@@ -75,7 +79,7 @@ for (const reason of ['too-quiet', 'no-gap'] as const) {
 }
 
 test('測れなかった項目は選ばず、測れた項目がどれも幅の中なら直す点なしを返す', () => {
-  assert.deepEqual(nextPoint({ ...inside(), shimoPlusYoin: gone('cut-off') }, pair), { kind: 'clear' });
+  assert.deepEqual(nextPoint({ ...inside(), shimoPlusYoin: gone('cut-off') }, pair), clear);
   const answer = nextPoint({ ...inside(), shimoPlusYoin: gone('cut-off'), kami: ok(longer('kami')) }, pair);
   assert.equal(answer.kind === 'point' && answer.point.item, 'kami');
 });
@@ -100,7 +104,7 @@ test('幅の外が2つ以上なら、外れの大きさによらず優先の順�
 
 test('判定は表示と同じ 0.1 秒の値で決め、幅の端は幅の中とする', () => {
   const edge = Math.round((ranges.ma.maxSec + 0.04) * 100) / 100;
-  assert.deepEqual(nextPoint({ ...inside(), ma: ok(edge) }, pair), { kind: 'clear' });
+  assert.deepEqual(nextPoint({ ...inside(), ma: ok(edge) }, pair), clear);
   const over = Math.round((ranges.ma.maxSec + 0.05) * 100) / 100;
   assert.equal(nextPoint({ ...inside(), ma: ok(over) }, pair).kind, 'point');
 });
@@ -109,7 +113,7 @@ test('判定の幅は定義のデータから読む', () => {
   const measurement = { ...inside(), ma: ok(longer('ma')) };
   const wider = { ...definition, ranges: { ...ranges, ma: { minSec: ranges.ma.minSec, maxSec: longer('ma') } } };
   assert.equal(nextPoint(measurement, pair).kind, 'point');
-  assert.deepEqual(nextPoint(measurement, pair, wider), { kind: 'clear' });
+  assert.deepEqual(nextPoint(measurement, pair, wider), clear);
 });
 
 test('同じ入力からは、いつも同じ答えを返す', () => {
@@ -172,8 +176,8 @@ test('直し方の文は、判定していない伸ばし方を原因として�
 
 test('文に判定の幅の値を書き写さず、測っていない明瞭さ、発音、声の大きさ、余韻の消え方に触れない', () => {
   const widths = Object.values(ranges).flatMap(({ minSec, maxSec }) => [minSec, maxSec]).map(String);
-  for (const [name, text] of allTexts()) {
-    const sentence = [text.fix, text.reason, text.how].join('');
+  const sentences: [string, string][] = [...allTexts().map(([name, text]): [string, string] => [name, [text.fix, text.reason, text.how].join('')]), ['clear', texts.clear.fix + texts.clear.reason]];
+  for (const [name, sentence] of sentences) {
     for (const width of widths) assert.ok(!new RegExp(`(^|[^\\d.])${width.replace('.', '\\.')}([^\\d]|$)`).test(sentence), `${name} に ${width}`);
     assert.doesNotMatch(sentence, /明瞭|発音|音量|声の大きさ|大きな声|小さな声|Claude|AI/, name);
     // 余韻の消え方と口の形は判定していない。余韻は減衰ではなく最後の音を伸ばす部分なので、「消す」とも書かない。

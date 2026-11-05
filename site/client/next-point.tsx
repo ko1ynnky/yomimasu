@@ -28,8 +28,8 @@ export function NextPoint({ answer }: { answer: Answer }) {
     return (
       <section class="card one">
         <div class="l">次に直す1点</div>
-        <div class="t">今回はありません</div>
-        <p>測った項目はどれも目安の幅の中でした。練習会の本番には補助がないので、補助を外して読んでみましょう。</p>
+        <div class="t">{answer.fix}</div>
+        <p>{answer.reason}</p>
       </section>
     );
   }

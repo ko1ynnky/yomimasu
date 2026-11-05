@@ -17,8 +17,8 @@ export type Point = {
   link: { label: string; url: string };
 };
 
-// clear は「直す点なし」、hidden は「出さない」である。
-export type NextPoint = { kind: 'point'; point: Point } | { kind: 'clear' } | { kind: 'hidden' };
+// clear は「直す点なし」、hidden は「出さない」である。直す点なしの文も答えに持たせ、Web とスキルで文が分かれないようにする。
+export type NextPoint = { kind: 'point'; point: Point } | { kind: 'clear'; fix: string; reason: string } | { kind: 'hidden' };
 
 // 幅の外が2つ以上あるときに先に選ぶ順。余韻と間は競技者がタイミングを合わせるのにとくに大事で、毎回同じ長さに保つ項目である。
 // 間を先頭にするのは、標準が1.0秒と決まっていて、外れた値がそのまま直す所を指すからである。下の句＋余韻は、下の句と余韻のどちらが原因かを分けられない。
@@ -37,7 +37,7 @@ export function nextPoint(measurement: Measurement, pair: Pair, use: Definition 
   const measured = seconds.flatMap(({ item, seconds }) => (seconds.status === 'ok' ? [{ item, placement: rangePlacement(seconds.sec, use.ranges[item]) }] : []));
   if (measured.length === 0) return { kind: 'hidden' };
   const [off] = measured.flatMap(({ item, placement }) => (placement === 'inside' ? [] : [{ item, placement }]));
-  if (!off) return { kind: 'clear' };
+  if (!off) return { kind: 'clear', ...texts.clear };
   const { item, placement } = off;
   const { fix, reason, how } = texts.points[item][placement];
   return { kind: 'point', point: { item, placement, fix, reason, how, link: { label: texts.points[item].link, url: pageOf(item, pair) } } };

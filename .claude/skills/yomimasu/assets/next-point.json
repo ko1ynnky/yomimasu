@@ -1,5 +1,9 @@
 {
-  "about": "次に直す1点の文。scripts/next-point.ts が読む。文はスキル yomimasu の references/ の知識をもとに書き、basis に、もとにしたファイルと見出しと、資料の版とページ（講習資料はスライドの番号）を1つずつ残す。判定の幅の値は書き写さない。MIT License の範囲外で、扱いは NOTICE.md にある",
+  "about": "次に直す1点の文。scripts/next-point.ts が読む。文はスキル yomimasu の references/ の知識をもとに書き、basis に、もとにしたファイルと見出しと、資料の版とページ（講習資料はスライドの番号）を1つずつ残す。判定の幅の値は書き写さない。MIT License の範囲外で、扱いは NOTICE.md にある。clear は直す点がないときの文で、資料ではなく docs/ui-sample.html の見本の文から来たので basis を持たない",
+  "clear": {
+    "fix": "今回はありません",
+    "reason": "測った項目はどれも目安の幅の中でした。練習会の本番には補助がないので、補助を外して読んでみましょう。"
+  },
   "points": {
     "ma": {
       "link": "間を詳しく",
