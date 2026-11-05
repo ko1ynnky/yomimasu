@@ -2,6 +2,36 @@
 
 あとの作業に影響する技術と設計の判断を、新しいものを上にして書く。理由と、採らなかった案も残す。結論を改めるときは、元の項目を消さずに、改めた日付と理由を足す。
 
+## 2026-11-06 お手本の音声を、公開しないバケットから Worker が同じオリジンで配る
+
+- 決めたこと：
+  - お手本の202本は R2 のバケット `yomimasu-audio` に `v1/NNN_N.m4a` の名前で置き、バケットは公開しない。アプリの Worker（`site/worker.ts`）が、同じオリジンの `/audio/v1/NNN_N.m4a` で配る。
+  - Worker を静的なファイルより先に通すのは `/audio/*` だけにする（`assets.run_worker_first`）。静的なファイルに当たらないパスは Worker にも来るので、`/audio/` の外は `ASSETS` の束縛に渡し、今までどおりの答えにする。
+  - 答えるのは GET と HEAD の `/audio/v1/<3桁>_<1か2>.m4a` だけにする。形の違うパスは、バケットにキーがあっても 404 にする。形の合うパスへのほかのメソッドは 405 にし、`Allow: GET, HEAD` を付ける。
+  - Range は1つの範囲に 206 で答え、満たせない範囲には 416 と `Content-Range: bytes */全体の大きさ` を返す。複数の範囲と読めない Range は、RFC 9110 が認めるとおり無視して全体を返す。
+  - `Content-Type: audio/mp4`、`Cache-Control: public, max-age=31536000, immutable`、`Accept-Ranges: bytes` は、バケットのメタデータを写さずに Worker で付ける。ETag は R2 の `httpEtag` を使う。
+  - `v1/` のキーの中身は置き換えない。音声を直すときは `v2/` のキーに置き、聞く画面の取得先を変える。
+  - プレビューにも同じバケットを束ねる。
+- 経緯：2026-11-06 にユーザーが、お手本の音声を上げて配ることを決めた（#42）。
+- 根拠：
+  - 聞く画面は、取得先を同じオリジンのパスに限る（PR #22 の `site/client/playback.ts`）。外の配信から読むと、どの端末が聞いたかが外へ出るからである。
+  - Range は iOS の Safari が使う（#42）。
+  - パスの形で m4a に限っているので、型は Worker で決められる。上げ方の違いで型やキャッシュが変わらないようにした。
+  - キーの中身を置き換えないので、1年の `immutable` で端末にキャッシュさせても古い音が残らない。同じ理由で、`If-None-Match` と `If-Range` は見ない。
+  - R2 の Workers API の文書は、満たせない範囲を `get` に渡したときの答えを決めていない。そこで範囲の要求では先に `head` で大きさを見て、範囲を Worker で決めてから `get` で読む。
+  - プレビューは、上の階層の束縛を受け継がない。束縛は `previews` に書く。Worker はバケットを読むだけなので、プレビュー用のバケットには分けない。
+- 採らなかった案：
+  - バケットを公開し、r2.dev の URL で配る案。別のオリジンになり、聞く画面の取得先の制限から外れる。r2.dev は速さが制限され、本番には向かない。
+  - バケットを公開し、カスタムドメインで配る案。これも別のオリジンになり、CORS の設定が要る。バケットの中のどのキーも、パスの検査なしに取れるようになる。
+  - 音声を `dist` に入れて静的なファイルとして配る案。音声は Git に入れない（2026-11-02）ので、組み立てのたびにどこかから取ってくることになる。
+  - R2 の型のために `@cloudflare/workers-types` を足す案。使うのは `head` と `get` だけなので、使う形だけを `site/worker.ts` に書き、依存を増やさない。
+- 限界：
+  - Worker の答えは Cloudflare の CDN のキャッシュに載らないので、毎回 R2 から読む。端末のキャッシュは1年である。要るようになったら Cache API を試す。
+  - 範囲の要求は R2 の操作を2回使う（`head` と `get`）。
+  - iPhone の Safari での再生は、PR #22 のマージのあとに、プレビューの聞く画面で確かめる。
+  - お手本の許諾を得た日は、まだ `NOTICE.md` の「音声」にない。ユーザーが書き足す。
+- 根拠の文書（確認日 2026-11-06）：[Static Assets の routing](https://developers.cloudflare.com/workers/static-assets/)、[run_worker_first](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/)、[Previews の設定](https://developers.cloudflare.com/workers/previews/configuration/)、[R2 の Workers API](https://developers.cloudflare.com/r2/api/workers/workers-api-reference/)、[R2 の制限（r2.dev）](https://developers.cloudflare.com/r2/platform/limits/)、[RFC 9110 の Range](https://www.rfc-editor.org/rfc/rfc9110#section-14.2)
+
 ## 2026-11-05 次に直す1点を、間 → 下の句＋余韻 → 上の句 の順で選ぶ
 
 - 決めたこと：
