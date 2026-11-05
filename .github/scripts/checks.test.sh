@@ -208,6 +208,40 @@ if [[ $history != *公式の指摘* || $history != *修正の答え* || $history
   ng "review-comments: 答えも渡すときは Claude の答えだけを足す（出力 $history）"
 fi
 
+# 実行の記録の見本。本文、コマンドの出力、最後の答えは、要約にも、取り出した記録にも出さない。
+execution=$(mktemp "$work/execution.XXXXXX")
+cat >"$execution" <<'EOF'
+[
+  {"type": "system", "subtype": "init", "cwd": "/home/runner/work/yomimasu"},
+  {"type": "assistant", "message": {"content": [{"type": "text", "text": "非公開の本文"}, {"type": "tool_use", "name": "Skill", "input": {"skill": "verify"}}]}},
+  {"type": "user", "message": {"content": [{"type": "tool_result", "content": "非公開の出力"}]}},
+  {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Bash", "input": {"command": "npm run check"}}, {"type": "tool_use", "name": "Skill", "input": {"skill": "yomimasu"}}]}},
+  {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Skill", "input": {"skill": "verify"}}]}},
+  {"type": "result", "num_turns": 3, "result": "非公開の答え", "modelUsage": {"claude-x": {"inputTokens": 1, "outputTokens": 1}}},
+  {"type": "result", "num_turns": 12, "result": "非公開の答え", "modelUsage": {"claude-opus-5-5": {"inputTokens": 10, "cacheReadInputTokens": 200, "cacheCreationInputTokens": 30, "outputTokens": 40}, "claude-haiku": {"inputTokens": 5, "outputTokens": 6}}}
+]
+EOF
+summary_want='<!-- run-summary -->
+実行の要約
+
+- モデル：claude-haiku、claude-opus-5-5
+- ターン数：12
+- トークン：入力 245、出力 46
+- スキル：verify、yomimasu'
+summary=$(bash "$scripts/run-summary.sh" "$execution" 2>&1)
+if [[ $summary != "$summary_want" ]]; then
+  ng "run-summary: 最後の結果のモデル、ターン数、トークンと、使ったスキルを書く（出力 $summary）"
+fi
+extracted=$(mktemp "$work/extracted.XXXXXX")
+bash "$scripts/run-summary.sh" --extract "$execution" >"$extracted" 2>&1
+summary=$(bash "$scripts/run-summary.sh" "$extracted" 2>&1)
+if [[ $summary != "$summary_want" ]]; then
+  ng "run-summary: 取り出した記録から同じ要約を作る（出力 $summary）"
+fi
+if grep -q '非公開' "$extracted"; then
+  ng 'run-summary: 取り出した記録に本文、コマンドの出力、答えを残さない'
+fi
+
 # 偽の gh は、呼ばれた引数を記録し、場面ごとの JSON を返す。
 gh_bin=$(mktemp -d "$work/gh.XXXXXX")
 cat >"$gh_bin/gh" <<'EOF'
