@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { outputPathOf, parseSource, renderDocument } from '../../site/render.ts';
+import { outputPathOf, parseSource, renderDocument, runFor } from '../../site/render.ts';
 
 test('Markdown の先頭からタイトルを取り出し、本文と分ける', () => {
   assert.deepEqual(parseSource('---\ntitle: 総論\n---\n\n本文です。\n'), { title: '総論', markdown: '\n本文です。\n' });
@@ -64,7 +64,7 @@ test('上の帯から入口へ戻れる', () => {
 
 test('コマンドのあるページは、実行の行と読んだファイルの行を本文の上に出す', () => {
   const html = renderDocument({ ...page, command: '総論を学ぶ', readName: '総論.md' });
-  assert.match(html, /<div class="screen"><div class="run"><div><span class="gt">&gt;<\/span> \/yomimasu 総論を学ぶ<\/div><div class="read">● Read 総論.md<\/div><\/div><p>本文です。<\/p>/);
+  assert.match(html, /<div class="screen"><div class="run"><div><span class="gt">&gt;<\/span> <span data-run>\/yomimasu 総論を学ぶ<\/span><\/div><div class="read">● Read 総論.md<\/div><\/div><p>本文です。<\/p>/);
 });
 
 test('入口には実行の行がない', () => {
@@ -87,4 +87,50 @@ test('タイトルとコマンドの記号は HTML として解釈させない',
   const html = renderDocument({ ...page, title: '<b>&"', command: '<i>' });
   assert.match(html, /<title>&lt;b&gt;&amp;&quot;<\/title>/);
   assert.match(html, /\/yomimasu &lt;i&gt;/);
+});
+
+test('入力の行は、押したボタンのコマンドを打ち込める', () => {
+  assert.match(renderDocument(page), /<div class="ask-line"><span class="gt">&gt;<\/span> <span data-typed>\/yomimasu <\/span><span class="caret"><\/span><\/div>/);
+});
+
+const NEXT = '<p>本文</p>\n<!-- ask -->\n<div class="next"><a class="btn btn--line" href="/soron/">総論を学ぶ</a><a class="btn btn--fill" href="/read/">まず1回読む</a></div>';
+const BACK = '<a class="btn btn--line back" href="/" data-back>戻る</a>';
+
+test('読んだファイルのある画面は、主の操作の右に「戻る」を並べる。JS がなくても入口へ移れる', () => {
+  const html = renderDocument({ ...page, command: '総論を学ぶ', readName: '総論.md', bodyHtml: NEXT });
+  assert.ok(html.includes(`<div class="main-row"><a class="btn btn--fill" href="/read/">まず1回読む</a>${BACK}</div>`));
+  assert.equal(html.split('data-back').length, 2);
+});
+
+test('主の操作のない画面は、「戻る」だけを右に寄せて置く', () => {
+  const asking = renderDocument({ ...page, command: 'このアプリについて', readName: 'このアプリについて.md', bodyHtml: '<p>本文</p>\n<!-- ask -->\n<p class="ask-q">次は？</p>' });
+  assert.match(asking, new RegExp(`<p class="ask-q">次は？</p><div class="back-row">${BACK}</div></section>`));
+  const tool = renderDocument({ ...page, command: '1首ずつ学ぶ', readName: '一覧.md', tool: true, bodyHtml: '<p>一覧</p>' });
+  assert.ok(tool.includes(`<p>一覧</p><div class="back-row">${BACK}</div></div>`));
+});
+
+test('入口と、読んだファイルのない画面（読む流れ）には「戻る」を置かない', () => {
+  assert.doesNotMatch(renderDocument({ ...page, bodyHtml: NEXT }), /data-back/);
+  assert.doesNotMatch(renderDocument({ ...page, command: 'まず1回読む', bodyHtml: NEXT }), /data-back/);
+});
+
+test('本文の <!-- foot --> から後ろは、入力の行と一覧の下に置く', () => {
+  const html = renderDocument({ ...page, bodyHtml: '<p>題</p>\n<!-- ask -->\n<nav>一覧</nav>\n<!-- foot -->\n<p>下端</p>' });
+  assert.match(html, /<nav>一覧<\/nav>\n<\/section>\n<p>下端<\/p>\n?<\/div>/);
+});
+
+test('実行の行と読んだ行は、コマンドの表から引いたものにする', () => {
+  assert.deepEqual(runFor('総論.md', {}, { say: '総論を学ぶ', read: '総論.md' }), { command: '総論を学ぶ', readName: '総論.md' });
+  assert.deepEqual(runFor('practice.md', { command: '練習モード' }, { say: '練習モード' }), { command: '練習モード' });
+  assert.deepEqual(runFor('read/rec.md', {}, undefined), {});
+});
+
+test('先頭のコマンドか読んだ行が表と違うと、組み立てを止める', () => {
+  assert.throws(() => runFor('総論.md', { command: '総論' }, { say: '総論を学ぶ', read: '総論.md' }), /総論を学ぶ/);
+  assert.throws(() => runFor('総論.md', { readName: 'soron.md' }, { say: '総論を学ぶ', read: '総論.md' }), /総論\.md/);
+});
+
+test('読んだ行の名前が、その画面の content/ のファイルの名前でないと、組み立てを止める', () => {
+  assert.throws(() => runFor('karuta/一覧.md', {}, { say: '1首ずつ学ぶ', read: '100首.md' }), /100首\.md/);
+  assert.deepEqual(runFor('karuta/一覧.md', {}, { say: '1首ずつ学ぶ', read: '一覧.md' }), { command: '1首ずつ学ぶ', readName: '一覧.md' });
 });
