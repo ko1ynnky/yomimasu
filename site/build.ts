@@ -4,6 +4,7 @@ import { marked } from 'marked';
 import { build } from 'vite';
 import deck from '../.claude/skills/yomimasu/assets/cards.json' with { type: 'json' };
 import type { Card } from '../.claude/skills/yomimasu/scripts/cards.ts';
+import { mouthFiguresHtml, nasalEndingsText, nasalFigureHtml } from '../content/karuta/mouth.ts';
 import { cardPage, expandCardRefs, finalSoundCounts, listHtml, parseAdvice } from './karuta.ts';
 import { outputPathOf, parseSource, renderDocument } from './render.ts';
 
@@ -14,6 +15,12 @@ const ADVICE_PATH = '.claude/skills/yomimasu/references/card-advice-candidates.m
 // 100首の一覧は札の読みの表から組むので、一覧.md には置き場の印だけを書く。
 const LIST_MARK = '<!-- 100首の一覧 -->';
 const FINAL_SOUND_MARK = '<!-- 最後の音の数 -->';
+// 口の形の図と「ん」の数も、文に書き写さず、組み立てのたびに作る。
+const MARKS: Record<string, () => string> = {
+  '<!-- 最後の音の口の形 -->': mouthFiguresHtml,
+  '<!-- 「ん」の位置の図 -->': nasalFigureHtml,
+  '<!-- 「ん」で終わる札の数 -->': () => nasalEndingsText(cards),
+};
 
 await build({
   logLevel: 'warn',
@@ -40,7 +47,8 @@ for (const entry of readdirSync(CONTENT_DIR, { recursive: true, withFileTypes: t
   if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
   const sourcePath = join(entry.parentPath, entry.name);
   const { title, command, readName, tool, slug, markdown } = parseSource(readFileSync(sourcePath, 'utf8'));
-  const bodyHtml = expandCardRefs((await marked.parse(markdown)).replace(LIST_MARK, () => listHtml(cards)).replace(FINAL_SOUND_MARK, () => finalSoundCounts(cards)), cards);
+  const parsed = (await marked.parse(markdown)).replace(LIST_MARK, () => listHtml(cards)).replace(FINAL_SOUND_MARK, () => finalSoundCounts(cards));
+  const bodyHtml = expandCardRefs(Object.entries(MARKS).reduce((html, [mark, make]) => html.replace(mark, make), parsed), cards);
   writePage(outputPathOf(relative(CONTENT_DIR, sourcePath), slug), renderDocument({ title, bodyHtml, scriptPath, stylePaths, command, readName, tool }));
 }
 
