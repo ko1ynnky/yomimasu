@@ -8,7 +8,7 @@
   - お手本の202本は R2 のバケット `yomimasu-audio` に `v1/NNN_N.m4a` の名前で置き、バケットは公開しない。アプリの Worker（`site/worker.ts`）が、同じオリジンの `/audio/v1/NNN_N.m4a` で配る。
   - Worker を静的なファイルより先に通すのは `/audio/*` だけにする（`assets.run_worker_first`）。静的なファイルに当たらないパスは Worker にも来るので、`/audio/` の外は `ASSETS` の束縛に渡し、今までどおりの答えにする。
   - 答えるのは GET と HEAD の `/audio/v1/<3桁>_<1か2>.m4a` だけにする。形の違うパスは、バケットにキーがあっても 404 にする。形の合うパスへのほかのメソッドは 405 にし、`Allow: GET, HEAD` を付ける。
-  - Range は1つの範囲に 206 で答え、満たせない範囲には 416 と `Content-Range: bytes */全体の大きさ` を返す。複数の範囲と読めない Range は、RFC 9110 が認めるとおり無視して全体を返す。
+  - Range は1つの範囲に 206 で答え、満たせない範囲には 416 と `Content-Range: bytes */全体の大きさ` を返し、長いキャッシュは付けない。複数の範囲と読めない Range は、RFC 9110 が認めるとおり無視して全体を返す。
   - `Content-Type: audio/mp4`、`Cache-Control: public, max-age=31536000, immutable`、`Accept-Ranges: bytes` は、バケットのメタデータを写さずに Worker で付ける。ETag は R2 の `httpEtag` を使う。
   - `v1/` のキーの中身は置き換えない。音声を直すときは `v2/` のキーに置き、聞く画面の取得先を変える。
   - プレビューにも同じバケットを束ねる。
@@ -175,6 +175,7 @@
 - 限界：
   - 句切れと掛詞は表に列がないので、`card-rules.md` が冊子を目で数えた札をそのまま使い、歌のどこかは示さない。
   - 総論（B1）の帯は、お手本の音声の配信（E1）がないので、動かさない図だけにした。「実際の読みで確認する」とお手本の再生、「この札で読む」はまだない。
+- 改めた点（2026-11-06）：お手本の音声の配信（E1）を足した（「お手本の音声を、公開しないバケットから Worker が同じオリジンで配る」）。総論の帯を動かすかと、お手本の再生をどこに置くかは、まだ決めていない。
 
 ## 2026-11-04 読む画面を、区切りと朱の進みだけの形にする
 
@@ -558,6 +559,7 @@
   - [Build branches](https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/)、[Workers Builds API](https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/)、[Worker Previews の設定](https://developers.cloudflare.com/workers/previews/configuration/)
   - [Workers の料金](https://developers.cloudflare.com/workers/platform/pricing/)、[R2 の料金](https://developers.cloudflare.com/r2/pricing/)
   - [Skills](https://code.claude.com/docs/en/skills)、[Node.js の TypeScript](https://nodejs.org/api/typescript.md)
+- 改めた点（2026-11-06）：Worker のスクリプト（`site/worker.ts`）を足した。先に通すのは `/audio/*` だけで、ほかのパスは今までどおり静的アセットとして配る。理由は「お手本の音声を、公開しないバケットから Worker が同じオリジンで配る」にある。
 
 ## 2026-11-02 Anthropic の開発の記事からハーネスに入れるものを選ぶ
 

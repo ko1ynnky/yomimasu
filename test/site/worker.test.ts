@@ -73,11 +73,12 @@ test('終わりのない範囲、末尾からの範囲、大きさを超える�
   }
 });
 
-test('始まりが大きさを超える範囲には、416 と全体の大きさを返す', async () => {
+test('始まりが大きさを超える範囲には、416 と全体の大きさを返し、キャッシュさせない', async () => {
   for (const range of ['bytes=1000-', 'bytes=1000-1099', 'bytes=-0']) {
     const response = await call('/audio/v1/001_1.m4a', { headers: { Range: range } });
     assert.equal(response.status, 416, range);
     assert.equal(response.headers.get('content-range'), 'bytes */1000', range);
+    assert.equal(response.headers.get('cache-control'), null, range);
     assert.equal((await bytesOf(response)).length, 0, range);
   }
 });

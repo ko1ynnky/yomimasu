@@ -64,8 +64,9 @@ async function serveClip(request: Request, bucket: ClipBucket, key: string): Pro
   const object = await bucket.head(key);
   if (!object) return notFound();
   const range = byteRangeOf(spec, object.size);
+  // 416 は要求の Range ごとの答えなので、お手本の長いキャッシュを付けない。付けると、同じ URL の全体の取得まで 416 を返しうる。
   if (!range) {
-    return new Response(null, { status: 416, headers: { ...CLIP_HEADERS, 'Content-Range': `bytes */${object.size}` } });
+    return new Response(null, { status: 416, headers: { 'Accept-Ranges': 'bytes', 'Content-Range': `bytes */${object.size}` } });
   }
   const part = await bucket.get(key, { range });
   if (!part) return notFound();
