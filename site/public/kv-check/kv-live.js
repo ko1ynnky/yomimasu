@@ -98,7 +98,6 @@
   const F = (c, n, up) => ({ c, q: quatOf(frame(n, up)) });
   const toEye = (c) => sub(EYE_LEVEL, c);
   const FRAMES = {
-    rest: F([BOX.c[0] + 0.005, BOX.c[1] + BOX.half[1] + 0.006, BOX.c[2] - 0.035], [0, -1, 0], [0, 0, 1]),
     dip: F([BOX.c[0], STACK_TOP + 0.002, BOX.c[2] + 0.005], [0, -1, 0], [0, 0, 1]),
     lift: F([BOX.c[0] - 0.01, BOX.c[1] + 0.13, BOX.c[2] - 0.02], [0, -0.3, -1], [0, 1, 0.3]),
     glance: F([-0.05, 1.3, 0.3], [0.08, 0.6, -1], [0, 1, 0]),
@@ -109,25 +108,26 @@
     back: F([BOX.c[0] - 0.06, BOX.c[1] + 0.1, BOX.c[2] - 0.06], [0, -1, 0.1], [0, 0, 1]),
   };
 
-  // 1周の流れ。読唱箱から札を取り、目を落として確かめ、顔を起こして正面へ読み、読み終えた札を表にして脇へ置く
+  // 1周は下の句の余韻が始まる所から。読み終えた札を表にして脇へ置き、読唱箱の次の札を取り、
+  // 間合いで一瞬だけ見て、顔を起こして上の句を読む。札を置くときも取るときも顔はほとんど伏せず、深くうつむくのは見る一瞬だけにする。
+  // 読手は次の札をぎりぎりまで見ない。下の句を読む前に次の上の句を知ると読みに出て、競技者に伝わりうるからである
   const LOOP = 10;
   const KEYS = [
-    { t: 0.0, f: 'rest', pitch: -3, yaw: 0, lean: 0, card: 0 },
-    { t: 0.6, f: 'rest', pitch: -3, yaw: 0, lean: 0, card: 0 },
-    { t: 1.3, f: 'dip', pitch: 40, yaw: -4, lean: 10, card: 0 },
-    { t: 1.6, f: 'dip', pitch: 40, yaw: -4, lean: 10, card: 1 },
-    { t: 2.1, f: 'lift', pitch: 34, yaw: -4, lean: 6, card: 1 },
-    { t: 2.7, f: 'glance', pitch: 26, yaw: -6, lean: 2, card: 1 },
-    { t: 3.4, f: 'glance', pitch: 26, yaw: -6, lean: 2, card: 1 },
-    { t: 4.1, f: 'read', pitch: -4, yaw: 0, lean: 0, card: 1 },
-    { t: 8.0, f: 'read', pitch: -4, yaw: 0, lean: 0, card: 1 },
-    { t: 8.5, f: 'over', pitch: 22, yaw: -22, lean: 7, card: 1 },
-    { t: 8.9, f: 'place', pitch: 26, yaw: -24, lean: 9, card: 1 },
-    { t: 9.1, f: 'place', pitch: 22, yaw: -20, lean: 8, card: 0 },
-    { t: 9.6, f: 'back', pitch: 2, yaw: -6, lean: 2, card: 0 },
-    { t: LOOP, f: 'rest', pitch: -3, yaw: 0, lean: 0, card: 0 },
+    { t: 0.0, f: 'read', pitch: -4, yaw: 0, lean: 0, card: 1 },
+    { t: 0.4, f: 'read', pitch: -4, yaw: 0, lean: 0, card: 1 },
+    { t: 0.9, f: 'over', pitch: 16, yaw: -16, lean: 7, card: 1 },
+    { t: 1.3, f: 'place', pitch: 18, yaw: -18, lean: 9, card: 1 },
+    { t: 1.5, f: 'place', pitch: 16, yaw: -16, lean: 8, card: 0 },
+    { t: 2.0, f: 'back', pitch: 6, yaw: -6, lean: 3, card: 0 },
+    { t: 2.4, f: 'dip', pitch: 12, yaw: -4, lean: 9, card: 0 },
+    { t: 2.6, f: 'dip', pitch: 12, yaw: -4, lean: 9, card: 1 },
+    { t: 3.0, f: 'lift', pitch: 10, yaw: -4, lean: 6, card: 1 },
+    { t: 3.35, f: 'glance', pitch: 26, yaw: -6, lean: 2, card: 1 },
+    { t: 3.65, f: 'glance', pitch: 26, yaw: -6, lean: 2, card: 1 },
+    { t: 4.2, f: 'read', pitch: -4, yaw: 0, lean: 0, card: 1 },
+    { t: LOOP, f: 'read', pitch: -4, yaw: 0, lean: 0, card: 1 },
   ];
-  const READ_SPAN = [4.1, 8.0];
+  const READ_SPAN = [4.2, LOOP];
 
   const LEFT_HAND = (() => {
     const M = frame([0, -1, 0], [0.15, 0, 1]);
