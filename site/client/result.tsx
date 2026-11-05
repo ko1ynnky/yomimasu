@@ -1,6 +1,8 @@
 import { render } from 'preact';
 import { useEffect, useMemo } from 'preact/hooks';
 import { measure } from '../../.claude/skills/yomimasu/scripts/measure.ts';
+import { nextPoint } from '../../.claude/skills/yomimasu/scripts/next-point.ts';
+import { NextPoint } from './next-point.tsx';
 import { lastTake, type Take } from './take.ts';
 import { levelSentence, noticeOf, resultRows } from './verdict.ts';
 import './result.css';
@@ -46,6 +48,7 @@ function Result({ take, example }: { take: Take; example: boolean }) {
         {(notice ?? level) && <br />}
         明瞭さは測っていません。お手本と聴き比べてください。
       </p>
+      <NextPoint answer={nextPoint(measurement, take.pair)} />
       <p class="fine">録音は端末の外へ出ません。</p>
     </>
   );
