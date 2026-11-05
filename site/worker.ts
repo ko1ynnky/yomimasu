@@ -11,7 +11,8 @@ export type ClipBucket = {
 type Env = { AUDIO: ClipBucket; ASSETS: { fetch(request: Request): Promise<Response> } };
 
 // NNN は札の番号の3桁（000 は序歌）、最後の数字は 1 が上の句、2 が下の句である。バケットのキーは /audio/ のあとの部分になる。
-const CLIP_PATH = /^\/audio\/(v1\/[0-9]{3}_[12]\.m4a)$/;
+// 例の録音（C9）は examples/v1/ の下に、英小文字と数字とハイフンの名前で置く。名前の形を絞るのは、バケットのほかのキーを返さないためである。
+const CLIP_PATH = /^\/audio\/(v1\/[0-9]{3}_[12]\.m4a|examples\/v1\/[a-z0-9]+(?:-[a-z0-9]+)*\.m4a)$/;
 
 // 型とキャッシュはバケットのメタデータから写さずに、ここで決める。パスの形で m4a に限っていて、上げ方の違いで変わらないようにするためである。
 // v1 のキーの中身は置き換えない（直すときは v2 にする）ので、1年の immutable にする。同じ理由で If-None-Match と If-Range は見ない。

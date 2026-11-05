@@ -19,7 +19,7 @@ function bucketOf(objects: Record<string, Uint8Array>): ClipBucket {
 }
 
 const env = {
-  AUDIO: bucketOf({ 'v1/001_1.m4a': CLIP, 'v1/notes.txt': CLIP }),
+  AUDIO: bucketOf({ 'v1/001_1.m4a': CLIP, 'v1/notes.txt': CLIP, 'examples/v1/ma-long.m4a': CLIP, 'examples/v1/Ma.m4a': CLIP }),
   ASSETS: { fetch: async (request: Request) => new Response(`asset:${new URL(request.url).pathname}`) },
 };
 
@@ -109,9 +109,22 @@ test('3桁の番号と 1 か 2 の形でないパスは、バケットにあっ�
     '/audio/001_1.m4a',
     '/audio/v1/%30%30%31_1.m4a',
     '/audio/',
+    '/audio/examples/v1/Ma.m4a',
+    '/audio/examples/v1/-ma.m4a',
+    '/audio/examples/v1/ma_long.m4a',
+    '/audio/examples/v2/ma-long.m4a',
+    '/audio/examples/ma-long.m4a',
   ]) {
     assert.equal((await call(path)).status, 404, path);
   }
+});
+
+test('例の録音は examples/v1/ の下の、英小文字と数字とハイフンの名前だけを返す', async () => {
+  const response = await call('/audio/examples/v1/ma-long.m4a');
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('Content-Type'), 'audio/mp4');
+  assert.deepEqual(await bytesOf(response), CLIP);
+  assert.equal((await call('/audio/examples/v1/ma-short.m4a')).status, 404);
 });
 
 test('GET と HEAD のほかのメソッドには、405 と使えるメソッドを返す', async () => {
