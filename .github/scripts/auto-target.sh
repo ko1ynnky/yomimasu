@@ -40,7 +40,7 @@ for pr in $waiting; do
   fi
 done
 
-# Issue を始めるときに work の job が in-progress を付けるので、日本時間の今日に付けた回数を始めた件数とする。
+# Issue を選んだときに pick の job が in-progress を付けるので、日本時間の今日に付けた回数を始めた件数とする。
 # 失敗した実行も Claude の利用枠を使うので数える。PR の修正はレビューの回数で止まるので、上限に含めない。
 started=0
 for ((page = 1; ; page++)); do
