@@ -35,6 +35,17 @@ test('入口から、導入、お手本を聞く、読む、結果、前回と�
     args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', `--use-file-for-fake-audio-capture=${writeFakeMicFile()}%noloop`],
   });
   const page = await (await browser.newContext({ baseURL, viewport: VIEWPORT })).newPage();
+  // 鳴らした音の長さを記録し、自分の読みが移ってきた録音から鳴ったかを確かめる。
+  await page.addInitScript(() => {
+    const started: number[] = [];
+    const start = AudioBufferSourceNode.prototype.start;
+    AudioBufferSourceNode.prototype.start = function (this: AudioBufferSourceNode, ...args: Parameters<typeof start>) {
+      started.push(this.buffer?.duration ?? 0);
+      return start.apply(this, args);
+    };
+    Object.assign(window, { startedSec: started });
+  });
+  const lastStartedSec = () => page.evaluate(() => (window as unknown as { startedSec: number[] }).startedSec.at(-1));
   const loads: string[] = [];
   page.on('load', () => loads.push(new URL(page.url()).pathname));
   const asked: string[] = [];
@@ -88,9 +99,12 @@ test('入口から、導入、お手本を聞く、読む、結果、前回と�
   await page.locator('main .ask').scrollIntoViewIfNeeded();
   await shot('result-listen-back');
 
-  // 自分の読みは、移ってきた画面のメモリーの録音から鳴る。
+  // 自分の読みは、移ってきた録音の読み始めから最後までを鳴らす。
+  const take = page.getByTestId('take');
+  const ownSec = Number(await take.getAttribute('data-length-sec')) - Number(await take.getAttribute('data-reading-start-sec'));
   await result.getByRole('button', { name: '自分の読み', exact: true }).click();
   await expect(result.locator('.pair button')).toHaveText(['やめる', 'お手本']);
+  await expect.poll(async () => Math.abs(((await lastStartedSec()) ?? 0) - ownSec)).toBeLessThanOrEqual(0.002);
   await result.getByRole('button', { name: 'やめる' }).click();
   await expect(result.locator('.pair button')).toHaveText(['自分の読み', 'お手本']);
 

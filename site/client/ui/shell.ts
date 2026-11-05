@@ -215,12 +215,15 @@ async function follow(link: HTMLAnchorElement, url: URL) {
   await arrive(url, page, mine, { push: pathOf(url) !== shown, motion: !reduced() });
 }
 
-// リンクを押さずに移る（読み終えたあとの結果の画面など）。打ち込みは呼ぶ側が済ませているので、取ってきたらすぐ入れ替える。
-export function go(href: string) {
+// リンクを押さずに移る（読み終えたあとの結果の画面など）。打ち込みは呼ぶ側が行う。
+// 取得は呼んだ時点で始め、ready が true になってから入れ替える。false なら移らない。待つあいだに戻る・進む操作があれば、そちらを採る。
+export async function go(href: string, ready: Promise<boolean>) {
   const url = new URL(href, location.href);
   const mine = ++generation;
   busy = true;
-  void arrive(url, load(url), mine, { push: pathOf(url) !== shown, motion: !reduced() });
+  const page = load(url);
+  if (await ready) return arrive(url, page, mine, { push: pathOf(url) !== shown, motion: !reduced() });
+  if (mine === generation) busy = false;
 }
 
 const TOP = () => new URL('/', location.href);
