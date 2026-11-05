@@ -32,10 +32,10 @@ export function AskNext({ links = [], again }: { links?: readonly Link[]; again:
 }
 
 // ライブラリの答えをそのまま描き、ここで選び直さない。文の出どころを画面に書かない（docs/ui-guide.md の10節と12節）。
-// more は、次に直す1点とは別に「次は？」へ足す移動である（前回と比べる など）。
-export function NextPoint({ answer, pair, more = [] }: { answer: Answer; pair: Pair; more?: readonly Link[] }) {
-  if (answer.kind === 'hidden') return <AskNext links={more} again={{ label: '読み直す', url: againUrl(pair) }} />;
-  const again = { label: 'もう1回読む', url: againUrl(pair) };
+// more は、次に直す1点とは別に「次は？」へ足す移動である（前回と比べる など）。again を渡すと、塗りのボタンをそれに替える（例の録音 など）。
+export function NextPoint({ answer, pair, more = [], again: given }: { answer: Answer; pair: Pair; more?: readonly Link[]; again?: Link }) {
+  if (answer.kind === 'hidden') return <AskNext links={more} again={given ?? { label: '読み直す', url: againUrl(pair) }} />;
+  const again = given ?? { label: 'もう1回読む', url: againUrl(pair) };
   if (answer.kind === 'clear') {
     return (
       <>
