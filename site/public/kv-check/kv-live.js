@@ -99,8 +99,12 @@
   const toEye = (c) => sub(EYE_LEVEL, c);
   const FRAMES = {
     dip: F([BOX.c[0], STACK_TOP + 0.002, BOX.c[2] + 0.005], [0, -1, 0], [0, 0, 1]),
-    lift: F([BOX.c[0] - 0.01, BOX.c[1] + 0.13, BOX.c[2] - 0.02], [0, -0.3, -1], [0, 1, 0.3]),
-    glance: F([-0.05, 1.3, 0.3], [0.08, 0.6, -1], [0, 1, 0]),
+    onBox: F([BOX.c[0] + 0.005, BOX.c[1] + BOX.half[1] + 0.006, BOX.c[2] - 0.035], [0, -1, 0], [0, 0, 1]),
+    // みぞおちの前で、裏を目へ向けて持つ。めくるときは札の縦の軸で回す。表と裏は向きが正反対なので、
+    // 間に横向きの1枚（turn）を挟まないと、回る向きが定まらない
+    faceDown: F([-0.07, 1.2, 0.3], [-0.1, -0.35, 1], [0, 1, 0]),
+    turn: F([-0.07, 1.21, 0.3], [-1, 0, 0], [0, 1, 0]),
+    look: F([-0.07, 1.22, 0.3], [0.1, 0.5, -1], [0, 1, 0]),
     // 読むときは札を胸の前で立てて持つ。面を目へ向けて寝かせると、前から見て札が線になり、持っているのが分からない
     read: F([-0.08, 1.3, 0.31], [0.1, 0.35, -1], [0, 1, 0]),
     over: F([PILE.c[0], PILE_TOP + 0.07, PILE.c[2] - 0.01], [0, 1, -0.25], [0, 0, 1]),
@@ -108,26 +112,32 @@
     back: F([BOX.c[0] - 0.06, BOX.c[1] + 0.1, BOX.c[2] - 0.06], [0, -1, 0.1], [0, 0, 1]),
   };
 
-  // 1周は下の句の余韻が始まる所から。読み終えた札を表にして脇へ置き、読唱箱の次の札を取り、
-  // 間合いで一瞬だけ見て、顔を起こして上の句を読む。札を置くときも取るときも顔はほとんど伏せず、深くうつむくのは見る一瞬だけにする。
-  // 読手は次の札をぎりぎりまで見ない。下の句を読む前に次の上の句を知ると読みに出て、競技者に伝わりうるからである
-  const LOOP = 10;
+  // 1周は上の句の読み始めから。読み終えた札を表にして脇へ置き、次の札を裏のまま読唱箱の上に置いて下の句を読む。
+  // 下の句の終わりの2〜3字で札を手に取ってみぞおちの前へ運び、余韻でめくって初めて見る。
+  // 次の札を先に見ないのは、下の句を読む前に次の上の句を知ると読みに出て、競技者に伝わりうるからである
+  const LOOP = 12;
   const KEYS = [
     { t: 0.0, f: 'read', pitch: -4, yaw: 0, lean: 0, card: 1 },
-    { t: 0.4, f: 'read', pitch: -4, yaw: 0, lean: 0, card: 1 },
-    { t: 0.9, f: 'over', pitch: 16, yaw: -16, lean: 7, card: 1 },
-    { t: 1.3, f: 'place', pitch: 18, yaw: -18, lean: 9, card: 1 },
-    { t: 1.5, f: 'place', pitch: 16, yaw: -16, lean: 8, card: 0 },
-    { t: 2.0, f: 'back', pitch: 6, yaw: -6, lean: 3, card: 0 },
-    { t: 2.4, f: 'dip', pitch: 12, yaw: -4, lean: 9, card: 0 },
-    { t: 2.6, f: 'dip', pitch: 12, yaw: -4, lean: 9, card: 1 },
-    { t: 3.0, f: 'lift', pitch: 10, yaw: -4, lean: 6, card: 1 },
-    { t: 3.35, f: 'glance', pitch: 26, yaw: -6, lean: 2, card: 1 },
-    { t: 3.65, f: 'glance', pitch: 26, yaw: -6, lean: 2, card: 1 },
-    { t: 4.2, f: 'read', pitch: -4, yaw: 0, lean: 0, card: 1 },
+    { t: 4.4, f: 'read', pitch: -4, yaw: 0, lean: 0, card: 1 },
+    { t: 4.9, f: 'over', pitch: 16, yaw: -16, lean: 7, card: 1 },
+    { t: 5.25, f: 'place', pitch: 18, yaw: -18, lean: 9, card: 1 },
+    { t: 5.45, f: 'place', pitch: 16, yaw: -16, lean: 8, card: 0 },
+    { t: 5.9, f: 'back', pitch: 10, yaw: -6, lean: 4, card: 0 },
+    { t: 6.25, f: 'dip', pitch: 16, yaw: -4, lean: 9, card: 0 },
+    { t: 6.45, f: 'dip', pitch: 16, yaw: -4, lean: 9, card: 1 },
+    { t: 6.9, f: 'onBox', pitch: 4, yaw: -2, lean: 2, card: 1 },
+    { t: 7.1, f: 'onBox', pitch: -3, yaw: 0, lean: 0, card: 1 },
+    { t: 8.7, f: 'onBox', pitch: -3, yaw: 0, lean: 0, card: 1 },
+    { t: 9.3, f: 'faceDown', pitch: 4, yaw: -2, lean: 1, card: 1 },
+    { t: 9.6, f: 'faceDown', pitch: 4, yaw: -2, lean: 1, card: 1 },
+    { t: 9.85, f: 'turn', pitch: 18, yaw: -4, lean: 1, card: 1 },
+    { t: 10.1, f: 'look', pitch: 28, yaw: -4, lean: 1, card: 1 },
+    { t: 10.45, f: 'look', pitch: 28, yaw: -4, lean: 1, card: 1 },
+    { t: 11.1, f: 'read', pitch: -4, yaw: 0, lean: 0, card: 1 },
     { t: LOOP, f: 'read', pitch: -4, yaw: 0, lean: 0, card: 1 },
   ];
-  const READ_SPAN = [4.2, LOOP];
+  const READ_SPAN = [0, 4.4];
+  const READ_T = 2.0;
 
   const LEFT_HAND = (() => {
     const M = frame([0, -1, 0], [0.15, 0, 1]);
@@ -462,7 +472,7 @@ void main(){
   function calibrate(mode, cols, rows, ss, yaw, pitch) {
     const key = [mode, cols, rows, ss, yaw, pitch].join(':');
     if (calibCache.has(key)) return calibCache.get(key);
-    const st = stats(6.0, yaw, pitch, cols, rows, ss);
+    const st = stats(READ_T, yaw, pitch, cols, rows, ss);
     const tones = [];
     for (let i = 0; i < st.cov.length; i++) if (st.cov[i] > 0.18) tones.push(mode === 'dark' ? st.bright[i] : 1 - st.bright[i]);
     const c = { lo: percentile(tones, 0.03), hi: percentile(tones, 0.97) };
@@ -641,5 +651,5 @@ void main(){
     };
   }
 
-  window.YomimasuKv = { mount, still, LOOP };
+  window.YomimasuKv = { mount, still, LOOP, READ_T };
 })();
