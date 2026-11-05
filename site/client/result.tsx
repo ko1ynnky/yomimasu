@@ -1,4 +1,5 @@
 import { render } from 'preact';
+import { createPortal } from 'preact/compat';
 import { useEffect, useState } from 'preact/hooks';
 import type { Measurement } from '../../.claude/skills/yomimasu/scripts/measure.ts';
 import { nextPoint } from '../../.claude/skills/yomimasu/scripts/next-point.ts';
@@ -11,17 +12,20 @@ import { levelSentence, noticeOf, resultRows } from './verdict.ts';
 import './result.css';
 
 const COMPARE = { label: '前回と比べる', url: '/result/compare/' };
+const RESULT_PROGRESS = '3 / 3 結果';
 
 // 補助の有無は上の帯の右に出す。帯は画面の組み立て（render.ts）が置き、この部品の外にある。
-function Assist({ assisted }: { assisted: boolean }) {
+// 読む流れから来たときは、進み具合（3 / 3 結果）に続けて出す。
+function Assist({ assisted, progress }: { assisted: boolean; progress?: string }) {
   useEffect(() => {
     const step = document.querySelector<HTMLElement>('.bar .step');
     if (!step) return;
-    step.textContent = assisted ? '補助あり' : '補助なし';
+    const assist = assisted ? '補助あり' : '補助なし';
+    step.textContent = progress ? `${progress}・${assist}` : assist;
     return () => {
       step.textContent = '';
     };
-  }, [assisted]);
+  }, [assisted, progress]);
   return null;
 }
 
@@ -35,19 +39,28 @@ function useHasKept(example: boolean) {
   return hasKept;
 }
 
+// 実行の行は画面の組み立て（render.ts）が置き、この部品の外にある。読んだばかりの録音のときだけ、その下に1行足す（docs/ui-guide.md の8節）。
+function RecordedNote() {
+  const [run, setRun] = useState<Element | null>(null);
+  useEffect(() => setRun(document.querySelector('.screen > .run')), []);
+  return run && createPortal(<div class="read">● 録音しました</div>, run);
+}
+
 // 例の録音は利用者が読んだものではないので、「もう1回読む」「読み直す」ではなく、同じ組を読んでみるよう誘う。
 const exampleAgain = (take: Take) => ({ label: '読んでみる', url: againUrl(take.pair) });
 
 // Take は声の処理の設定を持つが、measure に autoGainControl を渡していない。iPhone で設定の値を信じられるかを実機で確かめるまで渡さない（docs/measure.md）ので、声の大きさは出さない。
 // 聴き比べ（C6）は、この take をそのまま鳴らす。例の録音は端末に残さないので、records.ts の loadTake では読み直せない。
 // 例の録音は利用者が読んだものではないので、「自分の読み」と書かない。
-function Result({ take, measurement, example }: { take: Take; measurement: Measurement; example: boolean }) {
+// justRead は、このページで読んだばかりの録音である。読む流れの進み具合（3 / 3 結果）と「● 録音しました」は、そのときだけ出す。
+function Result({ take, measurement, example, justRead = false }: { take: Take; measurement: Measurement; example: boolean; justRead?: boolean }) {
   const notice = noticeOf(measurement);
   const level = levelSentence(measurement);
   const hasKept = useHasKept(example);
   return (
     <>
-      <Assist assisted={take.assisted} />
+      <Assist assisted={take.assisted} progress={justRead ? RESULT_PROGRESS : undefined} />
+      {justRead && <RecordedNote />}
       {example && <span class="tag">例の録音です</span>}
       <div class="card rows res">
         {resultRows(measurement).map((row) => (
@@ -83,13 +96,14 @@ function Result({ take, measurement, example }: { take: Take; measurement: Measu
 type Shown = { take: Take; measurement: Measurement };
 
 // 録音は端末の中にしかないので、URL だけでは結果を開けない。開いている画面の録音がなければ、端末に残した最後の録音を出す。
+// 開いている画面の録音は、ページを開き直さずに読む画面から移ってきたときにだけある（take.ts）。
 function OwnScreen() {
-  const [shown, setShown] = useState<Shown | null | undefined>(() => {
+  const [shown, setShown] = useState<(Shown & { justRead: boolean }) | null | undefined>(() => {
     const take = lastTake();
-    return take ? { take, measurement: measurementOf(take) } : undefined;
+    return take ? { take, measurement: measurementOf(take), justRead: true } : undefined;
   });
   useEffect(() => {
-    if (shown === undefined) latestKept().then(setShown, () => setShown(null));
+    if (shown === undefined) latestKept().then((kept) => setShown(kept && { ...kept, justRead: false }), () => setShown(null));
   }, []);
   if (shown === undefined) return null;
   if (!shown) {
@@ -99,7 +113,21 @@ function OwnScreen() {
       </p>
     );
   }
-  return <Result take={shown.take} measurement={shown.measurement} example={false} />;
+  const { take } = shown;
+  return (
+    <>
+      <Result take={take} measurement={shown.measurement} example={false} justRead={shown.justRead} />
+      <div
+        hidden
+        data-testid="take"
+        data-length-sec={(take.pcm.length / take.sampleRate).toFixed(3)}
+        data-reading-start-sec={take.readingStartSec.toFixed(3)}
+        data-assisted={String(take.assisted)}
+        data-pair={`${take.pair.shimo}-${take.pair.kami}`}
+        data-voice-processing={JSON.stringify(take.voiceProcessing)}
+      />
+    </>
+  );
 }
 
 // 例の録音は配信から取り、利用者の録音と同じ定義でこの端末で測る。数値は画面に書き込まず、毎回音から測る。

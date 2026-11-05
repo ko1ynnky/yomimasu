@@ -117,15 +117,13 @@ test('読んで結果の画面へ進むと、次に直す1点の下で自分の�
   const endSec = reading.leadSec + reading.shimoSec + reading.yoinSec + reading.maSec + reading.kamiSec + reading.tailSec;
   await page.waitForTimeout(endSec * 1000 + 300);
   await page.getByRole('button', { name: '読み終えた' }).click();
+  // 読み終えると、殻が開き直さずに本文を結果の画面へ入れ替える。読む画面で開いた1本は閉じていて、結果の画面は新しくマイクを開かない。
+  await expect(result(page).locator('.res')).toBeVisible();
+  expect(new URL(page.url()).pathname).toBe('/result/');
   const take = page.getByTestId('take');
-  await expect(take).toBeAttached();
   const lengthSec = Number(await take.getAttribute('data-length-sec'));
   const readingStartSec = Number(await take.getAttribute('data-reading-start-sec'));
-  // マイクを閉じてから結果の画面へ進む。結果の画面はマイクを開かない。
   expect(await microphones(page)).toEqual([true]);
-  await page.getByRole('link', { name: '結果を見る' }).click();
-  await expect(result(page).locator('.res')).toBeVisible();
-  expect(await microphones(page)).toEqual([]);
 
   // 次に直す1点のカードの下、「録音は端末の外へ出ません。」の上に、2つを並べる。
   await expect(playButtons(page)).toHaveText(['自分の読み', 'お手本']);
@@ -182,7 +180,7 @@ test('読んで結果の画面へ進むと、次に直す1点の下で自分の�
 
   await expect(result(page)).not.toContainText(/総合|点数|(?<!直す)\d+\s*点|順位/);
   await expect(result(page).getByRole('alert')).toHaveCount(0);
-  expect(await microphones(page)).toEqual([]);
+  expect(await microphones(page)).toEqual([true]);
   expect(await mediaPlaysOf(page)).toBe(0);
   expect(sent).toEqual([]);
   expect(await beaconsOf(page)).toEqual([]);

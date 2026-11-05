@@ -215,6 +215,14 @@ async function follow(link: HTMLAnchorElement, url: URL) {
   await arrive(url, page, mine, { push: pathOf(url) !== shown, motion: !reduced() });
 }
 
+// リンクを押さずに移る（読み終えたあとの結果の画面など）。打ち込みは呼ぶ側が済ませているので、取ってきたらすぐ入れ替える。
+export function go(href: string) {
+  const url = new URL(href, location.href);
+  const mine = ++generation;
+  busy = true;
+  void arrive(url, load(url), mine, { push: pathOf(url) !== shown, motion: !reduced() });
+}
+
 const TOP = () => new URL('/', location.href);
 
 // 「戻る」は Claude Code の質問（AskUserQuestion）と同じ順に動かす。行き先が入口しかないときは尋ねずに移る（docs/ui-guide.md の8節「戻る」）。

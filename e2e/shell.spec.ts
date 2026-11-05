@@ -364,7 +364,6 @@ test('読み終えた録音を、ページを読み直さずに結果の画面�
   await expect(page.locator('.blk[data-phase="kami"]')).toHaveClass(/is-now/, { timeout: 15_000 });
   await page.waitForTimeout(3000);
   await page.getByRole('button', { name: '読み終えた' }).click();
-  await page.getByRole('link', { name: '結果を見る' }).click();
   await expect(page).toHaveURL(/\/result\/$/);
   await expect(page.locator('yomimasu-result .res')).toBeVisible();
   await expect(page.locator('main')).not.toContainText('まだ録音がありません');
