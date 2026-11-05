@@ -6,26 +6,28 @@ import { levelSentence, noticeOf, resultRows } from './verdict.ts';
 import './result.css';
 
 // 補助の有無は上の帯の右に出す。帯は画面の組み立て（render.ts）が置き、この部品の外にある。
-function Assist({ assisted }: { assisted: boolean }) {
+// 読む流れから来たときは、進み具合（3 / 3 結果）に続けて出す。
+function Assist({ assisted, progress }: { assisted: boolean; progress?: string }) {
   useEffect(() => {
     const step = document.querySelector<HTMLElement>('.bar .step');
     if (!step) return;
-    step.textContent = assisted ? '補助あり' : '補助なし';
+    const assist = assisted ? '補助あり' : '補助なし';
+    step.textContent = progress ? `${progress}・${assist}` : assist;
     return () => {
       step.textContent = '';
     };
-  }, [assisted]);
+  }, [assisted, progress]);
   return null;
 }
 
 // Take は声の処理の設定を持たないので、自動の音量調整が切れているかは分からない。声の大きさは、設定が Take に入るまで出さない。
-function Result({ take, example }: { take: Take; example: boolean }) {
+export function Result({ take, example, progress }: { take: Take; example: boolean; progress?: string }) {
   const measurement = useMemo(() => measure(take), [take]);
   const notice = noticeOf(measurement);
   const level = levelSentence(measurement);
   return (
     <>
-      <Assist assisted={take.assisted} />
+      <Assist assisted={take.assisted} progress={progress} />
       {example && <span class="tag">例の録音です</span>}
       <div class="card rows res">
         {resultRows(measurement).map((row) => (

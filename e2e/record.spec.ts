@@ -90,6 +90,23 @@ const takeOf = async (page: Page) => {
   };
 };
 
+// 打ち込みは 370ms で終わるので、待って見るのではなく、実行の行に出た文字をすべて記録する。
+const watchRunLine = (page: Page) =>
+  page.evaluate(() => {
+    const seen: string[] = [];
+    const note = () => {
+      const text = document.querySelector('.run > div')?.textContent ?? '';
+      if (seen.at(-1) !== text) seen.push(text);
+    };
+    new MutationObserver(note).observe(document.body, { subtree: true, childList: true, characterData: true });
+    Object.assign(window, { runLineSeen: seen });
+  });
+const runLineSeen = (page: Page) => page.evaluate(() => (window as unknown as { runLineSeen: string[] }).runLineSeen);
+
+// 開き直すと置き場の録音が消えるので、開いたときの印が残っているかで、開き直していないことを確かめる。
+const markDocument = (page: Page) => page.evaluate(() => Object.assign(window, { sameDocument: true }));
+const sameDocument = (page: Page) => page.evaluate(() => (window as unknown as { sameDocument?: boolean }).sameDocument === true);
+
 const startButton = (page: Page) => page.getByRole('button', { name: '読み始める' });
 const finishButton = (page: Page) => page.getByRole('button', { name: '読み終えた' });
 const cancelButton = (page: Page) => page.getByRole('button', { name: 'やめる' });
@@ -123,11 +140,20 @@ test('合図は数字だけで音を鳴らさず、録音は合図の前から�
   await browser.close();
 });
 
-test('読み終えたは上の句の区間から押せ、録音を読み始めの位置つきで置いて確かめる画面へ移る', async ({ baseURL }) => {
+// 結果の画面に移ったことは、結果の部品が出す行と、実行の行で見る。
+const showsResult = async (page: Page) => {
+  await expect(page.locator('.res')).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('.run')).toHaveText(/^> \/yomimasu 結果を見る\s*● 録音しました$/);
+  await expect(page.getByTestId('lyrics')).toHaveCount(0);
+  await expect(page.getByText('まず聴いてみましょう')).toHaveCount(0);
+};
+
+test('読み終えたは上の句の区間から押せ、押すと「読み終えた」を打ち込んでから、開き直さずに結果の画面へ移る', async ({ baseURL }) => {
   const browser = await launchWithFakeMic();
   const page = await openPage(browser, baseURL);
   const lyrics = page.getByTestId('lyrics');
   const before = await lyrics.boundingBox();
+  await markDocument(page);
 
   const pressedAt = Date.now();
   await startButton(page).click();
@@ -138,12 +164,15 @@ test('読み終えたは上の句の区間から押せ、録音を読み始め�
   await expect(finishButton(page)).toBeDisabled();
   await expect(block(page, 'kami')).toHaveClass(/is-now/, { timeout: 6000 });
   expect(await lyrics.boundingBox()).toEqual(before);
+  await watchRunLine(page);
   await finishButton(page).click();
   const wallSec = (Date.now() - pressedAt) / 1000;
 
-  await expect(page.getByRole('heading', { name: '読めました。まず聴いてみましょう。' })).toBeVisible();
-  await expect(page.getByRole('img', { name: /下の句 5秒/ })).toHaveCount(0);
-  await expect(page.locator('.run')).toContainText('● 録音しました');
+  await showsResult(page);
+  expect(await runLineSeen(page)).toContain('> /yomimasu 読み終えた');
+  expect(await sameDocument(page)).toBe(true);
+  expect(new URL(page.url()).pathname).toBe('/read/rec/');
+  await expect(page.locator('.bar .step')).toHaveText('3 / 3 結果・補助あり');
   expect(await microphonesClosed(page)).toEqual([true]);
   await expect(recState(page)).toHaveCount(0);
 
@@ -154,11 +183,13 @@ test('読み終えたは上の句の区間から押せ、録音を読み始め�
   expect(take.lengthSec).toBeLessThanOrEqual(wallSec);
   expect(take).toMatchObject({ assisted: 'true', pair: '81-45' });
 
-  await expect(page.getByRole('link', { name: '結果を見る' })).toHaveAttribute('href', '/result/');
+  await expect(page.getByRole('button', { name: '自分の読み' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'お手本' })).toBeVisible();
   await expect(page.getByRole('button', { name: '読み直す' })).toBeVisible();
+  await expect(page.getByRole('link', { name: '結果を見る' })).toHaveCount(0);
 
   mkdirSync(ARTIFACTS_DIR, { recursive: true });
-  await page.screenshot({ path: join(ARTIFACTS_DIR, 'heard.png') });
+  await page.screenshot({ path: join(ARTIFACTS_DIR, 'result-after-reading.png'), fullPage: true });
   writeFileSync(
     join(ARTIFACTS_DIR, 'take.json'),
     JSON.stringify({ expectedReadingStartSec: COUNT_SEC, recordedReadingStartSec: take.readingStartSec, recordedLengthSec: take.lengthSec, wallSec }, null, 2),
@@ -167,6 +198,8 @@ test('読み終えたは上の句の区間から押せ、録音を読み始め�
   await page.getByRole('button', { name: '読み直す' }).click();
   await expect(startButton(page)).toBeVisible();
   await expect(lyrics).toBeVisible();
+  await expect(page.locator('.bar .step')).toHaveText('2 / 3 読む');
+  await expect(page.locator('.run')).toHaveText('> /yomimasu 読む ほ あはれ');
   await browser.close();
 });
 
@@ -227,6 +260,7 @@ test('補助を外すと、字の朱と区切りの囲みを出さずに「補�
   await expect(finishButton(page)).toBeEnabled({ timeout: 4000 });
   await finishButton(page).click();
   expect(await takeOf(page)).toMatchObject({ assisted: 'false' });
+  await expect(page.locator('.bar .step')).toHaveText('3 / 3 結果・補助なし');
   await browser.close();
 });
 
@@ -278,15 +312,19 @@ for (const [name, leave] of [
   });
 }
 
-test('読み始めて 25 秒で自動で止め、録音の塊が遅れて届いても読み始めから 25 秒を録って、確かめる画面へ移る', async ({ baseURL }) => {
+test('読み始めて 25 秒で自動で止め、録音の塊が遅れて届いても読み始めから 25 秒を録って、打ち込まずに結果の画面へ移る', async ({ baseURL }) => {
   test.setTimeout(60_000);
   const browser = await launchWithFakeMic();
   const page = await openPage(browser, baseURL, '/read/rec/', { lateMs: 30 });
+  await markDocument(page);
 
   await startButton(page).click();
   await waitForReading(page);
-  await expect(page.getByRole('heading', { name: '読めました。まず聴いてみましょう。' })).toBeVisible({ timeout: 30_000 });
+  await watchRunLine(page);
+  await showsResult(page);
 
+  expect(await runLineSeen(page)).not.toContain('> /yomimasu 読み終えた');
+  expect(await sameDocument(page)).toBe(true);
   expect(await microphonesClosed(page)).toEqual([true]);
   const take = await takeOf(page);
   expect(take.lengthSec - take.readingStartSec).toBeGreaterThanOrEqual(25);
@@ -368,6 +406,14 @@ test('画面を消さない設定を取れなくても、録音は止めない',
   await finishButton(page).click();
   await expect(page.getByTestId('take')).toBeAttached();
   await browser.close();
+});
+
+test('読む流れの上の帯の右に、聞く画面は「1 / 3 聞く」、読む画面は「2 / 3 読む」と出す', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('yomimasu.recHelpDone', '1'));
+  await page.goto('/read/');
+  await expect(page.locator('.bar .step')).toHaveText('1 / 3 聞く');
+  await page.goto('/read/rec/');
+  await expect(page.locator('.bar .step')).toHaveText('2 / 3 読む');
 });
 
 test('実行の行は組を決まり字で書き、前回の直す点を渡すと代わりに1行で出す', async ({ page }) => {
