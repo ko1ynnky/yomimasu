@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { definition, voicedSpanMethods, type Definition } from '../../.claude/skills/yomimasu/scripts/definition.ts';
-import { measure, measureKami, type Measurement, type Recording, type Seconds } from '../../.claude/skills/yomimasu/scripts/measure.ts';
+import { measure, measureKami, rangePlacement, tenthSec, type Measurement, type Recording, type Seconds } from '../../.claude/skills/yomimasu/scripts/measure.ts';
 import { standardReading, synthesize, type ReadingPlan } from '../support/synth.ts';
 
 const TOLERANCE_SEC = 0.05;
@@ -237,4 +237,16 @@ test('上の句だけを測るとき、物音しかない録音では、上の�
   const plan: ReadingPlan = { ...kamiOnly, kamiSec: 0, tailSec: 2.5, extras: [{ kind: 'thud', atSec: 1.5, lengthSec: 0.3 }] };
   const result = measureKami(recordingOf(plan, { autoGainControl: false }));
   assert.deepEqual(result, { kami: { status: 'unmeasured', reason: 'too-quiet' }, level: { status: 'unmeasured', reason: 'too-quiet' } });
+});
+
+test('見せる秒は、測った 0.01 秒の値を 0.1 秒に四捨五入する', () => {
+  assert.deepEqual([1.15, 1.24, 1.25, 1.05, 8.04, 0.95].map(tenthSec), [1.2, 1.2, 1.3, 1.1, 8.0, 1.0]);
+});
+
+test('判定は 0.1 秒に四捨五入した秒で、幅の両端を含めて、幅の中か、上か、下かを決める', () => {
+  const range = { minSec: 0.9, maxSec: 1.2 };
+  assert.equal(rangePlacement(0.85, range), 'inside');
+  assert.equal(rangePlacement(1.24, range), 'inside');
+  assert.equal(rangePlacement(1.25, range), 'above');
+  assert.equal(rangePlacement(0.84, range), 'below');
 });

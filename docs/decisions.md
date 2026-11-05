@@ -22,6 +22,83 @@
   - 「ポイントを知る」の6つの図にも舌と唇の文を付ける案。360px で2列に収まらず、6つで縦に長くなりすぎた。文は1首のページの図とスキルにある。
   - 「ん」の説明を別のカードにする案。ユーザーが候補を削っている75項目の数を変えずに、作者の経験のカードの中に折りたたんで置いた。
 - 限界：スケッチの寸法は測っていない。舌の形は母音の違いを見せるための形で、人によって違う。図の見た目は Chromium で、下書きを 375px と 900px の幅で、組み立てたページを 393px の幅で見た。320px は横にはみ出さないことと、断面の図の文字が 13px 以上であることを E2E で確かめた。WebKit では見ていない。
+## 2026-11-05 自走の Claude の job に書き込みのトークンを置かない
+
+- 決めたこと：
+  - `auto.yml` の `work` の job の `GITHUB_TOKEN` を読み取りだけにする（`actions: read`、`contents: read`、`pull-requests: read`）。`id-token: write` は、action が Claude の App のトークンを取るのに使うので残す。
+  - Claude のあとに書き込みの権限で動いていた3つの step（実行の要約、成果の確認、人への引き渡し）を、`work` のあとの `finish` の job に移す。`finish` は新しい runner で、この実行のコミットから取り出したスクリプトだけを動かす。
+  - Issue の `in-progress` は、`work` ではなく `pick` が、Issue を選んだ直後に付ける。
+  - `work` から `finish` へ渡すのは、要約に使う項目だけを残した実行の記録（Artifact、保存は1日）と、Claude の前に読んだ PR の head（job の出力）の2つにする。Issue と PR の番号は `pick` から受ける。`finish` はどちらもデータとして読み、`run-summary.sh` は jq で読むだけで、中身を実行しない。
+  - `finish` は、`pick` が Issue か PR を選んだ実行で `always()` で動き、`work` が成功で終わり、成果もあるときだけ成功で終わる。`next` は `work` と `finish` の両方の成功を待つ。`concurrency` は変えない。
+  - `run-summary.sh` に `--extract` を足し、要約に使う項目だけを残した記録を出す。要約はいつもこの項目から作る。
+  - Claude を動かす job の `GITHUB_TOKEN` が、読み取り（`read` と `none`、`read-all`、`{}`）と `id-token: write` だけであることを `checks.test.sh` で確かめる。読めない書き方は止める。
+- 経緯：`work` は Claude のあとに、書き込みの権限（contents、issues、pull-requests）の `github.token` を持つ step を動かしていた。2026-11-03 の「自走の試運転の形を決める」の限界に、job を分けるまでは守れないと書いてあった。PR #30 もこの点を範囲の外に置いた。
+- 根拠：
+  - action（`d535f51`）は、Claude を動かす step の環境に `DEFAULT_WORKFLOW_TOKEN: ${{ github.token }}` を置く。`base-action/src/parse-sdk-options.ts` は Claude の環境を `process.env` の写しから作り、OIDC の要求の変数と `ALL_INPUTS` だけを消す。`DEFAULT_WORKFLOW_TOKEN` は、Claude と Claude が動かすコマンドに見える。
+  - 2026-11-03 の項のとおり、`Edit` と `npm run` を組み合わせれば任意のコマンドを実行できる。
+  - Claude のあとの step は、Workflow に書いたものだけではない。`actions/checkout` と `actions/setup-node` の後始末の step も、入力の `token`（既定は `github.token`）を受けて、Claude が書き換えられる runner の上の action のファイルから動く。
+  - このため、Claude のあとの step を別の job に移すだけでは足りず、`work` のトークンそのものを読み取りだけにする。トークンが読み取りだけなら、`work` の中のどの step が書き換えられても、書き込みには届かない。
+  - `GITHUB_TOKEN` は job ごとに発行され、権限も job ごとに決まる。`finish` のトークンは `work` の runner に置かれない。
+- 判断：
+  - Claude のあとに同じ job で動く step は、Claude に書き換えられる前提で扱う。要約の項目を取り出す step と Artifact を上げる step もこれに当たる。この2つにさせられるのは、Artifact の中身を変えること、上げないこと、失敗することである。手に入るのは Claude がもともと持つもの（読み取りの `github.token`、Claude の App のトークン、Artifact とキャッシュのための実行のトークン）だけで、`finish` の runner、`finish` のスクリプト、Issue と PR の番号には届かない。
+  - Artifact は作業フォルダーの外に取り出し、取り出したスクリプトを中身で上書きさせない。要約は `run-summary.sh` が決めた枠（`<!-- run-summary -->` から始まる）で出るので、中身を変えても、`review-comments.sh` がレビューとして読むコメント（`<!-- review-gate -->` から始まる）にはならない。
+  - `head` も `work` から受けるが、Claude の前の step が書く。偽っても変わるのは成果の判定だけで、Claude は push するかしないかで同じことができる。
+  - 全文ではなく項目だけを渡すのは、記録の全文に依頼とコマンドの出力が入るからである。公開に戻したリポジトリの Artifact は、GitHub にログインした人なら誰でも取れる。項目は要約のコメントに載る内容と同じである。
+  - `in-progress` を `pick` で付けるので、依存の導入より前に付く。準備の段階で落ちた実行も1日の件数に入る。2026-11-03 の限界にある、準備の段階の失敗が続くと上限にかからない問題は、これで1日5件までに収まる。
+  - `pick` で付けるのは、`work` のトークンを読み取りだけにすると、`work` より前の job で付けるしかないからである。job を1つ足すより、Issue のときだけ動く step を足すほうが、runner も `needs` も増えない。
+  - `finish` を動かす条件は、`work` の結果ではなく `pick` の選んだ番号で見る。`pick` が `in-progress` を付けたあと、`work` が始まる前に取り消すと、`work` は飛ぶ。`work` の結果で見ると、Issue が `in-progress` のまま誰にも渡らない。
+  - `finish` の取り出しと Artifact の受け取りは要約のためだけに使うので、失敗しても成果の確認と人への引き渡しへ進む。
+- 採らなかった案：
+  - Claude のあとの step を別の job に移し、`work` の書き込みの権限は残す案。Claude の環境の `DEFAULT_WORKFLOW_TOKEN` と、checkout と setup-node の後始末の step から、書き込みのトークンに届く。
+  - 要約を `work` で作り、job の出力で渡す案（`review.yml` の形）。`work` の `run-summary.sh` は Claude が書き換えられるので、`<!-- review-gate -->` から始まる文を `github-actions[bot]` のコメントとして書かせられる。`review.yml` では Claude に書き込みの道具がなく、Claude の出力がそのまま判定になるので、この形で足りる。
+  - 記録の全文を Artifact で渡す案。上の公開の理由で採らない。
+  - `finish` で Artifact を読んだあとに消す案。`actions: write` が要り、消すまでの間は全文を取れる。
+  - `in-progress` を `finish` で、Claude の段階まで進んだときに付ける案。動いている間の Issue に印がなく、進んだかどうかを `work` の出力に頼ることになる。
+- 限界：
+  - GitHub Actions ではまだ動かしていない。取り消しと job の時間切れのあとに `always()` の `finish` が動いて人に渡すこと、Artifact のない実行で `download-artifact` が成功で終わること、読み取りだけの `github.token` で action と `gh pr view` が動くことは、実物で確かめる。
+  - `work` の `github.token` は読み取りのまま Claude に見える。非公開のリポジトリのコード、PR、Actions の記録を読める。
+  - `work` の `setup-node` は、Claude のあとの後始末で npm のキャッシュを保存する。Claude はキャッシュの中身を変えられ、`main` の上の実行のキャッシュはほかのブランチの実行からも読まれる。この経路はこの変更の範囲の外に残す。
+  - 要約のコメントの中のモデルの名前とスキルの名前は、Claude が決められる。枠は変わらないが、`github-actions[bot]` の名前のコメントに任意の文を入れられる。変更の前も、スキルの名前で同じことができた。
+  - Claude の App のトークンは、今までどおり Claude の環境にある。この変更は `github.token` だけを扱う。
+- 根拠の文書（確認日 2026-11-05）：claude-code-action `d535f51` の `action.yml`（`DEFAULT_WORKFLOW_TOKEN`）、`base-action/src/parse-sdk-options.ts`、`base-action/src/execution-file.ts`、`src/mcp/install-mcp-server.ts`。`actions/download-artifact` v8.0.2 の `src/download-artifact.ts`（`pattern` に合う Artifact がなければ0件で終わる）。
+
+## 2026-11-05 自走にスキル yomimasu の下だけを書かせる
+
+- 決めたこと：
+  - `auto.yml` の Claude の step に、action の `settings` で `PermissionRequest` の hook を渡す。hook は `.github/scripts/allow-skill-write.sh` で、`.claude/skills/yomimasu/` の下への Write と Edit にだけ allow を答え、ほかには答えない。
+  - スキル yomimasu の下でも、`SKILL.md`（深さと大文字と小文字によらない）と、入れ子の `.claude/` の下には答えない。
+  - hook は、Claude を動かす前に `~/.claude/hooks/` へ写し、写した先から動かす。
+  - `.claude/settings*`、`.claude/hooks/`、ほかのスキル（`verify`、`review-pr`）は、今のまま自走に書かせない。
+- 経緯：#13 の自走が `.claude/skills/yomimasu/scripts/commands.ts` を Write しようとして、`--allowedTools` に `Write` があるのに拒まれ、止まった。ユーザーは「skills の下だけ許す」と決めた（2026-11-05）。
+- 根拠：
+  - Claude Code は `.claude/` と `~/.claude/` を守られた場所として扱う。`default` のモードでは確認を求め、`-p` と Agent SDK の実行は `default` で始まる。設定の `permissions.allow` の規則は、守られた場所への書き込みを事前には許さない。
+  - `-p` の実行で確認の要る呼び出しは、`PermissionRequest` の hook か `--permission-prompt-tool` が許さなければ拒まれる。hook は確認を求める場面で呼ばれ、答えがなければ拒まれる。
+  - スキルの frontmatter の `allowed-tools` と `hooks` は、スキルを使う間の権限を足す。ワークスペースの信頼にも左右されない（`permissions` の文書）。
+  - 手元の `claude -p`（2.1.317、`--permission-mode default`、`--setting-sources project`、`--tools "Write,Edit,Read"`、モデルは haiku）で次を確かめた。
+    - hook なしでは、`--allowedTools` が `Write(.claude/skills/yomimasu/**)` でも `Write(/.claude/skills/yomimasu/**)` でも `Write` でも、スキルの下への Write は #13 と同じ文で拒まれた。
+    - `--settings` で hook を渡し、`--allowedTools` を `Write,Edit,Read` にすると、スキル yomimasu の下の Write と Edit は通った。`.claude/settings.json`、`.claude/hooks/`、`.claude/skills/verify/` への Write と、`SKILL.md` の Edit は拒まれた。
+    - 同じ条件で、作業フォルダーの外（`$RUNNER_TEMP` に当たる場所）への Write は確認なしに通った。`~/.claude/` の下への Write は拒まれた。
+- 判断：
+  - hook は判断できないとき何も答えない。答えのない確認は拒まれるので、壊れたときも書けない側に倒れる。
+  - パスは、親へ上る部分、「.」の部分、最後の「/」、リンクのファイルを断り、あるところまでを実際の場所に直して比べる。比べる先は、実際の場所に直したプロジェクトから名前で組み立てる。リンクのフォルダーを通る書き込みも、スキルのフォルダーそのものがリンクの場合も、スキルの外へは許さない。「.」と最後の「/」を断るのは、書く前にパスを整えると、名前で見る断りと違うファイルに書くからである。同じ理由で、スキルより下の部分に使える文字を英数字と `._/-` に絞る。整え方の綴り（最後の空白など）を1つずつ追うと、抜けがまた開くからである。スキルの今のファイル名はすべてこの範囲に入り、日本語の名前のファイルは書かせない。
+  - `SKILL.md` を外すのは、frontmatter を書き換えてから `Skill` で使えば、許可を広げられるからである。設定と同じものとして守る。入れ子の `<フォルダー>/.claude/skills/<名前>/SKILL.md` は、Claude がそのフォルダーのファイルを触るとスキルとして読まれる（`skills` の文書）ので、入れ子の `SKILL.md` と `.claude/` の下も守る。#13 で要ったのは `scripts/` の下である。
+  - 守りの行を1つずつ外した写しでテストを動かし、どの行を外しても、その行のテストが落ちることを確かめた。
+  - hook を `~/.claude/` の下に置くのは、hook を書き換えれば許す範囲を広げられるからである。`$RUNNER_TEMP` には Write が届くと手元で分かった。
+- 採らなかった案：
+  - `--allowedTools` や `permissions.allow` にパスを書く案。文書のとおり、手元でも効かなかった。
+  - hook を `.claude/settings.json` に置く案。手元のセッションでも、スキル yomimasu の下を確認なしに書けるようになる。hook のスクリプトも、実行の中で書き換えられる。
+  - hook を `$RUNNER_TEMP` に写す案。最初はこの形で書いたが、Write が届くので、実行の中で hook を書き換えられる（reviewer の指摘から手元で確かめた）。
+  - `PreToolUse` の hook で allow を返す案。確認の要らない呼び出しにも答えることになり、確認に答えるだけの `PermissionRequest` より広い。
+  - `bypassPermissions` のモード。設定と hook も書けるようになる。
+  - `auto` のモード。守られた場所への書き込みは分類器に回り、通るかが実行ごとに決まらない。
+  - Bash で書く案。権限の確認を回り込むことになる。
+- 限界：
+  - GitHub Actions ではまだ動かしていない。action は `settings` を `~/.claude/settings.json`（ユーザーの設定）に書き、手元では `--settings` で渡した。どちらの hook も動くと文書にはあるが、Actions では確かめていない。
+  - action が入れる Claude Code の版は、手元の 2.1.317 と違うことがある。action は Agent SDK で Claude を動かすが、手元では `claude -p` しか試していない。
+  - 2026-11-03 の項のとおり `--allowedTools` は境界にならない。`Edit` と `npm run` を組み合わせれば、`~/.claude/` の hook も `.claude/` の下も書き換えられる。この hook は、守られた場所の確認を、Write と Edit のうちスキルの下へのものに限って外すだけである。
+  - `~/.claude/` の下への Write が拒まれることは、`--settings` で渡した hook で確かめた。action の `settings` から読む実物では確かめていない。
+- 根拠の文書（確認日 2026-11-05）：Claude Code の `permission-modes`（Protected paths、Which mode a session starts in）、`permissions`（Extend permissions with hooks、ワークスペースの信頼の表）、`hooks`（PermissionRequest）、`headless`、`skills`（Load skills in monorepos and subdirectories）。claude-code-action `d535f51` の `base-action/src/setup-claude-code-settings.ts`。
+
 ## 2026-11-05 測定の定義を決め、選択と値を1か所のデータに置く
 
 - 決めたこと：
@@ -105,6 +182,26 @@
   - 字の時刻は標準の時間の中の割り振りで、お手本の音とは合わない。
   - 幅 320 では、歌の字が 10.9px まで縮む。
   - 実機では確かめていない（iPhone SE のシミュレーターと Chromium で確かめた）。
+
+## 2026-11-04 読み方一覧の（お）を、「ー」とは別の読みとして扱う
+
+- 決めたこと：
+  - 読み方一覧の括弧つきの注のうち（お）は、長音の「ー」とは別の読みとして扱う（2026-11-04 のユーザーの判断）。
+  - （お）がどういう音かと、（お）のほかの注の読みは決めない。スキルの文には「「ー」とは別の読み」とだけ書き、音の説明は足さない。
+  - スキルの `references/` の `kana-reading.md` と `card-rules.md`（「読み方一覧の括弧つきの注」）がこの判断を拠り所にする。`card-advice-candidates.md` の77番と95番の行は、メモの読みを一覧と違う読み（読手個人のやり方）として書く。
+- 経緯：#29。表の発音の列（`phrases[].sound`）は #21 で一覧の表記に合わせ、注の所を注の字で書いた（77番の「思ふ」は「おもお」、95番の三句は「おおおかな」）。一方で references は括弧の意味を決めないと書いていた。そのため、スキルが77番について、表からは「おもお」と、references からは「意味は決めていない」「メモでは おもー」と答えうる状態だった。
+- 根拠：
+  - 一覧は、20番と77番の「思ふ」に（お）を添え、40、48、85、99番の「思ふ」は「ー」で書いて、書き分けている。44番の初句「逢ふことの」の「ふ」にも（お）を添えている。
+  - 95番の三句は、2020年の改訂で「ー」を「（お）」に改めた（講習資料 s.31）。協会が「ー」と（お）を区別して直した所である。
+  - 注の値は、完全版のスキャンと1か所ずつ照らしてあり、抜粋版だけにある値と両版で違う値は見つかっていない（`docs/cards.md`）。
+- 採らなかった案：
+  - 括弧の意味を決めないままにする案。表の発音の列と references が同じ札について食い違う。
+  - （お）を長音の「ー」の別の書き方とみなし、表の発音を「おもー」にそろえる案。一覧の書き分けと、95番の改訂を消してしまう。表を一覧の表記に合わせた #21 の判断とも合わない。
+  - （お）の音の中身（「お」をどう出すか）を説明する案。資料に説明の文がなく、ユーザーも決めていない。
+- 限界：
+  - 括弧の意味を説明する文は資料にない。この判断は、一覧の書き分けと改訂からのユーザーの読み取りである。
+  - 「を」の読み分けと、44番と93番の二句の改訂の前の読みには、この判断を広げない。
+
 ## 2026-11-04 54番の四句の「けふ」を、一覧のふりがなではなくユーザーの判断で読む
 
 - 決めたこと：
@@ -158,6 +255,7 @@
   - `work` が成功したら、`next` の job が `auto.yml` を `workflow_dispatch` で起こす。番号は渡さない。平日の 9:00〜18:30 の外と、失敗のあとは起こさない。
   - どの実行も、起動のきっかけによらず、`auto-target.sh` がいまの状態から対象を選ぶ。順は、渡された PR、修正を待つ PR、Issue である。修正を待つ PR は、Claude の開いた PR で、最新の `review-gate` が赤で、`needs-human` がなく、レビューの回数が `review-gate.sh` の `MAX_ROUNDS` を超えていないものとする。
   - 日本時間の1日に始める Issue を5件までにする。`work` が付ける `in-progress` の、今日の回数を数える。`in-progress` を付けたあとに失敗した実行は数え、準備の段階（checkout、依存の導入）で落ちた実行と PR の修正は数えない。
+    - 改めた点（2026-11-05）：`in-progress` は `pick` が付ける。`work` のトークンを読み取りだけにするためで、準備の段階で落ちた実行も数えるようになった。「自走の Claude の job に書き込みのトークンを置かない」を見る。
   - 本文の `Depends:` を含む行の `#番号` を、行の数によらずすべて依存として読む。1つでも開いていれば飛ばす。
   - Claude の action に、`additional_permissions` で contents、pull_requests、issues の3つを書いて求める。すべての Workflow の Claude の step が、GITHUB_TOKEN か、この3つだけを求めたトークンを使うことを `checks.test.sh` で確かめる。
 - 理由：
@@ -189,6 +287,7 @@
   - 非公開の間は、何も選ばずに終わる cron の実行も Actions の分数を使う。1回を1分とすると、何もない日は20分である。
   - 修正を待つ PR の見分けは、`review-gate` が人に渡すときに `needs-human` を付けることと、レビューの回数に頼る。`needs-human` を付けるのに失敗した PR は、回数が残っている間だけ修正の対象として選ばれる。
   - 準備の段階の失敗（npm や apt の障害）が続くと、30分ごとに Issue を1件ずつ人に渡し、1日の上限にかからない。Claude の利用枠は使わない。
+    - 改めた点（2026-11-05）：`in-progress` を `pick` で付けるようになり、準備の段階の失敗も1日の上限に数える。「自走の Claude の job に書き込みのトークンを置かない」を見る。
   - `gh issue list --limit 200` に入らない開いた Issue は、`Depends` の相手でも閉じたものとして扱う。
 - 根拠（確認日 2026-11-03）：
   - `GET https://api.github.com/apps/claude` の `permissions`
@@ -290,6 +389,7 @@
 - 限界：
   - `--allowedTools` は境界にならない。`Edit` と `npm run` を組み合わせれば任意のコマンドを実行できる。Claude に読ませるものを手順で絞り、interaction limits でほかの人のコメントを閉じ、`stop` で止める。手順は仕組みの境界ではない。
   - `work` の job は書き込みの権限のまま、Claude のあとの step を動かす。要約のスクリプトは Claude の前に写すが、job を分けるまでは任意のコマンドから守れない。
+    - 改めた点（2026-11-05）：Claude のあとの書き込みを `finish` の job に分け、`work` のトークンを読み取りだけにした。action が Claude の環境に `github.token` を渡すと分かったので、job を分けるだけでは足りなかった。「自走の Claude の job に書き込みのトークンを置かない」を見る。
   - `Bash(git push origin auto/*)` は `auto/x:production` も通す見込みである。`production` を作るときに保護する。
   - 修正の起動は保留が1本なので、別の実行に押し出されることがある。`stop` の間に起こした修正は動き直さない。`pick` の失敗は人に渡らない。どれも Issue を1本ずつ試す間は起きにくいので、試運転のあとに直す。
     - 改めた点（2026-11-03）：順に進めると押し出しがほぼ毎回起きるので、どの実行も状態から修正を待つ PR を拾う形にした。`stop` を外したあとの修正も、これで拾い直す。`pick` の失敗は今も人に渡らない。

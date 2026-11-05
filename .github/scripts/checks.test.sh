@@ -208,6 +208,40 @@ if [[ $history != *公式の指摘* || $history != *修正の答え* || $history
   ng "review-comments: 答えも渡すときは Claude の答えだけを足す（出力 $history）"
 fi
 
+# 実行の記録の見本。本文、コマンドの出力、最後の答えは、要約にも、取り出した記録にも出さない。
+execution=$(mktemp "$work/execution.XXXXXX")
+cat >"$execution" <<'EOF'
+[
+  {"type": "system", "subtype": "init", "cwd": "/home/runner/work/yomimasu"},
+  {"type": "assistant", "message": {"content": [{"type": "text", "text": "非公開の本文"}, {"type": "tool_use", "name": "Skill", "input": {"skill": "verify"}}]}},
+  {"type": "user", "message": {"content": [{"type": "tool_result", "content": "非公開の出力"}]}},
+  {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Bash", "input": {"command": "npm run check"}}, {"type": "tool_use", "name": "Skill", "input": {"skill": "yomimasu"}}]}},
+  {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Skill", "input": {"skill": "verify"}}]}},
+  {"type": "result", "num_turns": 3, "result": "非公開の答え", "modelUsage": {"claude-x": {"inputTokens": 1, "outputTokens": 1}}},
+  {"type": "result", "num_turns": 12, "result": "非公開の答え", "modelUsage": {"claude-opus-5-5": {"inputTokens": 10, "cacheReadInputTokens": 200, "cacheCreationInputTokens": 30, "outputTokens": 40}, "claude-haiku": {"inputTokens": 5, "outputTokens": 6}}}
+]
+EOF
+summary_want='<!-- run-summary -->
+実行の要約
+
+- モデル：claude-haiku、claude-opus-5-5
+- ターン数：12
+- トークン：入力 245、出力 46
+- スキル：verify、yomimasu'
+summary=$(bash "$scripts/run-summary.sh" "$execution" 2>&1)
+if [[ $summary != "$summary_want" ]]; then
+  ng "run-summary: 最後の結果のモデル、ターン数、トークンと、使ったスキルを書く（出力 $summary）"
+fi
+extracted=$(mktemp "$work/extracted.XXXXXX")
+bash "$scripts/run-summary.sh" --extract "$execution" >"$extracted" 2>&1
+summary=$(bash "$scripts/run-summary.sh" "$extracted" 2>&1)
+if [[ $summary != "$summary_want" ]]; then
+  ng "run-summary: 取り出した記録から同じ要約を作る（出力 $summary）"
+fi
+if grep -q '非公開' "$extracted"; then
+  ng 'run-summary: 取り出した記録に本文、コマンドの出力、答えを残さない'
+fi
+
 # 偽の gh は、呼ばれた引数を記録し、場面ごとの JSON を返す。
 gh_bin=$(mktemp -d "$work/gh.XXXXXX")
 cat >"$gh_bin/gh" <<'EOF'
@@ -693,6 +727,175 @@ for sample in \
   claude_step "${sample%%|*}" "$(printf '%b' "${sample#*|}")" >"$bad_workflow"
   [[ -n $(token_problems "$bad_workflow") ]] || ng "token: 通してはいけない Workflow を通した（${sample%%|*}、${sample#*|}）"
 done
+
+# Claude を動かす job の GITHUB_TOKEN に、書き込みの権限を持たせないことを、Workflow の書き方で確かめる。
+# action は Claude の環境に GITHUB_TOKEN を DEFAULT_WORKFLOW_TOKEN として渡し、Claude のあとの step も同じ runner で動く。
+# id-token は、action が App のトークンを取るのに要る。
+# Claude を動かす job ごとに「名前=権限」を1行で出す。job に権限がなければ Workflow の権限を、どちらもなければ unset を出す。
+claude_job_permissions() {
+  awk '
+    function indent_of(line) { match(line, /^ */); return RLENGTH }
+    function flush() {
+      if (job != "" && claude) print job "=" (job_set ? job_perms : (top_set ? top_perms : "unset"))
+      job = ""; claude = 0; job_set = 0; job_perms = ""
+    }
+    function add(value) {
+      if (target == "top") top_perms = (top_perms == "") ? value : top_perms "," value
+      else job_perms = (job_perms == "") ? value : job_perms "," value
+    }
+    function start(value) {
+      sub(/^permissions:[[:space:]]*/, "", value)
+      if (value == "") { block = 1; block_indent = current } else add(value)
+    }
+    /^[[:space:]]*(#.*)?$/ { next }
+    {
+      current = indent_of($0)
+      line = $0
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", line)
+      sub(/[[:space:]]+#.*$/, "", line)
+      if (block && current > block_indent) { add(line); next }
+      block = 0
+    }
+    current == 0 { flush(); in_jobs = (line == "jobs:") }
+    current == 0 && line ~ /^permissions:/ { top_set = 1; target = "top"; start(line); next }
+    in_jobs && current == 2 { flush(); job = line; sub(/:.*$/, "", job); next }
+    in_jobs && current == 4 && line ~ /^permissions:/ { job_set = 1; target = "job"; start(line); next }
+    /uses:[[:space:]]*["\047]?anthropics\/claude-code-action(\/base-action)?@/ { claude = 1 }
+    END { flush() }
+  ' "$1"
+}
+
+# 問題を1行ずつ出す。問題がなければ何も出さない。
+claude_job_problems() {
+  local entries entry job item items
+  entries=$(claude_job_permissions "$1")
+  if grep -qE "uses:[[:space:]]*[\"']?anthropics/claude-code-action(/base-action)?@" "$1" && [[ -z $entries ]]; then
+    echo 'Claude を動かす job を読めない'
+  fi
+  while IFS= read -r entry; do
+    [[ -z $entry ]] && continue
+    job=${entry%%=*}
+    if [[ ${entry#*=} == unset ]]; then
+      echo "$job の GITHUB_TOKEN の権限が書かれていない"
+      continue
+    fi
+    # 読めない書き方（YAML の別名など）も止める側に倒すので、通す形を並べる。
+    IFS=, read -ra items <<<"${entry#*=}"
+    for item in "${items[@]}"; do
+      if [[ ! $item =~ ^([a-z-]+:\ (read|none)|id-token:\ write|read-all|\{\})$ ]]; then
+        echo "Claude を動かす $job の GITHUB_TOKEN に、読み取りと id-token のほかの $item がある"
+      fi
+    done
+  done <<<"$entries"
+}
+
+for workflow in "$scripts"/../workflows/*.yml; do
+  while IFS= read -r problem; do
+    [[ -z $problem ]] || ng "job: $(basename "$workflow") の $problem"
+  done <<<"$(claude_job_problems "$workflow")"
+done
+
+# 第1引数は Workflow の権限、第2引数は Claude の job の権限である。書き込みの権限を持つ後ろの job は、Claude を動かさない。
+claude_job() {
+  printf '%bjobs:\n  work:\n%b    steps:\n      - uses: anthropics/claude-code-action@abc\n  finish:\n    needs: work\n    permissions:\n      issues: write\n    steps:\n      - run: echo done\n' "$1" "$2"
+}
+job_workflow=$(mktemp "$work/job.XXXXXX")
+for sample in \
+  '|    permissions:\n      contents: read\n      issues: write\n' \
+  '|' \
+  'permissions:\n  contents: write\n|' \
+  '|    permissions: write-all\n' \
+  '|    permissions: # 理由\n      contents: write\n' \
+  '|    permissions: *perms\n'; do
+  claude_job "${sample%%|*}" "${sample#*|}" >"$job_workflow"
+  [[ -n $(claude_job_problems "$job_workflow") ]] || ng "job: 通してはいけない Workflow を通した（$sample）"
+done
+for sample in \
+  'permissions:\n  contents: write\n|    permissions:\n      contents: read\n      id-token: write\n' \
+  '|    permissions: # 理由\n      contents: read # 理由\n      id-token: write\n' \
+  'permissions: read-all\n|'; do
+  claude_job "${sample%%|*}" "${sample#*|}" >"$job_workflow"
+  problems=$(claude_job_problems "$job_workflow")
+  [[ -z $problems ]] || ng "job: 読み取りと id-token だけの Claude の job を止めた（$sample、$problems）"
+done
+
+# 自走の実行で .claude/ の下の書き込みを確かめる PermissionRequest の hook。許すときだけ allow を出し、
+# ほかは何も答えない。答えのない確認は -p の実行で拒まれる。
+skill_project=$(mktemp -d "$work/project.XXXXXX")
+mkdir -p "$skill_project/.claude/skills/yomimasu/scripts" "$skill_project/.claude/skills/yomimasu-other" \
+  "$skill_project/.claude/skills/verify" "$skill_project/.claude/hooks"
+touch "$skill_project/.claude/hooks/guard-files.sh"
+ln -s ../../hooks "$skill_project/.claude/skills/yomimasu/linked"
+ln -s ../../../hooks/guard-files.sh "$skill_project/.claude/skills/yomimasu/scripts/linked.sh"
+ln -s ../yomimasu-other "$skill_project/.claude/skills/yomimasu/other-link"
+# パスに .claude を含めずにスキルの中を指す入口。
+ln -s .claude/skills/yomimasu "$skill_project/skill-link"
+ln -s "$skill_project" "$work/project-alias"
+# スキルのフォルダーそのものが .claude/hooks/ を指すプロジェクト。
+linked_skill_project=$(mktemp -d "$work/project.XXXXXX")
+mkdir -p "$linked_skill_project/.claude/skills" "$linked_skill_project/.claude/hooks"
+ln -s ../hooks "$linked_skill_project/.claude/skills/yomimasu"
+
+# 相対パスがこのリポジトリの本物のスキルに直らないよう、プロジェクトの中で動かす。
+skill_write() {
+  local project=$1 tool=$2 path=$3
+  jq -n --arg tool "$tool" --arg path "$path" \
+    '{hook_event_name: "PermissionRequest", tool_name: $tool, tool_input: {file_path: $path, content: "x"}}' |
+    (
+      cd "$skill_project" || exit 1
+      if [[ -n $project ]]; then
+        CLAUDE_PROJECT_DIR=$project bash "$scripts/allow-skill-write.sh"
+      else
+        env -u CLAUDE_PROJECT_DIR bash "$scripts/allow-skill-write.sh"
+      fi
+    )
+}
+
+# 第1引数は allow（許す）か none（答えない）。
+expect_skill_write() {
+  local want=$1 what=$2 output code got
+  shift 2
+  output=$(skill_write "$@" 2>&1)
+  code=$?
+  got=none
+  if [[ -n $output ]]; then
+    got=$(jq -r 'select(.hookSpecificOutput.hookEventName == "PermissionRequest") | .hookSpecificOutput.decision.behavior' <<<"$output" 2>/dev/null)
+  fi
+  if [[ $code != 0 || $got != "$want" ]]; then
+    ng "allow-skill-write: $what（期待 $want、exit $code、出力 $output）"
+  fi
+}
+
+skills=$skill_project/.claude/skills
+expect_skill_write allow 'スキル yomimasu の下に新しいファイルを書ける' "$skill_project" Write "$skills/yomimasu/scripts/commands.ts"
+expect_skill_write allow 'スキル yomimasu の下の、まだないフォルダーにも書ける' "$skill_project" Write "$skills/yomimasu/references/new/a.md"
+expect_skill_write allow 'スキル yomimasu の下を Edit で直せる' "$skill_project" Edit "$skills/yomimasu/references/timing.md"
+expect_skill_write allow '大文字を含む名前のファイルも直せる' "$skill_project" Edit "$skills/yomimasu/references/README.md"
+expect_skill_write allow 'プロジェクトのパスがリンクを通っていても、実際の場所で比べて許す' "$work/project-alias" Write "$skills/yomimasu/scripts/commands.ts"
+expect_skill_write none 'スキルの定義の SKILL.md には答えない' "$skill_project" Edit "$skills/yomimasu/SKILL.md"
+expect_skill_write none '大文字と小文字だけが違う SKILL.md にも答えない' "$skill_project" Write "$skills/yomimasu/skill.md"
+expect_skill_write none '入れ子の SKILL.md にも答えない' "$skill_project" Write "$skills/yomimasu/scripts/SKILL.md"
+expect_skill_write none '入れ子の .claude/ の下には答えない' "$skill_project" Write "$skills/yomimasu/x/.claude/agents/a.md"
+expect_skill_write none '入れ子にスキルと同じ並びがあっても、.claude/ の下には答えない' "$skill_project" Write "$skills/yomimasu/x/.claude/skills/yomimasu/a.md"
+expect_skill_write none '最後に空白を付けた SKILL.md には答えない' "$skill_project" Write "$skills/yomimasu/SKILL.md "
+expect_skill_write none '最後に空白を付けたリンクのファイルには答えない' "$skill_project" Edit "$skills/yomimasu/scripts/linked.sh "
+expect_skill_write none '最後に /. を付けた SKILL.md には答えない' "$skill_project" Write "$skills/yomimasu/SKILL.md/."
+expect_skill_write none '最後に / を付けた SKILL.md には答えない' "$skill_project" Write "$skills/yomimasu/SKILL.md/"
+expect_skill_write none '最後に /. を付けたリンクのファイルには答えない' "$skill_project" Edit "$skills/yomimasu/scripts/linked.sh/."
+expect_skill_write none '.claude/settings.json には答えない' "$skill_project" Write "$skill_project/.claude/settings.json"
+expect_skill_write none '.claude/settings.local.json には答えない' "$skill_project" Edit "$skill_project/.claude/settings.local.json"
+expect_skill_write none '.claude/hooks/ には答えない' "$skill_project" Edit "$skill_project/.claude/hooks/guard-files.sh"
+expect_skill_write none 'ほかのスキルには答えない' "$skill_project" Write "$skills/verify/features/a.md"
+expect_skill_write none '名前の頭だけが同じフォルダーには答えない' "$skill_project" Write "$skills/yomimasu-other/scripts/a.ts"
+expect_skill_write none 'リンクを通って、名前の頭だけが同じフォルダーに出るパスには答えない' "$skill_project" Write "$skills/yomimasu/other-link/a.ts"
+expect_skill_write none 'まだないフォルダーを挟んで親へ上るパスには答えない' "$skill_project" Write "$skills/yomimasu/new/../../../settings.json"
+expect_skill_write none '外を指すリンクのフォルダーを通るパスには答えない' "$skill_project" Write "$skills/yomimasu/linked/guard-files.sh"
+expect_skill_write none '外を指すリンクのファイルには答えない' "$skill_project" Edit "$skills/yomimasu/scripts/linked.sh"
+expect_skill_write none 'スキルのフォルダーが外を指すリンクなら、その先に答えない' "$linked_skill_project" Write "$linked_skill_project/.claude/hooks/guard-files.sh"
+expect_skill_write none 'スキルのフォルダーが外を指すリンクなら、リンクを通るパスにも答えない' "$linked_skill_project" Write "$linked_skill_project/.claude/skills/yomimasu/x.sh"
+expect_skill_write none '相対パスには答えない' "$skill_project" Write skill-link/scripts/commands.ts
+expect_skill_write none 'Write と Edit のほかの道具には答えない' "$skill_project" NotebookEdit "$skills/yomimasu/a.ipynb"
+expect_skill_write none 'プロジェクトの場所が分からなければ答えない' '' Write "$skills/yomimasu/scripts/commands.ts"
 
 if ((failures > 0)); then
   printf '%s 件失敗\n' "$failures"

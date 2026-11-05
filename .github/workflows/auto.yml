@@ -29,11 +29,12 @@ jobs:
     # PR の修正を待つかどうかを review-gate の検査の結果で見るので、checks と statuses も読む。
     # gh は検査のワークフロー名を checkSuite.workflowRun から引くので、actions も読む。
     # actions がないと、検査の付いた PR が開いているときに pick が落ちる。
+    # in-progress はここで付けるので、issues は書く。work の job のトークンには書き込みの権限を持たせない。
     permissions:
       actions: read
       checks: read
       contents: read
-      issues: read
+      issues: write
       pull-requests: read
       statuses: read
     outputs:
@@ -53,6 +54,18 @@ jobs:
           DAILY_LIMIT: 5
         run: bash .github/scripts/auto-target.sh
 
+      # work の準備（依存の導入）より前に付けるので、準備の段階で落ちた実行も1日の件数に入る。
+      - name: Issue に in-progress を付ける
+        if: ${{ steps.pick.outputs.issue != '' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ steps.pick.outputs.issue }}
+        run: gh issue edit "$ISSUE" --add-label in-progress
+
+  # action は、Claude の環境に GITHUB_TOKEN を DEFAULT_WORKFLOW_TOKEN として渡す。Claude のあとの step と
+  # action の後始末も、Claude が書き換えられる runner で動く。この job のトークンは読み取りだけにし、書き込みは finish で行う。
+  # id-token は、action が Claude の App のトークンを取るのに使う。
   work:
     needs: pick
     if: ${{ needs.pick.outputs.issue != '' || needs.pick.outputs.pr != '' }}
@@ -60,13 +73,14 @@ jobs:
     timeout-minutes: 45
     permissions:
       actions: read
-      contents: write
+      contents: read
       id-token: write
-      issues: write
-      pull-requests: write
+      pull-requests: read
     env:
       ISSUE: ${{ needs.pick.outputs.issue }}
       PR: ${{ needs.pick.outputs.pr }}
+    outputs:
+      head: ${{ steps.before.outputs.head }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -79,17 +93,17 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
 
-      # Claude が変えられない場所へ、あとで書き込みの権限で動かすスクリプトを写しておく。
       - name: 始める前の状態を残す
         id: before
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp .github/scripts/run-summary.sh "$RUNNER_TEMP/run-summary.sh"
-          if [[ -n $ISSUE ]]; then
-            gh issue edit "$ISSUE" --add-label in-progress
-          else
+          # hook を書き換えれば許す範囲を広げられるので、Claude Code が守る ~/.claude/ の下に置く。
+          # $RUNNER_TEMP には、--allowedTools の Write が確認なしに届く（docs/decisions.md）。
+          mkdir -p ~/.claude/hooks
+          cp .github/scripts/allow-skill-write.sh ~/.claude/hooks/allow-skill-write.sh
+          if [[ -n $PR ]]; then
             gh pr view "$PR" --json comments | bash .github/scripts/review-comments.sh >previous-reviews.json
             head=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
             echo "head=$head" >>"$GITHUB_OUTPUT"
@@ -109,6 +123,11 @@ jobs:
             contents: write
             pull_requests: write
             issues: write
+          # Claude Code は .claude/ の下を守り、--allowedTools の Write と Edit では、パスを書いても書かせない。
+          # スキル yomimasu の下だけを、確認に答える hook で許す。設定、hook、SKILL.md、ほかのスキルは守ったままにする。
+          # .claude/settings.json に置かないのは、手元のセッションでも確認なしに書けるようになるからである。
+          settings: |
+            {"hooks": {"PermissionRequest": [{"matcher": "Write|Edit", "hooks": [{"type": "command", "command": "bash ~/.claude/hooks/allow-skill-write.sh"}]}]}}
           prompt: |
             ${{ needs.pick.outputs.issue != '' && format('Issue #{0} を実装する。', needs.pick.outputs.issue) || format('PR #{0} のレビューの指摘に答える。', needs.pick.outputs.pr) }}
 
@@ -132,26 +151,81 @@ jobs:
             --max-turns 80
             --allowedTools "Skill,Read,Edit,Write,Glob,Grep,Bash(npm run:*),Bash(npm test:*),Bash(npx playwright:*),Bash(lsof:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git add:*),Bash(git commit:*),Bash(git switch:*),Bash(git fetch:*),Bash(git push origin auto/*),Bash(git push -u origin auto/*),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr create:*),Bash(gh pr comment:*)"
 
-      - name: 実行の要約を PR に書く
+      # 記録の全文には依頼とコマンドの出力が入る。Artifact は公開に戻すと誰でも取れるので、要約に使う項目だけを渡す。
+      # ここから下の step は Claude のあとに同じ runner で動くので、Claude が中身を変えられる。finish は受けた中身を信用しない。
+      - name: 要約に使う項目を取り出す
         if: ${{ !cancelled() && steps.claude.outputs.execution_file != '' }}
         continue-on-error: true
         shell: bash
         env:
-          GH_TOKEN: ${{ github.token }}
           EXECUTION_FILE: ${{ steps.claude.outputs.execution_file }}
+        run: bash .github/scripts/run-summary.sh --extract "$EXECUTION_FILE" >"$RUNNER_TEMP/run-summary-input.json"
+
+      - name: 要約に使う項目を渡す
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: run-summary-input
+          path: ${{ runner.temp }}/run-summary-input.json
+          if-no-files-found: ignore
+          retention-days: 1
+
+  # Claude のあとに書き込みの権限で動く処理を、新しい runner に分ける。work の runner では、Claude が
+  # $RUNNER_TEMP のスクリプト、GITHUB_ENV と GITHUB_PATH、action の置き場を書き換えられる。
+  # 番号は pick から受け、work からは要約の項目と head だけをデータとして受ける。スクリプトはこの job で取り出したものを使う。
+  # 失敗と取り消しのあとも人に渡すので always() で動かす。pick が何も選ばなかった実行では動かさない。
+  # work の結果で見ないのは、pick が in-progress を付けたあとに取り消すと、work が飛んで Issue が印のまま残るからである。
+  finish:
+    needs: [pick, work]
+    if: ${{ always() && (needs.pick.outputs.issue != '' || needs.pick.outputs.pr != '') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    env:
+      GH_REPO: ${{ github.repository }}
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ needs.pick.outputs.issue }}
+      PR: ${{ needs.pick.outputs.pr }}
+    steps:
+      # 取り出しと Artifact は要約のためだけに使う。失敗しても成果の確認へ進み、成功した実行を人に渡さない。
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        continue-on-error: true
+        with:
+          persist-credentials: false
+
+      # name で指定すると、Artifact がないときに失敗する。準備の段階で落ちた実行には Artifact がない。
+      # 取り出し先は作業フォルダーの外にし、取り出したスクリプトを Artifact の中身で上書きさせない。
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        continue-on-error: true
+        with:
+          pattern: run-summary-input
+          merge-multiple: true
+          path: ${{ runner.temp }}/run-summary-input
+
+      - name: 実行の要約を PR に書く
+        if: ${{ needs.work.result == 'success' || needs.work.result == 'failure' }}
+        continue-on-error: true
+        shell: bash
         run: |
+          input=$RUNNER_TEMP/run-summary-input/run-summary-input.json
+          [[ -f $input ]] || exit 0
           target=${PR:-$(gh pr list --head "auto/issue-$ISSUE" --json number --jq '.[0].number // empty')}
           if [[ -n $target ]]; then
-            bash "$RUNNER_TEMP/run-summary.sh" "$EXECUTION_FILE" | gh pr comment "$target" --body-file -
+            bash .github/scripts/run-summary.sh "$input" | gh pr comment "$target" --body-file -
           fi
 
       # Claude が途中で諦めても action は成功で終わるので、成果の有無で確かめる。
       - name: 成果があるかを確かめる
         shell: bash
         env:
-          GH_TOKEN: ${{ github.token }}
-          HEAD_BEFORE: ${{ steps.before.outputs.head }}
+          HEAD_BEFORE: ${{ needs.work.outputs.head }}
+          WORK_RESULT: ${{ needs.work.result }}
         run: |
+          [[ $WORK_RESULT == success ]]
           if [[ -n $ISSUE ]]; then
             [[ -n $(gh pr list --head "auto/issue-$ISSUE" --state open --json number --jq '.[0].number // empty') ]]
           else
@@ -161,8 +235,6 @@ jobs:
       - name: 失敗したら人に渡す
         if: ${{ failure() || cancelled() }}
         shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
           if [[ -n $ISSUE ]]; then
             gh issue edit "$ISSUE" --add-label needs-human --remove-label in-progress
@@ -172,8 +244,9 @@ jobs:
 
   # 次の実行は、この実行が終わるまで保留になる。
   # 失敗のあとは起こさない。鍵の期限切れのような原因では、残りの Issue を次々に人へ渡すことになるので、30分ごとの cron に任せる。
+  # finish は work の失敗のあとも動くので、work の成功も条件に入れる。finish は成果がなければ失敗で終わる。
   next:
-    needs: work
+    needs: [work, finish]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
