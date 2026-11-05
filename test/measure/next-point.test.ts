@@ -6,6 +6,7 @@ import texts from '../../.claude/skills/yomimasu/assets/next-point.json' with { 
 import { definition, type Range, type RangeItem } from '../../.claude/skills/yomimasu/scripts/definition.ts';
 import { measure, type Measurement, type Seconds, type Unmeasured } from '../../.claude/skills/yomimasu/scripts/measure.ts';
 import { nextPoint, PRIORITY, type Pair } from '../../.claude/skills/yomimasu/scripts/next-point.ts';
+import { cardUrl } from '../../site/karuta.ts';
 import { standardReading, synthesize } from '../support/synth.ts';
 
 // テストリスト
@@ -52,6 +53,14 @@ for (const item of ITEMS) {
 test('序歌の下の句の組では、下の句＋余韻のページを序歌のページにする', () => {
   const answer = nextPoint({ ...inside(), shimoPlusYoin: ok(longer('shimoPlusYoin')) }, { shimo: 0, kami: 29 });
   assert.equal(answer.kind === 'point' && answer.point.link.url, '/karuta/joka/');
+});
+
+// スキルのスクリプトは site/ を読み込まないので、1首のページの URL の規則を写している。食い違えばリンクが切れる。
+test('1首のページの URL は、教科書の組み立てと同じ規則で作る', () => {
+  for (const no of [0, 1, 53, 100]) {
+    const answer = nextPoint({ ...inside(), kami: ok(longer('kami')) }, { shimo: no === 1 ? 2 : 1, kami: no });
+    assert.equal(answer.kind === 'point' && answer.point.link.url, cardUrl(no), `${no}`);
+  }
 });
 
 test('すべての項目が幅の中なら、直す点なしを返す', () => {
@@ -135,11 +144,13 @@ test('文はどの項目と向きにもあり、文ごとに、もとにした�
   }
 });
 
-test('文に判定の幅の値を書き写さず、測っていない明瞭さ、発音、声の大きさに触れない', () => {
+test('文に判定の幅の値を書き写さず、測っていない明瞭さ、発音、声の大きさ、余韻の消え方に触れない', () => {
   const widths = Object.values(ranges).flatMap(({ minSec, maxSec }) => [minSec, maxSec]).map(String);
   for (const [name, text] of allTexts()) {
     const sentence = [text.fix, text.reason, text.how].join('');
     for (const width of widths) assert.ok(!new RegExp(`(^|[^\\d.])${width.replace('.', '\\.')}([^\\d]|$)`).test(sentence), `${name} に ${width}`);
     assert.doesNotMatch(sentence, /明瞭|発音|音量|声の大きさ|大きな声|小さな声|Claude|AI/, name);
+    // 余韻の消え方と口の形は判定していない。余韻は減衰ではなく最後の音を伸ばす部分なので、「消す」とも書かない。
+    assert.doesNotMatch(sentence, /口の形|消え|消す|消し|途切れ|弱め|鏡/, name);
   }
 });

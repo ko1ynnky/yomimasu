@@ -27,7 +27,8 @@ export type NextPoint = { kind: 'point'; point: Point } | { kind: 'clear' } | { 
 // 決まり字までの速さは、測定の定義で出さないと決めているので、順に入れない。声の大きさは良し悪しを判定しないので入れない。
 export const PRIORITY: readonly RangeItem[] = ['ma', 'shimoPlusYoin', 'kami'];
 
-const cardPage = (no: number) => `/karuta/${no === 0 ? 'joka' : no}/`;
+// site/karuta.ts の cardUrl と同じ規則である。スキルのスクリプトは site/ を読み込まないので写し、一致はテストが確かめる。
+const cardPage =(no: number) => `/karuta/${no === 0 ? 'joka' : no}/`;
 const pageOf = (item: RangeItem, pair: Pair) => (item === 'ma' ? '/soron/' : cardPage(item === 'shimoPlusYoin' ? pair.shimo : pair.kami));
 
 export function nextPoint(measurement: Measurement, pair: Pair, use: Definition = standard): NextPoint {
