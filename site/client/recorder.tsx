@@ -134,6 +134,8 @@ function Recorder({ fix }: { fix?: string }) {
   const [help, setHelp] = useState(() => !helpDone());
   // 実行の行に打ち込んでいる途中の文字。打ち込んでいないあいだは null である。
   const [typed, setTyped] = useState<string | null>(null);
+  // マイクを閉じてから結果の画面へ入れ替わるまで。打ち込まない場合（動きを減らす設定、25 秒）も、録音中の表示を消し、ボタンを押せなくする。
+  const [closing, setClosing] = useState(false);
   const session = useRef<Session | null>(null);
   const opening = useRef(false);
   // 止めた時刻までの録音の塊を待っている録音。待つ間に「やめる」を押すか画面を離れたら、結果へ進めない。
@@ -163,11 +165,15 @@ function Recorder({ fix }: { fix?: string }) {
   async function finish(): Promise<Take | null> {
     const current = end();
     if (!current) return null;
+    setClosing(true);
     const { capture } = current;
     stopping.current = capture;
     const readingStartSec = capture.positionSec(current.countStart + COUNT_SEC);
     const { pcm, sampleRate, voiceProcessing } = await capture.stop(capture.now());
-    if (stopping.current !== capture) return null;
+    if (stopping.current !== capture) {
+      setClosing(false);
+      return null;
+    }
     stopping.current = null;
     const take: Take = {
       pcm,
@@ -192,12 +198,12 @@ function Recorder({ fix }: { fix?: string }) {
   }
 
   // 録音の終わりは押した時刻にする。打ち込むあいだもマイクを開いたままにしない。
-  // 打ち込んだ「読み終えた」は、殻が本文を入れ替えるまで実行の行に残す。
+  // 結果の画面の取得は押した時点で始め、録音を残して打ち込み終えてから入れ替える。打ち込んだ「読み終えた」は入れ替えるまで実行の行に残す。
   async function finishByUser() {
     if (!session.current) return;
-    const [take] = await Promise.all([finish(), typeRun('読み終えた')]);
-    if (take) go(RESULT);
-    else setTyped(null);
+    const kept = Promise.all([finish(), typeRun('読み終えた')]).then(([take]) => take !== null);
+    void go(RESULT, kept);
+    if (!(await kept)) setTyped(null);
   }
 
   function tick() {
@@ -208,7 +214,7 @@ function Recorder({ fix }: { fix?: string }) {
       setView({ kind: 'count', beat: COUNT_FROM - Math.floor(elapsed / COUNT_BEAT_SEC), elapsed });
     } else if (elapsed - COUNT_SEC >= LIMIT_SEC) {
       // 利用者が押していない動きなので、打ち込まずに移る（docs/ui-guide.md の8節）。
-      void finish().then((take) => take && go(RESULT));
+      void go(RESULT, finish().then((take) => take !== null));
       return;
     } else {
       setView({ kind: 'reading', t: elapsed - COUNT_SEC, elapsed });
@@ -274,9 +280,9 @@ function Recorder({ fix }: { fix?: string }) {
   const guide = view.kind === 'reading' ? Math.min(view.t, total) : 0;
   const kimariji = [pair.shimo, pair.kami].map((no) => cards.find((card) => card.no === no)?.kimariji?.kana ?? `${no}番`).join(' ');
 
-  const sending = typed !== null;
+  const sending = closing || typed !== null;
   // 読み直しの1行は実行の行の代わりに出す。打ち込むときは、実行の行に戻す。
-  const run = fix && !sending ? (
+  const run = fix && typed === null ? (
     <div class="fix-chip">直す1点：{fix}</div>
   ) : (
     <div class="run">

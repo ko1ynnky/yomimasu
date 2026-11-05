@@ -285,9 +285,18 @@ test('やめるで録音を捨てて最初へ戻り、マイクを閉じる', as
   await cancelButton(page).click();
 
   await expect(startButton(page)).toBeVisible();
-  await expect(page.getByTestId('take')).toHaveCount(0);
   await expect(recState(page)).toHaveCount(0);
   expect(await microphonesClosed(page)).toEqual([true]);
+
+  // 捨てた録音は、開き直さずに移った結果の画面にも出ない。結果の画面は、開いている画面の録音も端末に残した録音も見る。
+  await page.evaluate(() => {
+    const link = Object.assign(document.createElement('a'), { href: '/result/', textContent: '結果を見る' });
+    document.querySelector('main')!.append(link);
+    link.click();
+  });
+  await expect(page).toHaveURL(/\/result\/$/);
+  await expect(page.getByRole('status')).toContainText('まだ録音がありません。');
+  await expect(page.getByTestId('take')).toHaveCount(0);
   await browser.close();
 });
 
