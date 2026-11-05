@@ -11,6 +11,7 @@ import {
   startsWithVowel,
   type Point,
 } from '../content/karuta/rules.ts';
+import { cardMouthHtml } from '../content/karuta/mouth.ts';
 import { pairLines, type Line } from './client/lyrics.ts';
 
 const HTML_ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
@@ -201,6 +202,8 @@ export function cardPage(card: Card, cards: readonly Card[], advice: readonly Ad
     '<h3>気をつける点</h3>',
     `<p class="fine">${escapeHtml(PRIORITY_NOTE)}</p>`,
     `<div class="card rows points">${pointsHtml}</div>`,
+    '<h3>最後の音の口の形</h3>',
+    cardMouthHtml(card),
     ...(words.length > 0 ? ['<h3>言葉の助言</h3>', `<div class="card rows points">${wordsHtml}</div>`] : []),
     '</article>',
   ].join('\n');
