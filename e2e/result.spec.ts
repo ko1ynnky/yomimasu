@@ -104,7 +104,8 @@ test('間の長い読みを録ると、下の句＋余韻、間、上の句の3�
   await expect(result).toContainText('明瞭さは測っていません。お手本と聴き比べてください。');
   await expect(result).toContainText('録音は端末の外へ出ません。');
   await expect(result).not.toContainText('決まり字');
-  await expect(result).not.toContainText(/総合|点数|\d+\s*点/);
+  // 「次に直す1点」はカードの見出しで、点数ではない（docs/ui-guide.md の10節）。
+  await expect(result).not.toContainText(/総合|点数|(?<!直す)\d+\s*点/);
   await expect(result).not.toContainText('例の録音です');
   await expect(page.locator('.bar .step')).toHaveText('補助あり');
 

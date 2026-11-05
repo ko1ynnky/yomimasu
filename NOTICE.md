@@ -8,6 +8,7 @@
 | スキルの `SKILL.md` | スキルのフォルダー | MIT License |
 | 測定の定義 | `docs/measure.md` | MIT License |
 | 知識の文章 | `content/`（1首のページの文 `content/karuta/rules.ts` を含みます）、スキル `yomimasu` の `references/`。`test/site/karuta.test.ts`、`test/site/mouth.test.ts`、`e2e/textbook.spec.ts`、`e2e/mouth.spec.ts` の期待値にも、その文の一部があります | 権利を留保します。読むことと、個人の練習で使うことだけを認めます |
+| 次に直す1点の文 | `.claude/skills/yomimasu/assets/next-point.json` | 権利を留保します。読むことと、個人の練習で使うことだけを認めます。知識の文章と同じ扱いで、再利用を認めません |
 | 札の文字のデータ | `.claude/skills/yomimasu/assets/cards.json` の本文の列 | 再利用を認めません。元のデータの権利は[外部のデータ](#外部のデータ)のとおりです |
 | そのほかのデータ | 置くときにここへ書きます | 再利用を認めません。出典と権利は、置くときにここへ書きます |
 | 札ごとの読みの表 | `.claude/skills/yomimasu/assets/cards.json`。同じ値を含む `scripts/cards/corrections.ts`、`.claude/skills/yomimasu/scripts/cards.ts` の札の番号、`test/cards/` の期待値（ふりがな、注、別の読み、余韻の印の値は `test/cards/table.test.ts`、`test/cards/assemble.test.ts`、`test/cards/sound.test.ts`）、`docs/ui-sample.html` の見本の3首と100首の決まり字、`test/site/lyrics.test.ts`、`test/site/karuta.test.ts`、`test/site/mouth.test.ts`、`e2e/stage.spec.ts`、`e2e/textbook.spec.ts`、`e2e/mouth.spec.ts` の期待値。教科書の1首のページと100首の一覧は、組み立てのときにこの表から作ります | 再利用を認めません。伸ばす箇所は抜粋版の、ふりがな、注、別の読み、余韻の印は完全版の内容として、全日本かるた協会の回答の範囲で使っています |
