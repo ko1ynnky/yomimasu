@@ -67,6 +67,15 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
+## 配信のサービスが差し込むスクリプト
+
+https://yomimasu.karutalog.com を配信している Cloudflare は、配信の途中で、どのページにも次の2つのスクリプトを差し込みます。このリポジトリにはないコードで、MIT License の対象でもありません。このアプリのコードは、録音と測った結果をこの2つに渡しません。
+
+- アクセス解析（Cloudflare Web Analytics）：`static.cloudflareinsights.com` から読み込まれ、開いたページ、どこから来たか（リファラー）、表示にかかった時間（読み込みの時間と Core Web Vitals）を、同じオリジンの `/cdn-cgi/rum` へ送ります。Cookie は使いません。Cloudflare が国、ブラウザー、OS、端末の種類と合わせて集計し、作者はその集計だけを見ます。
+- ボット対策（Bot Fight Mode の JavaScript Detections）：同じオリジンの `/cdn-cgi/challenge-platform/` から読み込まれ、ブラウザーの特徴を暗号化して同じところへ送り、人が開いているかを判定します。結果は `cf_clearance` という Cookie（ドメインは `.karutalog.com`、HttpOnly）に1年残ります。送る中身は暗号化されていて、作者は見られません。
+
+画面では「このアプリについて」（`/about/`）に書いています。残すと決めた理由は [docs/decisions.md](docs/decisions.md) の 2026-11-07 の項目にあります。
+
 ## 公認や提携
 
 このプロジェクトは全日本かるた協会の公認を受けていません。Anthropic の公式の製品でもありません。
