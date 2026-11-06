@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { COMMANDS, commandAt } from '../../.claude/skills/yomimasu/scripts/commands.ts';
 import { INSTALL_TARGETS, isOffered, pickOptionsHtml, SKETCHES, sketchSvg } from '../../site/install.ts';
@@ -38,3 +39,39 @@ test('略図は押す順を文で書いた名前を持つ図で、押す場所�
     assert.deepEqual(badges, badges.map((_, i) => i + 1), name);
   }
 });
+
+// Web のボタンが打ち込む文字には、スキルも同じ内容を返す（docs/ui-guide.md の8節）。画面とスキルの答えを、別々に直して食い違わせないための検査である。
+const noteOf = (path: string) => COMMANDS.find((command) => command.path === path)?.skill.note ?? '';
+const textOf = (html: string) => html.replace(/<[^>]+>/g, '').trim();
+
+test('入れる先を尋ねるスキルの答えは、Web の選択肢と同じ入れる先を同じ順に、打ち込む文字で並べ、同じ例を挙げる', () => {
+  const note = noteOf('/install/');
+  assert.deepEqual(
+    [...note.matchAll(/`(インストール [^`]+)`/g)].map(([, say]) => say),
+    INSTALL_TARGETS.map(({ path }) => commandAt(path, noName)?.say),
+  );
+  const page = readFileSync('content/インストール.md', 'utf8');
+  const examples = [...page.matchAll(/^<div>(?:<span class="prio">[^<]+<\/span>)?(.+)<\/div>$/gm)].map(([, text]) => text);
+  assert.equal(examples.length, 4);
+  for (const example of examples) assert.ok(note.includes(example), example);
+});
+
+for (const { path } of INSTALL_TARGETS.filter(({ path }) => path !== '/install/agent/')) {
+  test(`${path} のスキルの答えは、Web の手順の画面と同じ場所の文、段の見出しと文、聞いてみる例、注記を持つ`, () => {
+    const note = noteOf(path);
+    const read = commandAt(path, noName)?.read ?? '';
+    const page = readFileSync(`content/${read}`, 'utf8');
+    const where = textOf(page.match(/^## .+\n\n(<p>.+<\/p>)$/m)?.[1] ?? '');
+    const steps = [...page.matchAll(/<b>([^<]+)<\/b>(?:<p>(.+?)<\/p>)?/g)].map(([, title, text]) => [title, textOf(text ?? '')]);
+    const example = textOf(page.match(/<code>([^<]+)<\/code>/)?.[1] ?? '');
+    const fine = textOf(page.match(/<p class="fine">(.+)<\/p>/)?.[1] ?? '');
+    assert.ok(where && note.startsWith(where), where);
+    for (const [i, [title, text]] of steps.entries()) {
+      const line = note.split('\n').find((l) => l.startsWith(`${i + 1}. ${title}：`));
+      assert.ok(line, `${i + 1}. ${title}`);
+      assert.ok(line.includes(text), `${title}：${text}`);
+    }
+    assert.ok(example && note.includes(example), example);
+    assert.ok(fine && note.endsWith(fine), fine);
+  });
+}
