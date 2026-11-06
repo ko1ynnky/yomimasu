@@ -6,6 +6,7 @@ import deck from '../.claude/skills/yomimasu/assets/cards.json' with { type: 'js
 import type { Card } from '../.claude/skills/yomimasu/scripts/cards.ts';
 import { commandAt } from '../.claude/skills/yomimasu/scripts/commands.ts';
 import { mouthFiguresHtml, nasalEndingsText, nasalFigureHtml } from '../content/karuta/mouth.ts';
+import { INSTALL_MARKS, isOffered } from './install.ts';
 import { cardName, cardPage, cardUrl, expandCardRefs, finalSoundCounts, listHtml, parseAdvice } from './karuta.ts';
 import { outputPathOf, parseSource, renderDocument, runFor } from './render.ts';
 import { skillZip } from './skill-zip.ts';
@@ -23,6 +24,7 @@ const MARKS: Record<string, () => string> = {
   '<!-- 最後の音の口の形 -->': mouthFiguresHtml,
   '<!-- 「ん」の位置の図 -->': nasalFigureHtml,
   '<!-- 「ん」で終わる札の数 -->': () => nasalEndingsText(cards),
+  ...INSTALL_MARKS,
 };
 
 await build({
@@ -54,6 +56,7 @@ for (const entry of readdirSync(CONTENT_DIR, { recursive: true, withFileTypes: t
   const contentPath = relative(CONTENT_DIR, sourcePath);
   const { title, command, readName, tool, slug, markdown } = parseSource(readFileSync(sourcePath, 'utf8'));
   const outputPath = outputPathOf(contentPath, slug);
+  if (!isOffered(urlOf(outputPath))) continue;
   const run = runFor(contentPath, { command, readName }, commandAt(urlOf(outputPath), (token) => cardNames.get(token)));
   const parsed = (await marked.parse(markdown)).replace(LIST_MARK, () => listHtml(cards)).replace(FINAL_SOUND_MARK, () => finalSoundCounts(cards));
   const bodyHtml = expandCardRefs(Object.entries(MARKS).reduce((html, [mark, make]) => html.replace(mark, make), parsed), cards);

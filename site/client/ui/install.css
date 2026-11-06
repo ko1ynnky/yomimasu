@@ -1,0 +1,26 @@
+/* AI に入れる画面（/install/ と手順の4画面）の見た目。値と意味は docs/ui-guide.md の8節「AI に入れる」と、見本の docs/ui-sample.html の t-ai にある。 */
+
+/* 入れる先を尋ねる画面は、入力の行がないので道具の画面（tool）として組む。間は道具の画面の 10px に詰めず、ほかの本文と同じ 16px にする（見本の t-ai） */
+.screen--stage:has(> [data-pick]) { gap: 16px; }
+
+/* 使い方の例 */
+.examples > div { padding: 10px 14px; font-size: 15px; line-height: 1.6; }
+
+/* 選択肢の添え書き（「Claude Code、Codex、Cursor など」）は、名前の下に、番号の分だけ字下げして置く */
+.auq-opts .btn:has(small) { flex-direction: column; align-items: flex-start; gap: 0; }
+.auq-opts .btn small { padding-left: 1.3em; color: var(--ink-3); font-size: 13px; }
+
+.list .save { margin-top: 8px; }
+
+/* 打ち込む文字の枠。文字はコマンドの行と同じ 14px、行の高さ 1.7 にする。折るのは語の切れ目だけにする。引数の中で折ると「cp -」と「R」のように割れて読み違えた。
+   横に送る形は、375px でコマンドがどれも途中で切れ、全体を読めなかったのでやめた。折れた続きは字下げして、別のコマンドに見えないようにする */
+.cmd { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 6px; padding: 6px 6px 6px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); }
+.cmd code { flex: 1 1 14em; min-width: 0; padding-block: 6px; font-family: var(--f-mono); font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; }
+.cmd code:has(> span) { padding-left: 2ch; text-indent: -2ch; }
+.cmd code > span { white-space: nowrap; }
+.cmd .btn { flex: none; margin-left: auto; min-height: 44px; padding: 4px 10px; }
+
+/* 各社の画面の略図（site/install.ts）。番号の列の下まで広げる。手順の列の幅のままだと、320px で図の文字が 11px まで縮んだ */
+.sketch { margin: 8px 0 0; }
+.list .sketch { margin-left: -34px; }
+.sketch svg { display: block; width: 100%; height: auto; }

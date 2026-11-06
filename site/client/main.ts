@@ -1,5 +1,6 @@
 import './ui/base.css';
 import './ui/textbook.css';
+import './ui/install.css';
 
 // 返す関数は要素が外れたときに呼ぶ。本文を入れ替えたときに、画面の木とマイクを残さないためである。
 type Mount = (element: HTMLElement) => () => void;
