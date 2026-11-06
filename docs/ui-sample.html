@@ -147,8 +147,8 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
 .pt > summary::after { content: ""; position: absolute; right: 16px; top: 50%; width: 8px; height: 8px; margin-top: -6px; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(45deg); }
 .pt[open] > summary::after { margin-top: -2px; transform: rotate(-135deg); }
 .pt-body { padding: 0 14px 12px; display: grid; gap: 4px; }
+.pt-body span.src { display: inline-block; max-width: 100%; font-size: 13px; line-height: 1.6; color: var(--ink-3); }
 .pt-body p { font-size: 15px; line-height: 1.7; color: var(--ink-2); }
-.pt-body p.src { font-size: 13px; line-height: 1.6; color: var(--ink-3); }
 .toc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 4px; }
 .toc a { min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 4px 10px; color: var(--ink); text-decoration: none; border-radius: 8px; }
 .toc a small { font-family: var(--f-mono); color: var(--ink-3); }
@@ -516,16 +516,16 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
   </nav>
   <h3 id="t-yoin">1組と、余韻と間</h3>
   <div class="card pts">
-    <details class="pt"><summary><span class="prio prio--hi">優先 高</span><b>項目の題</b></summary><div class="pt-body"><p>説明の本文が入ります。この文は仮の文です。</p><p class="src">冊子 p.3</p></div></details>
-    <details class="pt"><summary><span class="prio">優先 中</span><b>項目の題が2行に折れるくらい長いときの見え方</b></summary><div class="pt-body"><p>説明の本文が入ります。</p><p class="src">読手のメモ2 2-4（読手個人のやり方）</p></div></details>
+    <details class="pt"><summary><span class="prio prio--hi">優先 高</span><b>項目の題</b></summary><div class="pt-body"><p>説明の本文が入ります。この文は仮の文です。 <span class="src">— 冊子 p.3</span></p></div></details>
+    <details class="pt"><summary><span class="prio">優先 中</span><b>項目の題が2行に折れるくらい長いときの見え方</b></summary><div class="pt-body"><p>説明の本文が入ります。 <span class="src">— 読手メモより</span></p></div></details>
   </div>
   <h3 id="t-kimariji">決まり字まで</h3>
   <div class="card pts">
-    <details class="pt"><summary><span class="prio prio--hi">優先 高</span><b>項目の題</b></summary><div class="pt-body"><p>説明の本文が入ります。</p><p class="src">講習資料 s.20</p></div></details>
-    <details class="pt"><summary><span class="prio">優先 低</span><b>項目の題</b></summary><div class="pt-body"><p>説明の本文が入ります。</p><p class="src">冊子 p.28</p></div></details>
+    <details class="pt"><summary><span class="prio prio--hi">優先 高</span><b>項目の題</b></summary><div class="pt-body"><p>説明の本文が入ります。 <span class="src">— 講習資料 s.20</span></p></div></details>
+    <details class="pt"><summary><span class="prio">優先 低</span><b>項目の題</b></summary><div class="pt-body"><p>説明の本文が入ります。 <span class="src">— 冊子 p.28</span></p></div></details>
   </div>
   <p class="fine">優先の高・中・低は資料が付けた順位ではなく、このアプリの案です。</p>
-  <p class="fine">出典は「このアプリについて」にまとめています。</p>
+  <p class="fine">出典と、読手メモ・作者の実体験の扱いは「このアプリについて」にまとめています。</p>
   <section class="ask" data-ask>
     <div class="ask-line"><span class="gt">&gt;</span> <span data-typed>/yomimasu </span><span class="caret"></span></div>
     <p class="ask-q">次は？</p>

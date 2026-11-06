@@ -30,7 +30,7 @@ test('「ん」の説明は、余韻の口の形の行の中でさらに折り�
   await expect(nasal).toBeHidden();
   await page.getByText('「ん」は、口の中のどこで作るか').click();
   await expect(nasal).toBeVisible();
-  await expect(page.locator('#yoin-n')).toContainText('このアプリの解釈');
+  await expect(page.locator('#yoin-n')).toContainText('このアプリの考え');
   mkdirSync(ARTIFACTS_DIR, { recursive: true });
   await page.locator('#yoin-oto').screenshot({ path: join(ARTIFACTS_DIR, 'mouth-point-393.png') });
 });
