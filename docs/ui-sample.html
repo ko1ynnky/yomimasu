@@ -133,10 +133,23 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
 .list .n { font-family: var(--f-mono); font-size: 22px; font-weight: 600; line-height: 1.3; color: var(--shu-deep); }
 .list b { display: block; line-height: 1.5; }
 .list p { font-size: 15px; line-height: 1.7; color: var(--ink-2); }
-.trap { padding: 12px 14px; display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 4px 10px; }
-.trap b { line-height: 1.55; text-wrap: balance; }
-.trap p { grid-column: 1 / -1; font-size: 15px; line-height: 1.7; color: var(--ink-2); }
-.play { width: 44px; height: 44px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid var(--ink); background: var(--card); cursor: pointer; }
+/* ポイントを知るのたたんだ行とテーマの目次（ガイド6節「たたんだ行」）。アプリは site/client/ui/textbook.css */
+.screen h3 { font-size: 17px; line-height: 1.5; scroll-margin-top: 8px; }
+.pts { display: grid; }
+.pt + .pt { border-top: 1px solid var(--rule-2); }
+.pt b { display: block; line-height: 1.55; text-wrap: balance; }
+.pt > summary { min-height: 48px; padding: 10px 36px 10px 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; align-items: center; cursor: pointer; list-style: none; position: relative; }
+.pt > summary::-webkit-details-marker { display: none; }
+.pt > summary .prio { grid-column: 2; grid-row: 1; white-space: nowrap; }
+.pt > summary b { grid-column: 1; grid-row: 1; }
+.pt > summary::after { content: ""; position: absolute; right: 16px; top: 50%; width: 8px; height: 8px; margin-top: -6px; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(45deg); }
+.pt[open] > summary::after { margin-top: -2px; transform: rotate(-135deg); }
+.pt-body { padding: 0 14px 12px; display: grid; gap: 4px; }
+.pt-body p { font-size: 15px; line-height: 1.7; color: var(--ink-2); }
+.pt-body p.src { font-size: 13px; line-height: 1.6; color: var(--ink-3); }
+.toc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 4px; }
+.toc a { min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 4px 10px; color: var(--ink); text-decoration: none; border-radius: 8px; }
+.toc a small { font-family: var(--f-mono); color: var(--ink-3); }
 .more > div { padding: 10px 14px; font-size: 15px; line-height: 1.6; }
 .kim-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .kim-grid a, .kim-grid span { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 56px; padding: 4px; border-radius: 8px; border: 1px solid var(--rule-2); text-decoration: none; color: var(--ink-3); }
@@ -492,22 +505,24 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
 </template>
 
 <template id="t-trap">
-  <h2 class="head">知っておきたいポイントを、<br>大事な順に。</h2>
-  <div class="card trap">
-    <div><span class="prio prio--hi">優先 高</span><b>ポイントの題が2行まで入る</b></div>
-    <button class="play" type="button" aria-label="お手本を再生" data-say="お手本を再生"><svg class="ico"><use href="#i-play"/></svg></button>
-    <p>解説の本文は B3 で書く。何が問題か、どう読むかを2〜3行で書く場所である。</p>
+  <h2 class="head">知っておきたいポイントを、<br>テーマごとに。</h2>
+  <p class="fine">優先の高・中・低は資料が付けた順位ではなく、このアプリの案です。</p>
+  <p class="fine">見出しを押すと説明が開きます。</p>
+  <nav class="card toc" aria-label="テーマ">
+    <a href="#t-yoin">1組と、余韻と間<small>2</small></a>
+    <a href="#t-kimariji">決まり字まで<small>2</small></a>
+  </nav>
+  <h3 id="t-yoin">1組と、余韻と間</h3>
+  <div class="card pts">
+    <details class="pt"><summary><span class="prio prio--hi">優先 高</span><b>項目の題</b></summary><div class="pt-body"><p>説明の本文が入ります。この文は仮の文です。</p><p class="src">冊子 p.3</p></div></details>
+    <details class="pt"><summary><span class="prio">優先 中</span><b>項目の題が2行に折れるくらい長いときの見え方</b></summary><div class="pt-body"><p>説明の本文が入ります。</p><p class="src">読手のメモ2 2-4（読手個人のやり方）</p></div></details>
   </div>
-  <div class="card trap">
-    <div><span class="prio prio--hi">優先 高</span><b>ポイントの題</b></div>
-    <button class="play" type="button" aria-label="お手本を再生" data-say="お手本を再生"><svg class="ico"><use href="#i-play"/></svg></button>
-    <p>解説の本文は B3 で書く。</p>
+  <h3 id="t-kimariji">決まり字まで</h3>
+  <div class="card pts">
+    <details class="pt"><summary><span class="prio prio--hi">優先 高</span><b>項目の題</b></summary><div class="pt-body"><p>説明の本文が入ります。</p><p class="src">講習資料 s.20</p></div></details>
+    <details class="pt"><summary><span class="prio">優先 低</span><b>項目の題</b></summary><div class="pt-body"><p>説明の本文が入ります。</p><p class="src">冊子 p.28</p></div></details>
   </div>
-  <div class="card rows more">
-    <div><span class="prio">優先 中</span>項目の題</div>
-    <div>項目の題</div>
-    <div>項目の題</div>
-  </div>
+  <p class="fine">出典は「このアプリについて」にまとめています。</p>
   <section class="ask" data-ask>
     <div class="ask-line"><span class="gt">&gt;</span> <span data-typed>/yomimasu </span><span class="caret"></span></div>
     <p class="ask-q">次は？</p>
@@ -1435,6 +1450,15 @@ async function act(text, fn) {
 document.addEventListener('click', (e) => {
   const say = e.target.closest('[data-say]');
   if (say) act(say.dataset.say, () => {});
+});
+
+// ポイントを知るの目次。見本は hash で画面を切り替えるので、hash を変えずに見出しへ移す。アプリは同じ画面の中のリンクで、ブラウザーに任せる。
+// 開け閉めと同じく、打ち込まない（ガイド8節「押したらターミナルに出す」）
+document.addEventListener('click', (e) => {
+  const link = e.target.closest('.toc a[href^="#t-"]');
+  if (!link) return;
+  e.preventDefault();
+  out.querySelector(link.getAttribute('href'))?.scrollIntoView();
 });
 
 document.addEventListener('click', (e) => {
