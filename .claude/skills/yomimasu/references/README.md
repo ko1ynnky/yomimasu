@@ -70,4 +70,4 @@
 
 録音で測る項目の定義と判定の幅の目安は、このフォルダーの知識ではない。定義の文はリポジトリの `docs/measure.md` に、選択と値は `.claude/skills/yomimasu/scripts/definition.ts` にある。幅を答えるときは「目安」と書き、出典は書かない。
 
-録音を測るときと、Web のボタンと同じコマンドに答えるときは、`.claude/skills/yomimasu/scripts/yomimasu.ts` を動かし、その出力で答える。測った値を自分で計算し直さない。
+SKILL.md が測る手順を案内しているときに限り、録音を測るときと、Web のボタンと同じコマンドに答えるときは、`${CLAUDE_SKILL_DIR}/scripts/yomimasu.ts` を動かし、その出力で答える。測った値を自分で計算し直さない。
