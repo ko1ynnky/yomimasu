@@ -1,19 +1,36 @@
 import './kv-live.js';
 import type { KvLive } from './kv-live.js';
+import { attachLens } from './kv-lens.ts';
 
-// 入口の題の下に置く、決まり字で組んだ読手の絵（docs/ui-guide.md の8節「入口の絵と「↓」」）。
+// 入口の題の下に置く、決まり字で組んだ読手の絵（docs/ui-guide.md の8節「入口の絵と「↓」」と、試作の「入口の絵の虫眼鏡（試作）」）。
 
 // 決まり字の列は、組み立てのときに site/build.ts が札の読みの表から作って入れる（site/kimariji-stream.ts）。
 declare const __KIMARIJI_STREAM__: string;
 
 const { mount, still, LOOP, READ_T } = window.YomimasuKv;
 // tapGyro: false で、iOS で絵をたたいても傾きの許可を求めない（「初めての人を止めない」）。
-const OPTIONS = { stream: __KIMARIJI_STREAM__, fps: 20, layout: 'tate', tapGyro: false } as const;
+// 升目を細かくした試作では、升目1つを 2×2 の画素で写す。3×3 のままでは写す画素が升目の数に比例して増え、1コマが重い。
+const OPTIONS = { stream: __KIMARIJI_STREAM__, fps: 20, layout: 'tate', tapGyro: false, ss: 2 } as const;
 // 3周（36秒）動いたら読む場面で止め、触ったらまた3周動かす。動かし続けると、入口を開いたままの端末が熱を持つ。
 const STOP_MS = LOOP * 3 * 1000;
 
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-const cellFor = (height: number) => Math.min(11, Math.max(8, Math.floor(height / 32)));
+// 試作：段の数を #41 の版（clamp(floor(高さ / 32), 8, 11)）の約2倍にして、机や読唱箱の形が出るようにする。字は読めない大きさになるので、虫眼鏡で読ませる
+const cellFor = (height: number) => Math.min(6, Math.max(4, Math.round(height / 64)));
+
+// 操作の説明は、使ったあとも消さない。2回目に来た人が、虫眼鏡と回し方を思い出せるようにするためである。
+// 止めた絵（動きを減らす設定、WebGL2 がない端末）は回せないので、「長押しで拡大」だけにする。
+// 読み上げで操作が分かるよう、aria-hidden にしない
+const hintFor = (turnable: boolean) => {
+  const hint = document.createElement('p');
+  hint.className = 'kv-hint';
+  for (const text of turnable ? ['長押しで拡大', 'ドラッグで回転'] : ['長押しで拡大']) {
+    const line = document.createElement('span');
+    line.textContent = text;
+    hint.append(line);
+  }
+  return hint;
+};
 
 export function mountKv(element: HTMLElement): () => void {
   const screen = element.parentElement!;
@@ -24,6 +41,8 @@ export function mountKv(element: HTMLElement): () => void {
   let stopTimer = 0;
   let started = false;
   let typing = false;
+  let playing = false;
+  let playingBeforeLens = false;
   let hideMore = () => {};
 
   // 高さは CSS の clamp で決め、先頭の項目の下端（絵の高さを除く）に 24px を足した値だけを、ここで測って渡す。
@@ -39,13 +58,16 @@ export function mountKv(element: HTMLElement): () => void {
     const key = `${element.clientWidth}x${element.clientHeight}:${cell}`;
     if (key === stillKey) return;
     stillKey = key;
-    element.replaceChildren();
+    element.querySelector('canvas')?.remove();
     still(element, { ...OPTIONS, cell, time: READ_T });
   };
 
   const stopLater = () => {
     clearTimeout(stopTimer);
-    stopTimer = window.setTimeout(() => figure?.set({ playing: false, time: READ_T }), STOP_MS);
+    stopTimer = window.setTimeout(() => {
+      playing = false;
+      figure?.set({ playing: false, time: READ_T });
+    }, STOP_MS);
   };
 
   const start = () => {
@@ -54,9 +76,11 @@ export function mountKv(element: HTMLElement): () => void {
     // 動きを減らす設定では、傾きでも回さないよう、動かす版を作らずに止めた1コマを描く。
     figure = reduced() ? null : mount(element, { ...OPTIONS, cell });
     element.dataset.kv = figure ? 'live' : 'still';
+    playing = !!figure;
     if (figure) stopLater();
     else drawStill();
     hideMore = showMore(items.at(-1));
+    element.append(hintFor(!!figure));
   };
 
   // iOS の Safari はアドレスバーの出し入れでも resize を送る。升目が変わらなければ、枠の大きさの変化はスクリプトが追う。
@@ -71,9 +95,25 @@ export function mountKv(element: HTMLElement): () => void {
 
   const resume = () => {
     if (!figure || typing) return;
+    playing = true;
     figure.set({ playing: true });
     stopLater();
   };
+
+  // 虫眼鏡を開いているあいだは絵を止め、閉じたら開く前の状態に戻す。
+  const detachLens = attachLens(element, {
+    open() {
+      playingBeforeLens = playing;
+      clearTimeout(stopTimer);
+      figure?.hold();
+      figure?.set({ playing: false });
+      playing = false;
+    },
+    close() {
+      figure?.release();
+      if (playingBeforeLens) resume();
+    },
+  });
 
   // 殻（ui/shell.ts）の動きのあいだは描かない。打ち込み始めると .ask に is-sent が付き、
   // 入口へ入れ替えて題を流すあいだは、絵に is-held が付いて隠れている。
@@ -81,6 +121,7 @@ export function mountKv(element: HTMLElement): () => void {
     if (!started && !element.classList.contains('is-held')) start();
     if (!typing && screen.querySelector('.ask.is-sent')) {
       typing = true;
+      playing = false;
       clearTimeout(stopTimer);
       figure?.set({ playing: false });
     }
@@ -91,6 +132,7 @@ export function mountKv(element: HTMLElement): () => void {
   addEventListener('resize', resize);
   element.addEventListener('pointerdown', resume);
   return () => {
+    detachLens();
     watch.disconnect();
     removeEventListener('resize', resize);
     element.removeEventListener('pointerdown', resume);

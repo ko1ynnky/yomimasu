@@ -83,9 +83,9 @@ for (const [width, height] of SIZES) {
     // 絵の高さ = max(160, min(520, 画面の高さ − 先頭の項目の下端 − 24))。下端は絵の高さを除いて測る。
     const expected = Math.max(160, Math.min(520, height - (first.bottom - kv.height) - 24));
     expect(Math.abs(kv.height - expected)).toBeLessThan(1);
-    // 升目 = clamp(floor(絵の高さ / 32), 8, 11)。Canvas は、絵の枠に入る升目の数だけの大きさになる。
+    // 升目（試作）= clamp(round(絵の高さ / 64), 4, 6)。Canvas は、絵の枠に入る升目の数だけの大きさになる。
     const [boxWidth, boxHeight] = await page.locator('yomimasu-kv').evaluate((el) => [el.clientWidth, el.clientHeight]);
-    const cell = Math.min(11, Math.max(8, Math.floor(boxHeight / 32)));
+    const cell = Math.min(6, Math.max(4, Math.round(boxHeight / 64)));
     const canvas = await page.locator('yomimasu-kv canvas').evaluate((el) => [el.clientWidth, el.clientHeight]);
     expect(canvas).toEqual([Math.floor(boxWidth / cell) * cell, Math.floor(boxHeight / cell) * cell]);
 
@@ -100,8 +100,8 @@ for (const motion of ['live', 'still'] as const) {
     if (motion === 'still') await page.emulateMedia({ reducedMotion: 'reduce' });
     await openHome(page, motion);
     await page.setViewportSize({ width: 659, height: 393 });
-    // 横にすると、絵は下限の 160px になり、升目は 8px になる。
-    await expect.poll(() => page.locator('yomimasu-kv canvas').evaluate((el) => [el.clientWidth % 8, el.clientHeight])).toEqual([0, 160]);
+    // 横にすると、絵は下限の 160px になり、升目は（試作では）4px になる。
+    await expect.poll(() => page.locator('yomimasu-kv canvas').evaluate((el) => [el.clientWidth % 4, el.clientHeight])).toEqual([0, 160]);
     await page.setViewportSize({ width: 393, height: 659 });
     await expect.poll(() => page.locator('yomimasu-kv canvas').evaluate((el) => [el.clientWidth, el.clientHeight])).toEqual([360, 315]);
   });

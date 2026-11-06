@@ -603,6 +603,12 @@ void main(){
     return c;
   }
 
+  // Canvas ごとの、最後に描いた字の並び。入口の虫眼鏡（client/kv-lens.ts）が、指の下の升目の字を拡大して描くのに使う
+  const painted = new WeakMap();
+
+  // 升目が 4〜6px の字の読みにくい大きさでも、升目ごとに字を fillText で描き、虫眼鏡を開く前から仮名の絵に見せる（ユーザーの案）。
+  // 8px 未満の升目を字の濃さの印（点、横線、十字、四角）で描く版（PR #59）は1コマが軽いが、開く前は仮名に見えない。
+  // 字を1回だけ並べて描いた帯（atlas）から drawImage で写す案は、Chromium で fillText より重かったので採らなかった。
   function paint(ctx, ink, opt, cols, rows, t, yaw, pitch) {
     const calib = calibrate(ink.mode, cols, rows, opt.ss, opt.yaw, opt.pitch);
     const list = glyphs(stats(t, yaw, pitch, cols, rows, opt.ss), cols, rows, { ...opt, mode: ink.mode }, calib);
@@ -618,6 +624,7 @@ void main(){
       ctx.fillText(ch, c * cw + cw / 2, r * cw + cw / 2 + cw * 0.04);
     }
     ctx.globalAlpha = 1;
+    painted.set(ctx.canvas, { list, cell: cw, ink });
     return list.length;
   }
 
@@ -727,7 +734,7 @@ void main(){
 
     // 傾き：端末を回した分だけ人物を回す（360度動画と同じく、最初に受けた向きを正面とする）
     function onOrient(e) {
-      if (e.alpha == null) return;
+      if (e.alpha == null || s.held) return;
       s.gyro = heading(e);
       if (!s.gyroRef) s.gyroRef = s.gyro;
       if (Math.abs(s.gyro.pitch) < 75) s.gyroYaw = -wrap(s.gyro.yaw - s.gyroRef.yaw) * opt.gyroGain;
@@ -764,11 +771,14 @@ void main(){
       // 升目の大きさを変えたら、列と段の数から測り直す
       set(next) { Object.assign(opt, next); if (next.time != null) s.t = next.time; if (next.cell != null) resize(); else draw(); },
       front,
+      // 長押しの虫眼鏡（client/kv-lens.ts）に指を渡す。release まで、なぞって回す動き、離したあとの惰性、傾きで回さない
+      hold() { s.held = true; s.drag = null; s.vel = 0; view.style.cursor = 'grab'; },
+      release() { s.held = false; },
       orient: onOrient,
       enableGyro,
       destroy() { cancelAnimationFrame(s.raf); ro.disconnect(); io.disconnect(); window.removeEventListener('deviceorientation', onOrient); view.remove(); },
     };
   }
 
-  window.YomimasuKv = { mount, still, LOOP, READ_T };
+  window.YomimasuKv = { mount, still, glyphsOf: (canvas) => painted.get(canvas), LOOP, READ_T };
 })();
