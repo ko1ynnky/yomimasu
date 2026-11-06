@@ -397,18 +397,22 @@ function joka(card: Card): Point[] {
 
 export const PRIORITY_NOTE = '優先の高・中・低は、資料が付けた順位ではなく、このアプリの案です。';
 
-// 助言の候補の出典を、画面の短い印にする。資料の名前と版は「このアプリについて」の出典にまとめてある。
-// 読手のメモには「読手個人のやり方」を添え、協会の資料と分けて書く（REVIEW.md）。候補の区分が「読手のメモ」でも、出典に協会の資料（読み方一覧の注、講習資料）が並ぶ行がある。
-export function adviceSourceText(kind: string, source: string): string {
+// 助言の候補の出典を、段落の終わりの短い印にする。資料の名前と版は「このアプリについて」の出典にまとめてある。
+// 読手のメモは画面に「読手メモより」とだけ出し、メモの番号と節は ref に残す（REVIEW.md の「札か項目ごとに、由来の版とページを記録する」）。
+// 読手個人のやり方であることと、大会向けは参考程度であることは、項目ごとに書かず「このアプリについて」の #src-memo に1か所で書く（2026-11-07 のユーザーの判断）。
+// 候補の区分が「読手のメモ」でも、出典に協会の資料（読み方一覧の注、講習資料）が並ぶ行がある。協会の資料はページを残して先に出す。
+export type SourceMark = { label: string; ref?: string };
+
+export function adviceSourceMark(kind: string, source: string): SourceMark {
   const parts = source
     .replaceAll('完全版', '冊子')
     .split('、')
     .map((part) => part.replace(/^メモ([12]) /, '読手のメモ$1 '));
-  if (!kind.startsWith('読手のメモ')) return parts.join('、');
+  if (!kind.startsWith('読手のメモ')) return { label: parts.join('、') };
   const memo = parts.filter((part) => part.startsWith('読手のメモ'));
   const others = parts.filter((part) => !part.startsWith('読手のメモ'));
-  const tournament = kind.includes('大会向け') ? '。大会やきちんとした練習会での話で、ふだんの練習会では参考程度' : '';
-  return [`${memo.join('、')}（読手個人のやり方${tournament}）`, ...others].join('、');
+  const label = kind.includes('大会向け') ? '読手メモ（大会向け）より' : '読手メモより';
+  return { label: [...others, label].join('、'), ref: memo.join('、') };
 }
 
 // 歌の伸ばす箇所、ふりがな、注、余韻の印の出典の印。札ごとに由来の版とページを記録する決まり（REVIEW.md）なので、歌のそばに短く出す。

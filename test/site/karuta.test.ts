@@ -191,24 +191,44 @@ test('何首かにまたがる助言は、規則が当たる札に添える', ()
   assert.ok(hundred.every((c) => !texts(c.no).some((t) => t.includes('母音に声をのせる'))));
 });
 
-test('読手のメモから来た助言は、メモの印に「読手個人のやり方」を添えて出す', () => {
-  const html = wordsOf(1);
-  assert.match(html, /「かりほ」は「かりお」と読む。<\/p><p class="src">読手のメモ1 読み違い①（読手個人のやり方）<\/p>/);
-  assert.match(html, /<p class="src">読手のメモ2 1-7（読手個人のやり方。大会やきちんとした練習会での話で、ふだんの練習会では参考程度）<\/p>/);
+// 2026-11-07 のユーザーの判断：1首のページの印も「ポイントを知る」と同じく、段落の終わりに小さく付ける短い印にする。
+test('読手のメモから来た助言は、段落の終わりに「— 読手メモより」とだけ出し、メモの番号と節を data-ref に残す', () => {
+  assert.ok(wordsOf(17).includes('<p>「ちはやふる」ではなく「ちはやぶる」と読む。 <span class="src" data-ref="読手のメモ1 読み違い③">— 読手メモより</span></p>'));
+  assert.ok(wordsOf(17).includes('<p>「から」で伸ばし、「くれなゐに」と続ける。 <span class="src" data-ref="読手のメモ1 区切りの一覧">— 読手メモより</span></p>'));
   assert.doesNotMatch(pageOf(1), /完全版|(?<!読手の)メモ[12] /);
 });
 
-test('協会の資料から来た項目と助言は、資料の名前とページだけの短い印で出典を書く', () => {
-  assert.match(pageOf(53), /<p class="src">冊子 p\.23<\/p>/);
-  assert.match(wordsOf(70), /<p class="src">講習資料 s\.20<\/p>/);
+test('読手のメモの大会向けの助言は、段落の終わりに「— 読手メモ（大会向け）より」と出す', () => {
+  assert.ok(wordsOf(1).includes('どちらを読んだかを札で確かめる。 <span class="src" data-ref="読手のメモ2 1-7">— 読手メモ（大会向け）より</span></p>'));
+});
+
+test('どの1首のページにも、読手個人のやり方であることと参考程度であることを、項目ごとに書かない', () => {
+  for (const c of cards) assert.doesNotMatch(cardPage(c, cards, advice).bodyHtml, /読手個人のやり方|参考程度/, `${c.no}番`);
+});
+
+test('協会の資料から来た項目と助言は、段落の終わりに資料の名前とページを残した印で出す', () => {
+  assert.match(pageOf(15), /。 <span class="src">— 冊子 p\.3、p\.27、p\.28、講習資料 s\.10、s\.11<\/span><\/p>/);
+  assert.match(pageOf(53), /と読みます。 <span class="src">— 冊子 p\.23<\/span><\/p>/);
+  assert.ok(wordsOf(17).includes('無理に同じ音にもそろえない。 <span class="src">— 講習資料 s.19</span></p>'));
   for (const c of cards) assert.doesNotMatch(cardPage(c, cards, advice).bodyHtml, /協会の資料（/, `${c.no}番`);
 });
 
-test('どの1首のページも、出典の節を置かず、終わりに「このアプリについて」の出典への1行を置く', () => {
+test('1首のページの別の行の印は歌のすぐ下の1つだけで、項目と助言の印はどれも段落の終わりに置く', () => {
+  for (const c of cards) {
+    const html = cardPage(c, cards, advice).bodyHtml;
+    assert.equal(html.match(/<p class="src">/g)?.length, 1, `${c.no}番`);
+    assert.match(html, /<\/aside><\/div>\n<p class="src">/, `${c.no}番`);
+    const marks = [...html.matchAll(/<span class="src"[^>]*>— [^<]+<\/span>(.{0,4})/g)];
+    assert.ok(marks.length > 0, `${c.no}番`);
+    for (const [mark, after] of marks) assert.equal(after, '</p>', `${c.no}番の ${mark}`);
+  }
+});
+
+test('どの1首のページも、出典の節を置かず、終わりに出典と読手メモの扱いを「このアプリについて」へ案内する1行を置く', () => {
   for (const c of cards) {
     const html = cardPage(c, cards, advice).bodyHtml;
     assert.doesNotMatch(html, /card sources|<h3>出典<\/h3>/, `${c.no}番`);
-    assert.match(html, /<\/article>\n<p class="fine">出典は<a href="\/about\/#sources">このアプリについて<\/a>にまとめています。<\/p>\n<!-- ask -->/, `${c.no}番`);
+    assert.match(html, /<\/article>\n<p class="fine">出典と、読手メモの扱いは<a href="\/about\/#sources">このアプリについて<\/a>にまとめています。<\/p>\n<!-- ask -->/, `${c.no}番`);
   }
 });
 
@@ -234,9 +254,9 @@ test('どの1首のページにも歌番号を出さない', () => {
   for (const c of cards) assert.doesNotMatch(cardPage(c, cards, advice).bodyHtml, /\d+番/, `${c.no}番`);
 });
 
-test('読手のメモの助言に協会の資料の出典が並ぶときは、メモの印のあとに分けて書く', () => {
-  assert.match(wordsOf(95), /<p class="src">読手のメモ1 長音の一覧（読手個人のやり方）、講習資料 s\.31<\/p>/);
-  assert.match(wordsOf(77), /<p class="src">読手のメモ1 長音の一覧（読手個人のやり方）、読み方一覧（冊子 p\.15）<\/p>/);
+test('読手のメモの助言に協会の資料の出典が並ぶときは、協会の資料を先に、読手メモを後に出し、data-ref にはメモの部分だけを残す', () => {
+  assert.match(wordsOf(77), /と書く。 <span class="src" data-ref="読手のメモ1 長音の一覧">— 読み方一覧（冊子 p\.15）、読手メモより<\/span><\/p>/);
+  assert.match(wordsOf(95), /と書く。 <span class="src" data-ref="読手のメモ1 長音の一覧">— 講習資料 s\.31、読手メモより<\/span><\/p>/);
 });
 
 test('1首のページの優先は、このアプリの案だと断る', () => {
