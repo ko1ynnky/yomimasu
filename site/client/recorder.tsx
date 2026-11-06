@@ -26,6 +26,8 @@ const LIMIT_SEC = 25;
 // 「読み始める」と「やめる」は同じ高さにあるので、続けて押すと始めた録音をすぐ止めてしまう。止めた直後の「読み始める」も同じである。
 const RESTART_GUARD_MS = 500;
 const HELP_KEY = 'yomimasu.recHelpDone';
+// 声を出せない人とマイクを許可しない人が、録音しないで結果の画面まで進む入口（C9）。
+const EXAMPLE_RESULT = '/result/example/';
 
 const FAILURES: Record<Failure, [string, string]> = {
   denied: ['マイクを使えませんでした。', 'ブラウザーの設定でマイクを許可すると、読んで測れます。教科書とお手本はこのまま使えます。'],
@@ -325,10 +327,16 @@ function Recorder({ fix }: { fix?: string }) {
       <div class="controls">
         {view.kind === 'idle' && (
           <>
-            <button class="btn btn--fill" type="button" onClick={start}>
-              <Icon path={REC_ICON} />
-              読み始める
-            </button>
+            {/* 見本は「例の録音で見る」を注記の行に置くが、注記の行が2段になり、360×560 で 41px はみ出した。読み始めると同じ場所に「やめる」「読み終えた」が並ぶ */}
+            <div class="pair">
+              <button class="btn btn--fill" type="button" onClick={start}>
+                <Icon path={REC_ICON} />
+                読み始める
+              </button>
+              <a class="btn btn--line" href={EXAMPLE_RESULT}>
+                例の録音で見る
+              </a>
+            </div>
             <div class="pair">
               <button class="btn" type="button" aria-pressed={assisted} onClick={() => setAssisted(true)}>
                 補助あり
@@ -365,9 +373,16 @@ function Recorder({ fix }: { fix?: string }) {
             <button class="btn btn--fill" type="button" onClick={start}>
               もう一度試す
             </button>
-            <a class="btn btn--line" href="/">
-              教科書へ戻る
-            </a>
+            <div class="pair">
+              {view.failure === 'denied' && (
+                <a class="btn btn--line" href={EXAMPLE_RESULT}>
+                  例の録音で見る
+                </a>
+              )}
+              <a class="btn btn--line" href="/">
+                教科書へ戻る
+              </a>
+            </div>
           </div>
         )}
       </div>
