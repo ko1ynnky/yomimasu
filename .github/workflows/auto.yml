@@ -70,7 +70,7 @@ jobs:
     needs: pick
     if: ${{ needs.pick.outputs.issue != '' || needs.pick.outputs.pr != '' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 70
     permissions:
       actions: read
       contents: read
@@ -148,7 +148,7 @@ jobs:
             完了の条件を満たせないときは、PR を開かず、理由を Issue か PR のコメントに書く。
           claude_args: |
             --model claude-opus-5-5
-            --max-turns 80
+            --max-turns 120
             --allowedTools "Skill,Read,Edit,Write,Glob,Grep,Bash(npm run:*),Bash(npm test:*),Bash(npx playwright:*),Bash(lsof:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git add:*),Bash(git commit:*),Bash(git switch:*),Bash(git fetch:*),Bash(git push origin auto/*),Bash(git push -u origin auto/*),Bash(gh issue view:*),Bash(gh issue comment:*),Bash(gh pr view:*),Bash(gh pr create:*),Bash(gh pr comment:*)"
 
       # 記録の全文には依頼とコマンドの出力が入る。Artifact は公開に戻すと誰でも取れるので、要約に使う項目だけを渡す。
