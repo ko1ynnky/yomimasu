@@ -7,6 +7,8 @@ import { INSTALL_TARGETS } from '../site/install.ts';
 const ARTIFACTS_DIR = 'e2e-artifacts';
 const ASK_QUESTION = 'どこに入れますか？';
 const ASK_EXAMPLE = '競技かるたの読みで、余韻の3秒はどこから数える？';
+// /install/agent/ の「聞いてみる」のコマンドには /yomimasu が付き、下の図の問いには付かない。図の前に、付けずに聞いた例だと断る（docs/ui-guide.md の8節「流れの図」）。
+const AGENT_FLOW_LEAD = '下の例は、/yomimasu を付けずに、ふつうの文で聞いたものです。それでも AI はスキルを読み込みました。';
 // 流れの図の注記（docs/ui-guide.md の8節「流れの図」）。図ごとに、確かめた環境と日と回数を添える。
 const FLOW_NOTE = /^Claude Code で確かめた結果（\d{4}-\d{2}-\d{2}、\d+回中\d+回）$/;
 
@@ -224,6 +226,7 @@ for (const path of OFFERED) {
 
     if (path === '/install/agent/') {
       await expect(page.locator('.cmd code')).toHaveText(['npx skills add ko1ynnky/yomimasu', '/yomimasu 余韻の3秒はどこから数える？']);
+      await expect(page.locator('.list p:has(+ .flow)')).toHaveText(AGENT_FLOW_LEAD);
       await expect(page.getByRole('link', { name: 'yomimasu.zip を保存' })).toHaveCount(0);
       await expect(page.locator('main .fine')).toContainText('npx skills update');
     } else {
@@ -397,7 +400,7 @@ for (const [width, height] of [
         await page.screenshot({ path: join(ARTIFACTS_DIR, `install-${name}-${width}x${height}-full.png`), fullPage: true });
       }
       if (width === 393 && name === 'agent') {
-        await page.locator('main .flow').evaluate((el) => el.scrollIntoView({ block: 'start' }));
+        await page.locator('main .flow-lead').evaluate((el) => el.scrollIntoView({ block: 'start' }));
         await page.screenshot({ path: join(ARTIFACTS_DIR, `install-agent-figure-${width}x${height}.png`) });
       }
     }

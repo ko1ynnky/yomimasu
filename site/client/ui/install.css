@@ -51,3 +51,6 @@
 
 /* 手順の画面の流れの図も、略図と同じく番号の列の下まで広げる */
 .list .flow { margin: 8px 0 0 -34px; }
+/* 図の前の断りの1行（/install/agent/）。コマンドの枠と図のあいだに置き、手順の文と同じ列に収める */
+.list .flow-lead { margin-top: 8px; }
+.flow-lead code { font-family: var(--f-mono); font-size: 14px; }
