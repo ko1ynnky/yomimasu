@@ -64,6 +64,12 @@ test('読み札には、本文の出典と、再利用を認めないことが�
   assert.doesNotMatch(output, /序歌の本文/);
 });
 
+test('読み札は手元の画面で読むためのもので、印刷して配らず、ほかの人に渡さないことが付く', () => {
+  const output = readingCards(deck, ['た']);
+  assert.match(output, /手元の画面で読むためのもの/);
+  assert.match(output, /印刷して配ったり、ほかの人に渡したりしないでください/);
+});
+
 test('序歌を選ぶと、序歌の本文の出典が、資料の名前と版とページで付く', () => {
   const output = readingCards(deck, ['0']);
   assert.match(output, /序歌の本文/);
