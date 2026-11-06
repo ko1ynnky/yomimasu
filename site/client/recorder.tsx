@@ -1,9 +1,10 @@
 import { render } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { startCapture, type Capture, type VoiceProcessing } from './capture.ts';
+import { startCapture, type Capture } from './capture.ts';
 import { pairLines } from './lyrics.ts';
 import { segmentsOf } from './pair.ts';
-import { putLastTake, type Take } from './take.ts';
+import { keepTake } from './records.ts';
+import type { Take } from './take.ts';
 import { cards, pairOf, Stage } from './ui/stage.tsx';
 
 type Failure = 'denied' | 'unavailable';
@@ -12,11 +13,8 @@ type View =
   | { kind: 'starting' }
   | { kind: 'count'; beat: number; elapsed: number }
   | { kind: 'reading'; t: number; elapsed: number }
-  | { kind: 'heard'; take: RecordedTake }
+  | { kind: 'heard'; take: Take }
   | { kind: 'failed'; failure: Failure };
-
-// 声の処理の結果は録音と一緒に置き、take.ts の型に入れるのは記録を残す C8 で決める。
-type RecordedTake = Take & { voiceProcessing: VoiceProcessing };
 
 type Session = { capture: Capture; countStart: number; assisted: boolean; frame: number; releaseWake: () => void };
 
@@ -156,7 +154,7 @@ function Recorder({ fix }: { fix?: string }) {
     const { pcm, sampleRate, voiceProcessing } = await capture.stop(capture.now());
     if (stopping.current !== capture) return;
     stopping.current = null;
-    const take: RecordedTake = {
+    const take: Take = {
       pcm,
       sampleRate,
       readingStartSec,
@@ -164,7 +162,7 @@ function Recorder({ fix }: { fix?: string }) {
       pair,
       voiceProcessing,
     };
-    putLastTake(take);
+    await keepTake(take);
     setView({ kind: 'heard', take });
   }
 
@@ -340,7 +338,8 @@ function Recorder({ fix }: { fix?: string }) {
               </button>
             </div>
             <p class="fine">
-              録音はこの端末の外へ送りません。{' '}
+              {/* 「あとから消せます」も書きたいが、足すと 360×560 の1画面に収まらない。消し方は前回と比べる画面で伝える */}
+              録音は端末に残り、外へ送りません。{' '}
               <button class="link-inline" type="button" onClick={() => setHelp(true)}>
                 読み方の説明
               </button>

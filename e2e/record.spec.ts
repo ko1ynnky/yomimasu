@@ -419,10 +419,10 @@ test('読み始めるを押すと、読む前の説明を閉じて覚える', as
   await browser.close();
 });
 
-test('録音の前の説明は、端末の外へ送らないことだけを書き、持ち方の案内を出さない', async ({ page }) => {
+test('録音の前の説明は、端末に残ることと外へ送らないことだけを書き、持ち方の案内を出さない', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('yomimasu.recHelpDone', '1'));
   await page.goto('/read/rec/');
-  await expect(page.locator('yomimasu-recorder .fine')).toHaveText(/^録音はこの端末の外へ送りません。\s*読み方の説明$/);
+  await expect(page.locator('yomimasu-recorder .fine')).toHaveText(/^録音は端末に残り、外へ送りません。\s*読み方の説明$/);
   await expect(page.locator('body')).not.toContainText('持ち');
   await expect(page.getByText('例の録音で見る')).toHaveCount(0);
 });

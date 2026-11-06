@@ -114,6 +114,7 @@ test('声のない録音では、カードを出さず、次は？に読み直�
   await expect(page.locator('yomimasu-result')).toContainText('声を聞き取れず、測れませんでした。');
   await expect(cards(page)).toHaveCount(0);
   await expectAgain(page, '読み直す', again);
-  await expect(page.locator('main .ask .next .btn')).toHaveCount(1);
+  // 教科書へのリンクは置かない。録音は端末に残るので、前回と比べる画面への移動だけは並ぶ。
+  await expect(page.locator('main .ask .next .btn')).toHaveText(['前回と比べる', '読み直す']);
   await browser.close();
 });
