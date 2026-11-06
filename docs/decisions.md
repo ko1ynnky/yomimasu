@@ -12,7 +12,7 @@
   - 本番の https://yomimasu.karutalog.com は、ゾーン karutalog.com（Free プラン）の Cloudflare が配信している。次の2つはゾーンの機能で、配信の途中で HTML に差し込まれる。このリポジトリのコードにはない。
   - Cloudflare Web Analytics：ゾーン全体の自動の設定（automatic setup）で動く。サイトは、同じゾーンの別のアプリのために 2026-03-15 に作ったもの。`https://static.cloudflareinsights.com/beacon.min.js/...` を読み込み、同じオリジンの `/cdn-cgi/rum` へ送る。Cloudflare の文書では、Cookie も localStorage も使わず、IP と UA で人を見分けることもしない。集めるのはページのパス、リファラー、読み込みの時間と Core Web Vitals で、Cloudflare が国、ブラウザー、OS、端末の種類と合わせて集計する。データはすでにあり、2026-11-07 までの7日間で yomimasu.karutalog.com の読み込みは116回だった。
   - Bot Fight Mode（ゾーンの設定）の JavaScript Detections：インラインのスクリプトが `/cdn-cgi/challenge-platform/...` を読み込み、どのページを開いても（録音の画面でも）、暗号化した約 16 KB の本文を `/cdn-cgi/challenge-platform/h/b/jsd/oneshot/...` へ POST する。判定の結果は `cf_clearance` の Cookie に残る。Bot Fight Mode を使う間は、JavaScript Detections だけを止めることはできない。送った中身は、サイトの持ち主にも読めない。
-  - どちらも録音と測った結果には触れない。「このアプリについて」の「録音は端末の外へ出ません。」は今も正しいので、そのままにした。
+  - このアプリのコードは、録音と測った結果を2つのスクリプトに渡さない。アクセス解析が送る項目にも、ボット対策について Cloudflare が説明している中身にも、録音と結果は入っていない。ボット対策の本文は暗号化されていて、中身は確かめられない。「このアプリについて」の「録音は端末の外へ出ません。」は今も正しいので、そのままにした。
 - 理由：
   - アクセス解析は、SNS の投稿などからどれだけ人が来たかを、コードを足さずにダッシュボードで見られる。
   - Bot Fight Mode はゾーン全体の設定で、止めると同じゾーンの別のアプリの守りも弱まる。
@@ -29,6 +29,7 @@
   - ゾーン全体で Bot Fight Mode を止める案。同じゾーンの別のアプリの守りも弱まる。
 - 限界：
   - Bot Fight Mode が送る中身は読めないので、何を送るかは Cloudflare の説明に頼る。
+  - Cloudflare の Cookie の文書は、Bot Fight Mode で守るサイトには、ボットの点数を計る `__cf_bm`（使わないまま30分で切れる）も置くとしている。2026-11-07 に本番の HTML を curl で取ったときは `Set-Cookie` がなかった。ブラウザーで本番を開いて、付く Cookie は確かめていない。「このアプリについて」と NOTICE.md は `cf_clearance` だけを挙げている。
   - Cloudflare が差し込むものや送り先を変えても、E2E は気づかない。本番の送信は、ブラウザーの開発者ツールで本番を開いて確かめる。
   - E2E で外す条件はパスで決めるので、アプリのコードが `/cdn-cgi/rum` か `/cdn-cgi/challenge-platform/` へ送るようになっても、この検査は落ちない。
 
