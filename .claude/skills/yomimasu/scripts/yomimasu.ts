@@ -3,6 +3,6 @@
 import { readFileSync } from 'node:fs';
 import { answer } from './answer.ts';
 
-const reply = answer(process.argv.slice(2).join(' '), { readFile: (path) => readFileSync(path) });
+const reply = answer(process.argv.slice(2),{ readFile: (path) => readFileSync(path) });
 (reply.ok ? process.stdout : process.stderr).write(`${reply.text}\n`);
 process.exitCode = reply.ok ? 0 : 1;

@@ -8,12 +8,18 @@
 export type SkillAnswer = { open?: readonly string[]; run?: 'list' | 'card' | 'pair' | 'measure'; note?: string };
 export type Command = { button: string; say: string; read?: string; path: string; skill: SkillAnswer };
 
-const NOT_YET = 'に入れる手順は、入れて答えることを確かめてから足します。いまはコーディングエージェントに入れる手順だけがあります（`インストール エージェント`）。';
+// 候補の表は、Web の本文と違い、選ぶ前の行を区分と出典つきで並べている（references/README.md の「書き方の決まり」）。
+const CANDIDATES = '候補の表から答えるときは、行の区分と出典を添え、読手のメモから来た内容は読手個人のやり方として書く。';
+
+// 入れる手順は、リポジトリを公開してから実行して確かめる（README.md）。確かめるまで、入れられると言い切らない。
+const UNCHECKED = 'この手順は、リポジトリを公開してから実行して確かめるもので、まだ確かめていません。';
+
+const NOT_YET ='に入れる手順は、入れて答えることを確かめてから足します。いまはコーディングエージェントに入れる手順だけがあります（`インストール エージェント`）。';
 
 export const COMMANDS: readonly Command[] = [
   { button: 'まず1回読む', say: 'まず1回読む', path: '/read/', skill: { open: ['timing.md'], run: 'pair' } },
   { button: '総論を学ぶ', say: '総論を学ぶ', read: '総論.md', path: '/soron/', skill: { open: ['timing.md'] } },
-  { button: 'ポイントを知る', say: 'ポイントを知る', read: 'ポイント.md', path: '/point/', skill: { open: ['point-candidates.md'] } },
+  { button: 'ポイントを知る', say: 'ポイントを知る', read: 'ポイント.md', path: '/point/', skill: { open: ['point-candidates.md'], note: CANDIDATES } },
   { button: '1首ずつ学ぶ', say: '1首ずつ学ぶ', read: '一覧.md', path: '/karuta/', skill: { run: 'list' } },
   {
     button: 'このアプリについて',
@@ -29,7 +35,7 @@ export const COMMANDS: readonly Command[] = [
     say: 'インストール',
     read: 'インストール.md',
     path: '/install/',
-    skill: { note: 'スキル yomimasu は、コーディングエージェント（Claude Code、Codex、Cursor など）に入れられます。手順は `インストール エージェント` で出ます。Claude、ChatGPT、Gemini' + NOT_YET },
+    skill: { note: `スキル yomimasu をコーディングエージェント（Claude Code、Codex、Cursor など）に入れる手順は \`インストール エージェント\` で出ます。${UNCHECKED}Claude、ChatGPT、Gemini${NOT_YET}` },
   },
   { button: 'Claude', say: 'インストール Claude', read: 'Claudeに入れる.md', path: '/install/claude/', skill: { note: 'Claude' + NOT_YET } },
   { button: 'ChatGPT', say: 'インストール ChatGPT', read: 'ChatGPTに入れる.md', path: '/install/chatgpt/', skill: { note: 'ChatGPT' + NOT_YET } },
@@ -40,10 +46,10 @@ export const COMMANDS: readonly Command[] = [
     read: 'エージェントに入れる.md',
     path: '/install/agent/',
     skill: {
-      note: 'ターミナルで `npx skills add ko1ynnky/yomimasu` を実行し、入れる先のエージェントを選びます。Node.js が要ります。入れたら `/yomimasu 余韻の3秒はどこから数える？` のように聞きます。更新は `npx skills update` です。',
+      note: 'ターミナルで `npx skills add ko1ynnky/yomimasu` を実行し、入れる先のエージェントを選びます。Node.js が要ります。入れたら `/yomimasu 余韻の3秒はどこから数える？` のように聞きます。更新は `npx skills update` です。' + UNCHECKED,
     },
   },
-  { button: '1首のページ', say: '1首 {札}', read: '{札}.md', path: '/karuta/{札}/', skill: { open: ['card-rules.md', 'card-advice-candidates.md'], run: 'card' } },
+  { button: '1首のページ', say: '1首 {札}', read: '{札}.md', path: '/karuta/{札}/', skill: { open: ['card-rules.md', 'card-advice-candidates.md'], run: 'card', note: CANDIDATES } },
   { button: '最低限これだけ', say: '最低限これだけ', read: '最低限これだけ.md', path: '/saitei/', skill: { open: ['minimum.md'] } },
   {
     button: '練習モード',
@@ -105,9 +111,22 @@ export function commandAt(href: string, nameOf: (card: string) => string | undef
 
 export type Said = { command: Command; cards: Map<string, string>; rest: string[] };
 
+const wordsOf = (text: string) => text.trim().split(/\s+/).filter(Boolean);
+
+// 引数の配列で受けたときは、コマンドの語のあとを引数のまま返す。空白を含む音声ファイルのパスを2語に割らないためである。
+function restOf(args: readonly string[], used: number, words: string[]): string[] {
+  let count = 0;
+  for (let i = 0; i < args.length; i++) {
+    if (count === used) return args.slice(i).filter((arg) => arg.trim() !== '');
+    count += wordsOf(args[i]).length;
+  }
+  return count === used ? [] : words.slice(used);
+}
+
 // 打ち込んだ文字から表の行を引く（commandAt の逆）。結果を見るだけは、続けて音声ファイルと組を受け取る。
-export function commandOf(text: string): Said | undefined {
-  const words = text.trim().split(/\s+/).filter(Boolean);
+export function commandOf(input: string | readonly string[]): Said | undefined {
+  const args = typeof input === 'string' ? [input] : input;
+  const words = args.flatMap(wordsOf);
   for (const command of COMMANDS) {
     const pattern = command.say.split(' ');
     if (words.length < pattern.length || (words.length > pattern.length && command.skill.run !== 'measure')) continue;
@@ -117,7 +136,7 @@ export function commandOf(text: string): Said | undefined {
       if (slot) cards.set(slot, words[i]);
       return slot !== undefined || part === words[i];
     });
-    if (matched) return { command, cards, rest: words.slice(pattern.length) };
+    if (matched) return { command, cards, rest: restOf(args, pattern.length, words) };
   }
   return undefined;
 }

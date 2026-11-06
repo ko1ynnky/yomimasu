@@ -2,7 +2,7 @@
 // 測った結果の文と次に直す1点は、Web の結果の画面と同じ result.ts と next-point.ts から作る。
 import deck from '../assets/cards.json' with { type: 'json' };
 import type { Card } from './cards.ts';
-import { commandOf, COMMANDS, SCREEN_SAYS, type Said } from './commands.ts';
+import { commandAt, commandOf, COMMANDS, SCREEN_SAYS, type Said } from './commands.ts';
 import { measure } from './measure.ts';
 import { nextPoint, type Pair } from './next-point.ts';
 import { levelSentence, NOT_MEASURED, noticeOf, resultRows, UNMEASURED_ROW } from './result.ts';
@@ -24,6 +24,12 @@ const nameOf = (card: Card) => card.kimariji?.kana ?? '序歌';
 function cardAt(token: string): Card | undefined {
   if (token === '序歌' || token === 'joka') return cards.find((card) => card.no === JOKA);
   return cards.find((card) => card.kimariji?.kana === token);
+}
+
+// URL の札の欄（番号、序歌は joka）から決まり字を引く。site/karuta.ts の cardUrl と同じ規則である。
+function nameAtUrl(token: string): string | undefined {
+  const card = cards.find((c) => (token === 'joka' ? c.no === JOKA : String(c.no) === token));
+  return card && nameOf(card);
 }
 
 const fail = (text: string): Reply => ({ ok: false, text });
@@ -94,7 +100,10 @@ function measureText(rest: string[], io: Io): Reply {
   if (next.kind === 'clear') lines.push('## 次に直す1点', '', `**${next.fix}**`, '', next.reason, '');
   if (next.kind === 'point') {
     const { fix, reason, how, link } = next.point;
-    lines.push('## 次に直す1点', '', `**${fix}**`, '', reason, '', how, '', `次は？：${link.label}（Web アプリの ${link.url}）`, '');
+    // 公開アプリの URL はまだないので、同じページをスキルで開くコマンドで示す。
+    const page = commandAt(link.url, nameAtUrl);
+    const where = page ? `\`${page.say}\`` : link.url;
+    lines.push('## 次に直す1点', '', `**${fix}**`, '', reason, '', how, '', `次は？：${link.label}（${where}）`, '');
   }
   lines.push('幅はどれも目安です。音声はこの端末で読み、測った秒数と文だけを返しました。',`測定の定義：${DEFINITION_URL}`);
   return { ok: true, text: lines.join('\n') };
@@ -122,11 +131,13 @@ function run(said: Said, io: Io): Reply {
   return { ok: true, text: lines.join('\n') };
 }
 
-export function answer(text: string, io: Io): Reply {
-  const said = commandOf(text);
-  const header = `> /yomimasu ${text.trim()}`;
+// 引数の配列で渡すと、音声ファイルのパスを空白で割らずに読む（scripts/yomimasu.ts）。
+export function answer(input: string | readonly string[], io: Io): Reply {
+  const said = commandOf(input);
+  const text = (typeof input === 'string' ? [input] : input).map((arg) => arg.trim()).filter(Boolean).join(' ');
+  const header = `> /yomimasu ${text}`;
   if (!said) {
-    if (SCREEN_SAYS.some(({ say }) => say === text.trim())) return fail(`${header}\n\nWeb アプリの画面の中だけの操作で、スキルには対応がありません。`);
+    if (SCREEN_SAYS.some(({ say }) => say === text)) return fail(`${header}\n\nWeb アプリの画面の中だけの操作で、スキルには対応がありません。`);
     const says = [...new Set(COMMANDS.map(({ say }) => `\`${say}\``))].join('、');
     return fail(`${header}\n\n表にないコマンドです。使えるのは ${says} です。札は決まり字で書きます。`);
   }

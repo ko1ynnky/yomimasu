@@ -23,6 +23,7 @@ const wavOf = (plan: ReadingPlan) => encodeWav(synthesize(plan), plan.sampleRate
 const files = new Map<string, Uint8Array>([
   ['standard.wav', wavOf(standardReading)],
   ['long-ma.wav', wavOf({ ...standardReading, maSec: 2 })],
+  ['long-kami.wav', wavOf({ ...standardReading, kamiSec: 8.5 })],
   ['silent.wav', encodeWav(new Float32Array(48000 * 3), 48000)],
   ['song.mp3', new TextEncoder().encode('ID3 mp3 です')],
 ]);
@@ -59,6 +60,14 @@ test('1首のコマンドは、決まり字で札を引き、伸ばす印の付�
   assert.match(reply.text, /歌番号 53 の札/);
   assert.match(ask('1首 序歌').text, /序歌の行/);
   assert.ok(ask('1首 序歌').text.includes(card(0).marked.upper));
+});
+
+test('候補の表を開く答えは、区分と出典を添え、メモの内容を読手個人のやり方として書くよう伝える', () => {
+  for (const say of ['1首 なげき', 'ポイントを知る']) assert.match(ask(say).text, /区分と出典を添え、読手のメモから来た内容は読手個人のやり方として書く/, say);
+});
+
+test('インストールの答えは、まだ確かめていない手順を、確かめていないと書く', () => {
+  for (const say of ['インストール', 'インストール エージェント']) assert.match(ask(say).text, /まだ確かめていません/, say);
 });
 
 test('決まり字の分からない札は、答えずに理由を返す', () => {
@@ -105,7 +114,21 @@ test('幅の外の項目があれば、次に直す1点の文と、関わる教�
   assert.equal(point.kind, 'point');
   if (point.kind !== 'point') return;
   assert.equal(point.point.item, 'ma');
-  for (const text of [point.point.fix, point.point.reason, point.point.how, point.point.link.label, point.point.link.url]) assert.ok(reply.text.includes(text), text);
+  for (const text of [point.point.fix, point.point.reason, point.point.how, point.point.link.label]) assert.ok(reply.text.includes(text), text);
+  assert.match(reply.text, /`総論を学ぶ`/);
+});
+
+test('次に直す1点の札のページは、スキルで開ける1首のコマンドで示す', () => {
+  const reply = ask('結果を見る long-kami.wav ほ あはれ');
+  assert.match(reply.text, /上の句の札を見る/);
+  assert.match(reply.text, /`1首 あはれ`/);
+});
+
+test('引数で渡すと、空白を含む音声ファイルのパスも1つのパスとして読む', () => {
+  files.set('新規録音 3.wav', files.get('standard.wav')!);
+  const reply = answer(['結果を見る', '新規録音 3.wav', 'ほ', 'あはれ'], io);
+  assert.equal(reply.ok, true, reply.text);
+  assert.match(reply.text, /^> \/yomimasu 結果を見る 新規録音 3\.wav ほ あはれ$/m);
 });
 
 test('測れなかったときは、理由の文を返し、次に直す1点を出さない', () => {
