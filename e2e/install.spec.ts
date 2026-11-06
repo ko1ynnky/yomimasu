@@ -98,7 +98,8 @@ test('入口から「/インストール」を開くと、見出し、説明、�
   await expect(examples).toHaveCount(4);
   await expect(examples.locator('.prio')).toHaveText(['コーディングエージェントで', 'コーディングエージェントで']);
   await expect(examples.nth(0).locator('.prio')).toHaveCount(0);
-  await expect(examples.nth(1)).toContainText('Wikipedia などの音声学の資料も読ませて');
+  await expect(examples.nth(1)).toContainText('Wikipedia などの音声学の資料も読ませて、競技かるたの読みで');
+  await expect(examples.nth(2)).toContainText('自分の読みで、大山札が決まり字の前に聞き分けられるか、聞き取りテストを作って');
   const pick = page.getByRole('group', { name: ASK_QUESTION });
   await expect(pick.locator('.auq-q')).toHaveText(ASK_QUESTION);
   await expect(pick.getByRole('link')).toHaveText(OPTION_TEXTS);
