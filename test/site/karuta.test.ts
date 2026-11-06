@@ -290,7 +290,7 @@ test('ほかの札の名指しの助言、区切りの一覧、読み違い、�
   assert.match(wordsOf(1), /1音目を少し長めにして/);
   assert.match(wordsOf(1), /「かりほ」は「かりお」と読む/);
   assert.match(wordsOf(10), /「別れて」で伸ばし/);
-  assert.match(wordsOf(53), /決まり字の「き」が発音しにくく/);
+  assert.match(wordsOf(53), /決まり字の「き」は発音しにくいとされ、似た音の札がある。/);
   assert.match(wordsOf(25), /最初の5音をほかの札と同じ速さで読む/);
 });
 
