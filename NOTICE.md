@@ -30,6 +30,42 @@
 | ふりがな、注、別の読み、余韻の印 | 全日本かるた協会 競技かるた部（読唱）『小倉百人一首 競技かるた読手テキスト』冊子（完全版）、令和2年4月1日初版と、HP掲載用抜粋版、令和7年4月1日改訂版の読み方一覧 p.5-15 | 協会の回答により、完全版の内容として使っています | `cards.json` の `furigana`、`notes`、`alternatives`、`yoin` の列と、ふりがなの「ー」と注の字を当てた30句の `sound` と `diffs` です。値は抜粋版の文字のデータと画像の位置から読み取り、完全版のスキャンと目で照らしました。一致を目で確かめたのは、ふりがな707か所のうち706か所と、注、別の読み、余韻の印のすべてです。33番のふりがな1か所は読み方一覧のスキャンで濁点が判別できず、完全版 p.27 が同じ語を「しづごころ」と印刷していることと、冊子の実物で確かめました。抜粋版だけにある値と、両版で違う値は入れていません。ページは札ごとに `origin.notation.page` に残します |
 | お手本の音声 | A級公認読手の読み。序歌と100首の上の句と下の句の202本です。許諾と使う場面は[音声](#音声)にあります | 録音した人の権利のままです。再利用を認めません | リポジトリに置かず、公開しない R2 のバケット `yomimasu-audio` に `v1/NNN_N.m4a` の名前で置きます。NNN は札の番号の3桁（000 は序歌）、最後の数字は 1 が上の句、2 が下の句です。形式は AAC、48 kHz、モノラル、96 kbps です。アプリの Worker（`site/worker.ts`）が同じオリジンの `/audio/v1/` で配ります |
 
+## 外部のコード
+
+`site/kimariji-stream.ts` の乱数（`PythonRandom`）は、MT19937 の参照実装 mt19937ar.c（2002年1月26日に初期化を改めた版。<http://www.math.sci.hiroshima-u.ac.jp/m-mat/MT/MT2002/CODES/mt19937ar.c>）の初期化（`init_by_array`）と生成の手順を、CPython の `random` と同じ引き方で TypeScript に書き直したものです。元のコードの著作権表示と条件を、元のとおり次に載せます。
+
+```
+   Copyright (C) 1997 - 2002, Makoto Matsumoto and Takuji Nishimura,
+   All rights reserved.
+
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions
+   are met:
+
+     1. Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+
+     2. Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution.
+
+     3. The names of its contributors may not be used to endorse or promote
+        products derived from this software without specific prior written
+        permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+   A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+   EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
+
 ## 公認や提携
 
 このプロジェクトは全日本かるた協会の公認を受けていません。Anthropic の公式の製品でもありません。
