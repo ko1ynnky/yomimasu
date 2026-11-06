@@ -229,6 +229,10 @@ const prioClass = (point: Point) => (point.priority === '高' ? 'prio prio--hi' 
 
 export type CardPage = { path: string; title: string; command: string; readName: string; bodyHtml: string };
 
+// お手本の再生は JS で動くので、JS がないときはボタンを隠したままにする（100首の一覧の並べ方のボタンと同じ）。再生の印は SVG にする（docs/ui-guide.md の5節）。
+const playHtml = (card: Card) =>
+  `<yomimasu-karuta-play data-no="${card.no}"><button class="btn" type="button" data-echo hidden><svg class="ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg><span>お手本を再生</span></button></yomimasu-karuta-play>`;
+
 // 資料の名前と版は、ページごとに並べず「このアプリについて」の出典にまとめる。項目のそばには短い印だけを付ける（2026-11-06 のユーザーの判断）。
 const SOURCES_NOTE = '<p class="fine">出典は<a href="/about/#sources">このアプリについて</a>にまとめています。</p>';
 
@@ -261,6 +265,7 @@ export function cardPage(card: Card, cards: readonly Card[], advice: readonly Ad
   const article = [
     '<article class="karuta-page">',
     `<div class="card poem"><div class="tate">${poemHtml(card, cards)}</div><aside><div><small>${card.kimariji ? '決まり字' : '1枚目の前に読む歌'}</small><div class="kim">${escapeHtml(name)}</div></div></aside></div>`,
+    playHtml(card),
     ...pointsSectionHtml(card, cards),
     `<h3>余韻で伸ばす音「${escapeHtml(finalSound(card).kana)}」の口の形</h3>`,
     cardMouthHtml(card),

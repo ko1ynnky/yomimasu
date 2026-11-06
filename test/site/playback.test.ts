@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { audioSourceOf, clipUrl, GAP_SEC, pairLoader, play, scheduleOf, takeLoader, type PlaybackEnv } from '../../site/client/playback.ts';
+import { audioSourceOf, cardLoader, clipUrl, GAP_SEC, pairLoader, play, scheduleOf, takeLoader, type PlaybackEnv } from '../../site/client/playback.ts';
 import type { Take } from '../../site/client/take.ts';
 
 // テストリスト：
@@ -20,6 +20,7 @@ import type { Take } from '../../site/client/take.ts';
 // - 自分の読みも、文脈を作って resume() を呼んでから録音を読む。
 // - 読み始めより後に音がない録音でも、投げずに鳴らし終える。
 // - 端末に残した録音がもうないときは、読み込めない扱いにする。
+// - 1首のページのお手本は、同じ札の上の句、下の句の順に読み込む。序歌も同じ名前の付け方で読む。
 
 type FakeSource = { buffer: FakeBuffer | null; startedAt: number | null; stopped: boolean; onended: (() => void) | null };
 type FakeBuffer = { duration: number; length: number; sampleRate: number; data: Float32Array };
@@ -325,6 +326,34 @@ test('合成音の組は、下の句と余韻の 8 秒と、上の句の 6 秒�
     [8, 6],
   );
   assert.ok(loaded.every((buffer) => buffer.getChannelData(0).some((sample) => Math.abs(sample) > 0.05)));
+});
+
+test('1首のお手本の読み込みは、その札の上の句を前、下の句を後ろにする。序歌は 000 の2本を読む', async () => {
+  const { context } = fakeEnv();
+  const asked: string[] = [];
+  const fetcher = (url: string) => {
+    asked.push(url);
+    const bytes = new ArrayBuffer(8);
+    new DataView(bytes).setFloat64(0, url.includes('_2') ? 8 : 6);
+    return Promise.resolve(new Response(bytes));
+  };
+  const loaded = await cardLoader(53, { kind: 'url', base: '/audio/v1/' }, fetcher)(context as unknown as AudioContext);
+  assert.deepEqual(asked, ['/audio/v1/053_1.m4a', '/audio/v1/053_2.m4a']);
+  assert.deepEqual(
+    loaded.map((buffer) => buffer.duration),
+    [6, 8],
+  );
+  await cardLoader(0, { kind: 'url', base: '/audio/v1/' }, fetcher)(context as unknown as AudioContext);
+  assert.deepEqual(asked.slice(2), ['/audio/v1/000_1.m4a', '/audio/v1/000_2.m4a']);
+});
+
+test('合成音の1首のお手本は、上の句の 6 秒と、下の句と余韻の 8 秒の音を作る', async () => {
+  const { context } = fakeEnv();
+  const loaded = await cardLoader(53, { kind: 'synth' })(context as unknown as AudioContext);
+  assert.deepEqual(
+    loaded.map((buffer) => Math.round(buffer.duration * 100) / 100),
+    [6, 8],
+  );
 });
 
 const RATE = 48000;

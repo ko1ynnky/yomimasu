@@ -281,3 +281,11 @@ test('出さないと決めた助言の行が表から消えたり変わった�
   assert.throws(() => parseAdvice(without('| 54 |')), /54番/);
   assert.throws(() => parseAdvice(table.replace('| 大山札の6首 | 決まり字までが長いので読み急がない', '| 大山札の6首 | 決まり字まで長いので読み急がない')), /読み急がない/);
 });
+
+test('お手本を再生のボタンは歌の枠のすぐ下に置き、JS が動くまで隠し、打ち込む印を付ける', () => {
+  assert.match(
+    pageOf(53),
+    /<\/aside><\/div>\n<yomimasu-karuta-play data-no="53"><button class="btn" type="button" data-echo hidden><svg class="ico" viewBox="0 0 12 12" aria-hidden="true"><path d="[^"]+"\/><\/svg><span>お手本を再生<\/span><\/button><\/yomimasu-karuta-play>\n<h3>気をつける点<\/h3>/,
+  );
+  assert.match(pageOf(0), /<yomimasu-karuta-play data-no="0">/);
+});
