@@ -69,21 +69,26 @@ test('入口に、題、標語、入力の行、7つの項目、下端の行を�
   await expect(page.locator('body')).not.toContainText(/考え中|考えました/);
 });
 
-test('入口の一覧は、並びを変えずに、朱を「/まず1回読む」だけに塗り、「/練習モード」はほかの行と同じ地のまま太字にする', async ({ page }) => {
+test('入口の一覧は、並びを変えずに、朱の地を「/まず1回読む」だけに塗り、「/練習モード」は名前の字だけを朱にする', async ({ page }) => {
   const SHU = 'rgb(178, 58, 28)';
   const ON_SHU = 'rgb(255, 253, 249)';
-  const PLAIN = ['rgba(0, 0, 0, 0)', 'rgb(32, 29, 25)'];
+  const INK = 'rgb(32, 29, 25)';
+  const NO_FILL = 'rgba(0, 0, 0, 0)';
   await page.setViewportSize({ width: 393, height: 659 });
   await page.goto('/');
   const items = page.getByRole('navigation', { name: 'やれること' }).getByRole('link');
+  // 行ごとに、名前、地の色、名前の字の色、名前の太さを並べる。
   const looks = await items.evaluateAll((links) =>
     links.map((a) => {
       const name = a.querySelector('span')!;
-      return [name.textContent, getComputedStyle(a).backgroundColor, getComputedStyle(a).color, Number(getComputedStyle(name).fontWeight) >= 600];
+      return [name.textContent, getComputedStyle(a).backgroundColor, getComputedStyle(name).color, getComputedStyle(name).fontWeight];
     }),
   );
-  expect(looks).toEqual(MENU.map((name) => (name === '/まず1回読む' ? [name, SHU, ON_SHU, true] : [name, ...PLAIN, name === '/練習モード'])));
-  await expect(items.nth(5).locator('small')).toHaveCSS('font-weight', '600');
+  expect(looks).toEqual(
+    MENU.map((name) => (name === '/まず1回読む' ? [name, SHU, ON_SHU, '600'] : [name, NO_FILL, name === '/練習モード' ? SHU : INK, '400'])),
+  );
+  const note = (item: Locator) => item.locator('small').evaluate((el) => [getComputedStyle(el).color, getComputedStyle(el).fontWeight, getComputedStyle(el).fontSize]);
+  expect(await note(items.nth(5))).toEqual(await note(items.nth(1)));
 
   await page.locator('.menu').evaluate((el) => el.scrollIntoView({ block: 'center' }));
   mkdirSync(ARTIFACTS_DIR, { recursive: true });
