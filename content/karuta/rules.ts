@@ -325,12 +325,14 @@ const VOWEL_ROWS: Record<string, string> = {
 
 export type FinalSound = { kana: string; vowel: 'あ' | 'い' | 'う' | 'え' | 'お' | 'ん' };
 
+export const vowelOf = (kana: string) => Object.keys(VOWEL_ROWS).find((v) => VOWEL_ROWS[v].includes(kana)) as Exclude<FinalSound['vowel'], 'ん'> | undefined;
+
 export function finalSound(card: Card): FinalSound {
   const kana = [...card.phrases[4].sound].findLast((char) => char !== 'ー')!;
   if (kana === 'ん') return { kana, vowel: 'ん' };
-  const vowel = Object.keys(VOWEL_ROWS).find((v) => VOWEL_ROWS[v].includes(kana));
+  const vowel = vowelOf(kana);
   if (!vowel) throw new Error(`${card.no}番の最後の音「${kana}」の母音が分からない`);
-  return { kana, vowel: vowel as FinalSound['vowel'] };
+  return { kana, vowel };
 }
 
 // 弱め方の練習は作者の経験なので、ここでは協会の資料の余韻の決まりと、その札の音だけを書き、練習は「ポイントを知る」に分ける。
@@ -543,6 +545,13 @@ export function adviceSourceText(kind: string, source: string): string {
   return `読手のメモ（読手個人のやり方。${tournament}${memo.join('、')}）${others.length > 0 ? `、協会の資料（${others.join('、')}）` : ''}`;
 }
 
+// 口の形の図の出典。図は content/karuta/mouth.ts にあり、資料の詳しい一覧はスキルの references/mouth-shapes.md にある。
+const MOUTH_SOURCE =
+  '口の形の図：舌と唇の形は、一般の音声学の資料（Wikipedia 英語版「Japanese phonology」「Vowel」、日本語版「日本語の音韻」）をもとに、このアプリが描いたスケッチです。音ごとに何を「保つ」かは、このアプリの解釈です。';
+
+const NASAL_SOURCE =
+  '「ん」の朱の帯：話し言葉の発話の終わりの「ん」を実測した研究（Maekawa 2019、Hashi ほか 2016、Mizoguchi 2019、前川ほか 2018）によります。競技かるたの読みで確かめた研究は、この図を作るための調査では見つかりませんでした。';
+
 export const sourceLines = (card: Card, text: string): string[] => [
   `伸ばす位置は読み方一覧（抜粋版 p.${card.origin.stretches.page}）、余韻の印、別の読み、注は読み方一覧（冊子 p.${card.origin.notation.page}）によります。ふりがなは、札の読みの表の発音の列から振りました。`,
   '冊子：全日本かるた協会 競技かるた部（読唱）『小倉百人一首 競技かるた読手テキスト』冊子、令和2年4月1日初版。p. はページです。',
@@ -552,6 +561,8 @@ export const sourceLines = (card: Card, text: string): string[] => [
     ? ['読手のメモ1、2：A級公認読手が書いたメモ。1は初めて読む人向け（2018年作成、2022年更新）、2は大会で読む人向け（2020年作成、2022年更新）。協会の基準ではなく、読手個人のやり方です。']
     : []),
   ...(text.includes('作者の経験') ? ['作者の経験：このアプリの作者の個人の考えです。協会の資料でも読手のメモでもありません。'] : []),
+  ...(text.includes('class="mouth"') ? [MOUTH_SOURCE] : []),
+  ...(text.includes('class="m-range"') ? [NASAL_SOURCE] : []),
   '解説の文はこのアプリの言葉で書きました。資料の文と違う所があれば、資料が正しいものとしてください。',
 ];
 
