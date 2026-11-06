@@ -7,10 +7,17 @@ export type KvOptions = {
   tapGyro?: boolean;
   time?: number;
   playing?: boolean;
+  // 升目1つを、縦横いくつの画素で写すか。既定は 3
+  ss?: number;
 };
+
+// 描いた升目の字。行、列、字、濃さ、札の升目か
+export type Glyph = [row: number, col: number, char: string, alpha: number, card?: number];
+export type Painted = { list: Glyph[]; cell: number; ink: { color: string; card: string; font: string } };
 
 export type KvLive = {
   set(next: Partial<KvOptions>): void;
+  hold(): void;
   destroy(): void;
 };
 
@@ -20,6 +27,7 @@ declare global {
       // WebGL2 がないときは null を返す
       mount(element: HTMLElement, options: KvOptions): KvLive | null;
       still(element: HTMLElement, options: KvOptions): HTMLCanvasElement;
+      glyphsOf(canvas: HTMLCanvasElement): Painted | undefined;
       LOOP: number;
       READ_T: number;
     };
