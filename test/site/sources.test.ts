@@ -32,10 +32,10 @@ test('教科書と1首のページから「このアプリについて」への�
   for (const anchor of anchors) assert.ok(ids.has(anchor), anchor);
 });
 
-// 2026-11-07 のユーザーの判断：「ポイントを知る」の項目の印は、文の終わりに小さく付ける短い印にし、読手のメモと作者の実体験が何かの説明は「このアプリについて」に置く。
+// 2026-11-07 のユーザーの判断：「ポイントを知る」の項目の印は、段落の終わりに小さく付ける短い印にし、読手のメモと作者の実体験が何かの説明は「このアプリについて」に置く。
 const pointMarks = () => [...markdownOf('ポイント.md').matchAll(/<span class="src"(?: data-ref="([^"]+)")?>— ([^<]+)<\/span>/g)].map(([, ref, label]) => ({ ref, label }));
 
-test('ポイントを知るの出典の印は、文の終わりの「— 」で始まる短い印で、別の行の印と長い断りを置かない', () => {
+test('ポイントを知るの出典の印は、段落の終わりの「— 」で始まる短い印で、別の行の印と長い断りを置かない', () => {
   const markdown = markdownOf('ポイント.md');
   assert.doesNotMatch(markdown, /<p class="src">/);
   assert.doesNotMatch(markdown, /読手個人のやり方|協会の資料でも読手のメモでもありません|ふだんの練習会では参考程度/);
