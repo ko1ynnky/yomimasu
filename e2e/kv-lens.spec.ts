@@ -230,6 +230,8 @@ for (const [width, height] of [
   [448, 940],
 ] as const) {
   test(`${width}×${height} で、操作の説明は、回していない絵の1周のどのコマでも字に重ならない`, async ({ page }) => {
+    // 1周の24コマを描くと、CI の SwiftShader では大きい画面で30秒の既定を超える。コマを間引くと重なりを見逃すので、時間の上限を延ばす
+    test.setTimeout(120_000);
     await page.setViewportSize({ width, height });
     await page.clock.install({ time: new Date('2026-11-06T00:00:00Z') });
     await page.clock.pauseAt(new Date('2026-11-06T00:00:01Z'));
