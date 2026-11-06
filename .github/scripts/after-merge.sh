@@ -4,7 +4,7 @@
 # gh issue close は閉じた Issue でも成功するので、GitHub が閉じた場合も同じ結果になる。
 set -euo pipefail
 
-# マージは必須の検査の終わりを待つので、ci.yml の最も長い job の上限に合わせて15分待つ。
+# マージは必須の検査の終わりを待つ。ci.yml で最も長いのは上限10分の e2e-shard と、そのあとに動く e2e なので、15分待つ。
 MAX_POLLS=60
 POLL_SECONDS=${POLL_SECONDS:-15}
 

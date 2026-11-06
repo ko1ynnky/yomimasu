@@ -1,0 +1,47 @@
+name: risk-gate
+
+# ci.yml から分けた。ci.yml はラベルを付けても動かさないので、go:merge を付けたときの検査はここで動かす。
+on:
+  pull_request:
+    branches: [main, production]
+    # edited は入れない。base を変えても ci.yml は動かないので、ここだけ動かしても必須の検査はそろわない。
+    # job を飛ばした「skipped」で前の失敗を上書きする入口も増やさない。
+    types: [opened, synchronize, reopened, labeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: risk-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  risk-gate:
+    if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'go:merge') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # ラベルを書き換える権限を持つので、PR が変えたものではなく base のスクリプトと一覧を使う。
+      - name: 許可の外を触っていないか見る
+        # shell を書くと pipefail が付く。git diff の失敗を「変更なし」として通さない。
+        shell: bash
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          PR: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          git show "$BASE:.github/scripts/risk-gate.sh" >"$RUNNER_TEMP/risk-gate.sh"
+          git show "$BASE:.github/risk-allowlist.txt" >"$RUNNER_TEMP/risk-allowlist.txt"
+          if ! git -c core.quotePath=false diff --no-renames --name-only "$BASE...$HEAD" | bash "$RUNNER_TEMP/risk-gate.sh" "$RUNNER_TEMP/risk-allowlist.txt"; then
+            gh pr edit "$PR" --remove-label go:merge --add-label needs-human
+            exit 1
+          fi

@@ -3,7 +3,11 @@ name: ci
 on:
   pull_request:
     branches: [main, production]
-    types: [opened, synchronize, reopened, labeled, edited]
+    # ラベルを付けたときと、本文とタイトルを直したときは動かさない。PR の実行は取り消してやり直すので、動いている E2E が初めからになる。
+    # go:merge を付けたときの risk-gate は risk-gate.yml で動かす。
+    # edited を外したので、base を main に変えた PR では検査が動かず、必須の検査が待ちのまま残ってマージできない。push するか、閉じて開き直すと動く。
+    # github.event.action を見る if で job を飛ばす形にはしない。飛ばした job は同じコミットの前の失敗を上書きし、通った扱いになる。
+    types: [opened, synchronize, reopened]
   push:
     branches: [main, production]
   # GITHUB_TOKEN のマージは push の実行を作らないので、after-merge.sh がここから起こす。
@@ -57,9 +61,14 @@ jobs:
       - name: ビルド
         run: npm run build
 
-  e2e:
+  # 録音の E2E は音を実時間で流すので、1台では13〜16分かかる。ファイルを組に分け、組ごとに別の runner で流す。
+  e2e-shard:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -69,18 +78,105 @@ jobs:
           node-version-file: .node-version
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run e2e
+      - name: Playwright の版を読む
+        id: playwright
+        run: echo "version=$(jq -r .version node_modules/@playwright/test/package.json)" >>"$GITHUB_OUTPUT"
+      # --with-deps の apt は、遅い回に取得だけで10分かかった。ubuntu-latest には Google Chrome とその依存のライブラリーが入っている。
+      # 日本語のフォントは入っていないので、--with-deps が入れていた2つの .deb をブラウザーと一緒に残す。
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/e2e-fonts
+          key: e2e-${{ runner.os }}-playwright-${{ steps.playwright.outputs.version }}-fonts-ipafont-gothic-wqy-zenhei
+      - run: npx playwright install chromium
+      # フォントがないと字が豆腐で描かれ、横スクロールの検査がはみ出しを見逃す。画面の画像も読めなくなる。
+      - name: 日本語のフォントを入れる
+        timeout-minutes: 5
+        run: |
+          fonts=~/.cache/e2e-fonts
+          packages=(fonts-ipafont-gothic fonts-wqy-zenhei)
+          missing=()
+          for package in "${packages[@]}"; do
+            compgen -G "$fonts/${package}_*.deb" >/dev/null || missing+=("$package")
+          done
+          if ((${#missing[@]})); then
+            mkdir -p "$fonts"
+            sudo apt-get update
+            (cd "$fonts" && apt-get download "${missing[@]}")
+          fi
+          debs=()
+          for package in "${packages[@]}"; do
+            debs+=("$fonts/${package}"_*.deb)
+          done
+          # apt-get install に .deb を渡しても、同じ版が apt のリポジトリにあるとそちらから取り直すので、dpkg で入れる。
+          sudo dpkg -i "${debs[@]}"
+          if ! fc-list :lang=ja family | grep .; then
+            echo '::error::日本語のフォントがありません。'
+            exit 1
+          fi
+      - name: E2E
+        env:
+          JOB_INDEX: ${{ strategy.job-index }}
+          JOB_TOTAL: ${{ strategy.job-total }}
+          # 1行に「組の番号 e2e/ からのファイル名」を書く。番号は1から数え、最後の組の番号は書かない。
+          # 最後の組は、ここで前の組に入れなかったファイルを、新しいファイルも含めてすべて流す。
+          # Playwright の --shard は件数で前から切るので、遅いテストが集まる record から result までが1つの組に入る。
+          # kv-lens と kv は、runner によって2倍ほど長くなる。遅い runner でも、どの組も約200秒になるように分けた（docs/decisions.md）。
+          SHARD_FILES: |
+            1 kv-lens.spec.ts
+            2 result.spec.ts
+            2 listen-back.spec.ts
+            3 record.spec.ts
+            3 next-point.spec.ts
+            4 records.spec.ts
+            4 kv.spec.ts
+            4 flow.spec.ts
+        # 組の番号は matrix の値ではなく job-index から数える。matrix を書き換えても、どの組にも入らないファイルが出ない。
+        # 前の組と最後の組は同じ files_of でファイルを選ぶ。式が分かれると、どちらにも入らない番号が出る。
+        # 公開すると runner が4 vCPU になり、workers の既定が2に増える。録音の E2E の時間の条件を変えないよう、1に固定する。
+        run: |
+          files_of() {
+            awk -v from="$1" -v to="$2" '$1 ~ /^[0-9]+$/ && $1 >= from && $1 <= to { print $2 }' <<<"$SHARD_FILES"
+          }
+          shard=$((JOB_INDEX + 1))
+          list="$RUNNER_TEMP/e2e-files.txt"
+          if ((shard < JOB_TOTAL)); then
+            files_of "$shard" "$shard" >"$list"
+            option=--test-list
+          else
+            files_of 1 $((JOB_TOTAL - 1)) >"$list"
+            option=--test-list-invert
+          fi
+          npm run e2e -- --workers=1 "$option" "$list"
       # 音は OS の一時フォルダーにあるので、この2種類だけを上げれば声は成果物に入らない。
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
         with:
-          name: e2e
+          name: e2e-${{ matrix.shard }}
           path: |
             e2e-artifacts/*.png
             e2e-artifacts/*.json
           if-no-files-found: warn
           retention-days: 7
+
+  # 必須の検査は job の名前 e2e で結んでいるので、組の結果をここにまとめる。
+  # needs だけだと、組が落ちたときにこの job が飛ばされ、飛ばされた検査は通った扱いになる。
+  # !cancelled() も使わない。組の時間切れは取り消しとして出るので、そのときに飛ばされて通ってしまう。
+  e2e:
+    needs: e2e-shard
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: すべての組が通ったか見る
+        env:
+          RESULT: ${{ needs.e2e-shard.result }}
+        run: |
+          if [[ $RESULT != success ]]; then
+            echo "::error::E2E の組の結果が $RESULT です。すべての組が通ったときだけ通します。"
+            exit 1
+          fi
 
   no-audio:
     runs-on: ubuntu-latest
@@ -167,33 +263,3 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: bash .github/scripts/deny-names-text.sh
-
-  risk-gate:
-    if: ${{ github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'go:merge') }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      # ラベルを書き換える権限を持つので、PR が変えたものではなく base のスクリプトと一覧を使う。
-      - name: 許可の外を触っていないか見る
-        # shell を書くと pipefail が付く。git diff の失敗を「変更なし」として通さない。
-        shell: bash
-        env:
-          BASE: ${{ github.event.pull_request.base.sha }}
-          HEAD: ${{ github.event.pull_request.head.sha }}
-          PR: ${{ github.event.pull_request.number }}
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          git show "$BASE:.github/scripts/risk-gate.sh" >"$RUNNER_TEMP/risk-gate.sh"
-          git show "$BASE:.github/risk-allowlist.txt" >"$RUNNER_TEMP/risk-allowlist.txt"
-          if ! git -c core.quotePath=false diff --no-renames --name-only "$BASE...$HEAD" | bash "$RUNNER_TEMP/risk-gate.sh" "$RUNNER_TEMP/risk-allowlist.txt"; then
-            gh pr edit "$PR" --remove-label go:merge --add-label needs-human
-            exit 1
-          fi

@@ -2,6 +2,58 @@
 
 あとの作業に影響する技術と設計の判断を、新しいものを上にして書く。理由と、採らなかった案も残す。結論を改めるときは、元の項目を消さずに、改めた日付と理由を足す。
 
+## 2026-11-07 PR にラベルを付けたときと、本文とタイトルを直したときは ci.yml を動かさない
+
+- 決めたこと（ユーザーが認めた）：
+  - `ci.yml` の `pull_request` の types を `[opened, synchronize, reopened]` にする。`labeled` と `edited` を外す。
+  - `risk-gate` の job を、中身を変えずに `.github/workflows/risk-gate.yml` へ移す。types は `[opened, synchronize, reopened, labeled]` で、concurrency は PR の番号ごとにする。必須の検査は job の名前で結ぶので、設定を変えずに必須のまま残る。
+- 理由：
+  - PR の実行は同じ PR の前の実行を取り消すので、ラベルを付けたとき（`go:merge` など）と本文やタイトルを直したときに、動いている E2E が初めからやり直しになっていた。2026-11-05 から、12のコミットで CI が2回動き、5回は動き始めて 95〜400 秒で取り消された。
+  - `labeled` は、`go:merge` を付けたときに `risk-gate` を動かすためだけにあった。`edited` は、PR の base を変えたときに検査を動かすために足した（25fe57f の「fix: 検査の抜け道を閉じる」）。本文とタイトルを直したときも `edited` が起きる。
+- 引き換え：`edited` を外したので、base を `main` に変えた PR では、`ci.yml` も `risk-gate.yml` も動かない。必須の検査は待ちのまま残り、マージできない（止まる側に倒れる）。push するか、PR を閉じて開き直すと動く。`production` のブランチは作っていないので、`production` を base にした古い検査で通ることもない。
+- 採らなかった案：`ci.yml` の job を、`github.event.action` を見る `if` で飛ばす案。飛ばした job は「skipped」の検査を同じコミットに出し、前の失敗を上書きして通った扱いになる。抜け道になる。
+
+## 2026-11-07 CI の E2E をファイルの組に分けて5台で並べて流し、apt を使わない
+
+- 決めたこと：
+  - `ci.yml` の E2E を、matrix の `e2e-shard` の5つの組に分ける。組ごとに別の runner で、`--workers=1` で流す。必須の検査の名前 `e2e` は、組の結果をまとめる job の名前にする。どの組も通ったときだけ通し、組が落ちても時間切れでも、飛ばされずに赤で終わる。
+  - ファイルを組に分ける表は `ci.yml` の `SHARD_FILES` に置く。1行に「組の番号 ファイル」を書く。前の組は `--test-list` で表のファイルだけを流し、最後の組は `--test-list-invert` で、表で前の組に入れなかったファイルをすべて流す。新しいファイルは最後の組に入る。組の番号は `strategy.job-index` から数えるので、matrix の数を変えても、どの組にも入らないファイルは出ない。
+  - いまの組：1 は kv-lens、2 は result と listen-back、3 は record と next-point、4 は records、kv、flow、5 は残りの11ファイル。
+  - Playwright のブラウザーは、`~/.cache/ms-playwright` を `actions/cache` で `@playwright/test` の版ごとに残し、`npx playwright install chromium` で入れる。`--with-deps` は付けない。
+  - `--with-deps` が入れていた日本語と中国語のフォント（`fonts-ipafont-gothic`、`fonts-wqy-zenhei`）は、.deb を同じキャッシュに残し、`dpkg -i` で入れる。apt から取るのは、キャッシュにないときだけである。入れたあとに `fc-list :lang=ja` が空なら落とす。
+    - 試行錯誤：はじめは .deb を `apt-get install` に渡していたが、PR #76 の最初の実行で、同じ版を apt のリポジトリから取り直していた（`Need to get 11.0 MB of archives.`）。キャッシュがあっても apt の取得が残るので、`dpkg -i` に替えた。入るのはこの2つだけで、ほかに足りないパッケージはなかった（`2 newly installed`）。
+    - 同じ実行で、入れる前の runner に日本語のフォントがないことも確かめた。apt は2つを新しく入れ（`The following NEW packages will be installed`）、入れたあとの `fc-list :lang=ja` は IPAGothic と WenQuanYi Zen Hei Mono の2つだけだった。
+  - 組の上限は10分にする。`after-merge.sh` が15分待つ理由の注記を、この上限と、そのあとに動く `e2e` に合わせて直した。
+- 理由：
+  - PR のマージが `e2e` を待っていた。ほかの検査は1分かからないが、`e2e` は14〜23分かかった（`ci.yml` の直近約100回）。`npm run e2e` の step が13〜16分で、213件を1 worker で流し、1件ごとの時間の合計は 767 秒だった（run 42236921683）。録音を実時間で流すテストが多く、時間は CPU ではなく待ちである。runner を分ければ、待ちが並んで進む。
+  - 1台の中の workers は1のままにする。公開すると runner は4 vCPU になり、Playwright の既定（論理コアの50%）では2になる。提出の直前に、録音の E2E の時間の条件を変えない。
+  - `--with-deps` の apt は、ふだん20〜40秒だが、直近8回のうち2回は取得が 37 kB/s に落ちて9〜10分かかった。ubuntu-latest には Google Chrome とその依存のライブラリーが入っている。
+  - ubuntu-latest の apt のパッケージの一覧（runner-images の Ubuntu2404-Readme、20261101 の版）に載っているフォントは `fonts-noto-color-emoji` だけで、日本語のフォントはない。アプリは Web フォントを持たないので、フォントがないと字が豆腐で描かれる。豆腐は全角の字より幅が狭く、横スクロールの検査がはみ出しを見逃し、画面の画像も読めなくなる（PR 前のレビューの指摘）。今までと同じ2つのパッケージを入れ、字の幅の条件を変えない。
+- 分け方を決めた手順：
+  - Playwright 1.64.1 の `--shard` は、時間を見ずに、テストの件数で前から順に切る（`node_modules/playwright/lib/runner/index.js` の `filterForShard`）。`--fully-parallel` を付けると1件ずつ切れる。
+  - `--list --fully-parallel --shard=i/N` の一覧に run 42236921683 の1件ごとの時間を当てると、4組で 159、162、382、64 秒になった。遅いファイル（record、records、result）が名前の順で隣り合うので、1つの組に集まる。3〜10組のどれでも、最も遅い組は 207〜459 秒で、組を増やしても単調には減らない（8組で 207 秒、9組で 313 秒）。
+  - ファイルごとの時間（秒）は、result 150、record 133、kv-lens 92、records 84、next-point 62、shell 62、listen-back 44、kv 31、flow 28、install 24、listen 18、残りの8ファイルで合わせて 40 である。
+  - 試行錯誤：はじめはこの1回の時間で4組（result と listen-back、record と next-point、kv-lens と kv と records、残り）に分け、193、196、207、171 秒と見積もった。PR #76 の最初の実行では、3つ目の組の E2E の step が 356 秒かかった。kv-lens が 198 秒、kv が 65 秒で、見積もりの2倍だった。ほかの組は見積もりとの差が7秒以内だった。
+  - 1台で流していたころの6回（run 42240460788 から 42244731719）を見ると、kv-lens は 87〜197 秒、kv は 29〜64 秒、shell は 62〜87 秒で、速い回と遅い回の2つに分かれる。録音のテスト（result、record、records）は、どの回も差が数秒である。画面の絵を描く CPU の重いテストだけが、runner の速さで変わると見られる。
+  - そこで、6回のそれぞれに組の表を当て、最も遅い組の時間で比べた。4組の初めの表は最大 345 秒、4組で組み直した表（kv-lens と listen-back、result と records、record と next-point と flow、残り）は最大 251 秒、いまの5組の表は最大 203 秒だった。5組の表は、速い回で 87、193、195、143、134 秒、遅い回で 197、196、202、178、177 秒になる。新しいファイルが入る最後の組は軽くしてある。
+- 結果（PR #76 の実行。時間は GitHub の job と step の記録から）：
+  - 前：`e2e` の job は14〜23分。`npm run e2e` は13〜16分、`playwright install --with-deps` は20〜40秒（遅い回は9〜10分）。
+  - 5組、キャッシュあり（run 42250216262）：組の job は 207〜237 秒、`E2E` の step は 174〜204 秒。ブラウザーとフォントを入れる step は合わせて 3〜6 秒で、キャッシュを戻すのに 6〜9 秒かかった。apt からは何も取っていない。実行を始めてから `e2e` が通るまで4分7秒。テストの数は 18、10、25、20、140 で、合わせて 213。
+  - 4組、キャッシュなし（run 42248234879、上の試行錯誤の表）：ブラウザーの取得は 8〜13 秒、apt からのフォントの取得は 13〜35 秒。3つ目の組が遅い runner に当たり、`e2e` が通るまで7分8秒だった。
+  - どちらの実行でも、`--with-deps` なしで Chromium が起動し、213件がすべて通った。落ちたテストと、やり直して通ったテストはない。画面の画像の日本語は豆腐になっていない。
+- 採らなかった案：
+  - `--shard` と `--fully-parallel` だけで分ける案。上のとおり、4組で最も遅い組が 382 秒になり、目標の約4分を超える。ファイルで分けるいまの形では `--fully-parallel` は効かないので付けない。1つの組の中は、今までどおりファイルの中の順に流れる。
+  - `PWTEST_SHARD_WEIGHTS` で組の件数の比を変える案。文書にない内部の環境変数で、件数で切る形は変わらず、テストを足すと境目が動く。
+  - 4組の案。上のとおり、遅い runner に当たると最も遅い組が約250秒になり、目標の約4分を超える。5組では、速い runner に当たった kv-lens の組が1分半で終わって台が余るが、どの組が遅い runner に当たるかは選べないので、遅い回に合わせた。
+  - 1件ごとの時間の表をリポジトリに置き、実行のたびに組を計算する案。表と計算のスクリプトの手入れが要る。
+  - `fullyParallel` を設定に書く案。手元の `npm run e2e` の流し方が変わる。
+  - フォントを毎回 apt で入れる案。取得が遅い回を避けられない。Web フォントを足す案は、アプリの画面を変える。
+- 限界：
+  - 組は手で直す。ファイルの時間が変わったら、表の行を動かす。新しいファイルは最後の組に入るので、増えるとそこが遅くなる。
+  - 1つのファイルが1つの組の目安より長くなったら、表の1行をファイルの中のテストに分ける必要がある。`--test-list` は「ファイル › テストの名前」も受けるが、いまの awk は2列目だけを読む。
+  - matrix の値（job の名前の番号）と、実際に流す組（job-index）は、matrix を並べ替えると食い違う。
+  - キャッシュは PR のブランチと main で分かれる。PR の最初の実行は、main にキャッシュがなければブラウザーを取りに行く。
+
 ## 2026-11-06 公開の前に、deny-names で main の外のコミットと、Issue と PR の文も見る
 
 - 決めたこと：
@@ -867,6 +919,8 @@
 
 - 決めたこと：
   - `.github/workflows/ci.yml` に `check`、`e2e`、`no-audio`、`no-secrets`、`deny-names`、`risk-gate` を置く。型検査、テスト、シェルの検査、ビルドは `check` の中で順に動かす。
+    - 改めた点（2026-11-07）：E2E は、ファイルの組ごとに流す `e2e-shard` と、その結果をまとめる `e2e` に分けた。「CI の E2E をファイルの組に分けて5台で並べて流し、apt を使わない」を見る。
+    - 改めた点（2026-11-07）：`risk-gate` は `.github/workflows/risk-gate.yml` に移した。`ci.yml` をラベルで動かさないためである。「PR にラベルを付けたときと、本文とタイトルを直したときは ci.yml を動かさない」を見る。
   - 音声の拡張子と鍵の形は `.claude/hooks/patterns.sh` の1か所に置き、hook と CI が読み込む。`.gitignore` は読み込めないので、食い違いをテストで止める。
   - `deny-names` の一覧は GitHub の secret `DENY_NAMES` に1行1件で置く。空なら失敗する。
   - `deny-names` と `risk-gate` は、変更の中のものではなく base のスクリプトを実行する。`pull_request` の対象は `main` と `production` に絞り、スクリプトのない古いブランチを base にできないようにする。
@@ -887,6 +941,7 @@
 - 採らなかった案：`pull_request_target` で base の Workflow を動かす案。secret を持つ Workflow が PR の内容を扱う形は、外部の入力を閉じる考え方と合わない。`deny-names` は PR の本文を読むので、PR のコードを実行しない形なら作れるが、下の限界の前提が崩れるまでは使わない。
 - 限界：
   - `pull_request` の実行は PR 側の `ci.yml` を使う。同じリポジトリへ push でき、Workflow も書き換えられる人は、secret に届き、`risk-gate` も外せる。fork の PR には secret は渡らない。自動の実行のトークンに `workflows` の権限を渡さないことを前提にし、`auto.yml` を書くときに確かめる。
+    - 改めた点（2026-11-07）：`risk-gate` は `risk-gate.yml` に移した。PR 側の Workflow を使う点は同じである。
     - 改めた点（2026-11-03）：`auto.yml` は Claude のトークンに contents、pull_requests、issues だけを求め、`checks.test.sh` がそれを確かめる。交換のサーバーが求めたとおりに発行するかは、実物で確かめる。
   - 導入の PR がマージされるまでは、取り出した版の `deny-names.sh` が secret を読む。導入の PR は人が読むので、そこで止める。
   - `no-audio`、`no-secrets`、`deny-names` の本文の検査は、今の版のファイルだけを見る。PR の途中のコミットで足して消したものは見つけない。
