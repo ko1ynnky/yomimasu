@@ -1,4 +1,5 @@
 // AI に入れる画面（/install/ と手順の4画面）を組み立てる部品。画面の決まりは docs/ui-guide.md の8節「AI に入れる」にある。
+import { FLOW_CHECKED_ON, FLOWS, type Flow } from '../content/install/flows.ts';
 
 export type InstallTarget = { path: string; label: string; note?: string };
 
@@ -164,8 +165,23 @@ export function sketchSvg(spec: Sketch): string {
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeHtml(spec.alt)}" style="font-family:var(--f-sans)">${frame}${parts.join('')}${rings}${badges}</svg>`;
 }
 
-// content/ の Markdown に置く印と、組み立てで差し込む HTML。図の印は <!-- 図 claude-code --> の形で書く。
+// スキルを入れた AI に聞いたときの流れの図（docs/ui-guide.md の8節「流れの図」）。問い、AI が行ったこと、答えの抜粋、確かめた環境と回数の順に、文字で組む。
+// 画像にしないのは、読み上げで読めるようにし、画面の幅で折り返すためである。各社の画面の形とロゴは描かない。
+// スキルを読み込んだ行の地を朱にする案は採らなかった。色を付ける行は、次に直す1点に選ばれた1行だけである（ガイド2節）。
+export function flowHtml({ question, steps, answer, lang, asked, answered }: Flow): string {
+  const items = ['スキルを読み込みました <b>yomimasu</b>', ...steps].map((step) => `<li>${step}</li>`).join('');
+  return (
+    '<figure class="flow"><figcaption>チャットでの流れの例</figcaption>' +
+    `<div class="flow-q"><p class="flow-who">あなた</p><p>${escapeHtml(question)}</p></div>` +
+    `<div class="flow-steps"><p class="flow-who">AI が自分で行ったこと</p><ul>${items}</ul></div>` +
+    `<div class="flow-a"><p class="flow-who">答え（抜粋）</p><div${lang ? ` lang="${lang}"` : ''}>${answer}</div></div>` +
+    `<p class="flow-note">Claude Code で確かめた結果（${FLOW_CHECKED_ON}、${asked}回中${answered}回）</p></figure>`
+  );
+}
+
+// content/ の Markdown に置く印と、組み立てで差し込む HTML。図の印は <!-- 図 claude-code -->、流れの図の印は <!-- 流れ yoin --> の形で書く。
 export const INSTALL_MARKS: Record<string, () => string> = {
   '<!-- 入れる先 -->': pickOptionsHtml,
   ...Object.fromEntries(Object.entries(SKETCHES).map(([name, spec]) => [`<!-- 図 ${name} -->`, () => `<figure class="sketch">${sketchSvg(spec)}</figure>`])),
+  ...Object.fromEntries(Object.entries(FLOWS).map(([name, flow]) => [`<!-- 流れ ${name} -->`, () => flowHtml(flow)])),
 };

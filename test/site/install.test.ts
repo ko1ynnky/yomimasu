@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { COMMANDS, commandAt } from '../../.claude/skills/yomimasu/scripts/commands.ts';
-import { INSTALL_TARGETS, isOffered, pickOptionsHtml, SKETCHES, sketchSvg } from '../../site/install.ts';
+import { FLOWS } from '../../content/install/flows.ts';
+import { flowHtml, INSTALL_TARGETS, isOffered, pickOptionsHtml, SKETCHES, sketchSvg } from '../../site/install.ts';
 
 const noName = () => undefined;
 
@@ -40,6 +41,28 @@ test('略図は押す順を文で書いた名前を持つ図で、押す場所�
   }
 });
 
+// 「たとえば」の行は、文と、開くと出す流れの図の印でできている（content/インストール.md）。
+const examples = [...readFileSync('content/インストール.md', 'utf8').matchAll(/^<details><summary>(?:<span class="prio">[^<]+<\/span>)?(.+)<\/summary><!-- 流れ (\S+) --><\/details>$/gm)].map(
+  ([, text, flow]) => ({ text, flow }),
+);
+
+test('「たとえば」の各行は、開くとその行の文をそのまま問いにした流れの図を出す', () => {
+  assert.equal(examples.length, 4);
+  for (const { text, flow } of examples) assert.equal(FLOWS[flow]?.question, text, flow);
+});
+
+test('流れの図は、問い、スキルを読み込んだ行から始まる AI の行い、答えの抜粋、確かめた環境と回数を、画像を使わずに文字で出す', () => {
+  for (const [name, flow] of Object.entries(FLOWS)) {
+    const html = flowHtml(flow);
+    assert.match(html, /^<figure class="flow"><figcaption>チャットでの流れの例<\/figcaption>/, name);
+    assert.ok(html.includes('<ul><li>スキルを読み込みました <b>yomimasu</b></li>'), name);
+    assert.ok(html.includes('<p class="flow-who">答え（抜粋）</p>'), name);
+    assert.match(html, /<p class="flow-note">Claude Code で確かめた結果（\d{4}-\d{2}-\d{2}、\d+回中\d+回）<\/p><\/figure>$/, name);
+    assert.doesNotMatch(html, /<img|<svg|<image|<picture/, name);
+    assert.ok(flow.answered <= flow.asked, name);
+  }
+});
+
 // Web のボタンが打ち込む文字には、スキルも同じ内容を返す（docs/ui-guide.md の8節）。画面とスキルの答えを、別々に直して食い違わせないための検査である。
 const noteOf = (path: string) => COMMANDS.find((command) => command.path === path)?.skill.note ?? '';
 const textOf = (html: string) => html.replace(/<[^>]+>/g, '').trim();
@@ -50,10 +73,8 @@ test('入れる先を尋ねるスキルの答えは、Web の選択肢と同じ�
     [...note.matchAll(/`(インストール [^`]+)`/g)].map(([, say]) => say),
     INSTALL_TARGETS.map(({ path }) => commandAt(path, noName)?.say),
   );
-  const page = readFileSync('content/インストール.md', 'utf8');
-  const examples = [...page.matchAll(/^<div>(?:<span class="prio">[^<]+<\/span>)?(.+)<\/div>$/gm)].map(([, text]) => text);
   assert.equal(examples.length, 4);
-  for (const example of examples) assert.ok(note.includes(example), example);
+  for (const { text } of examples) assert.ok(note.includes(text), text);
 });
 
 for (const { path } of INSTALL_TARGETS.filter(({ path }) => path !== '/install/agent/')) {

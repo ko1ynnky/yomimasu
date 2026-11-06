@@ -1,15 +1,17 @@
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { commandAt } from '../.claude/skills/yomimasu/scripts/commands.ts';
 import { INSTALL_TARGETS } from '../site/install.ts';
 
 const ARTIFACTS_DIR = 'e2e-artifacts';
 const ASK_QUESTION = 'どこに入れますか？';
 const ASK_EXAMPLE = '競技かるたの読みで、余韻の3秒はどこから数える？';
+// 流れの図の注記（docs/ui-guide.md の8節「流れの図」）。図ごとに、確かめた環境と日と回数を添える。
+const FLOW_NOTE = /^Claude Code で確かめた結果（\d{4}-\d{2}-\d{2}、\d+回中\d+回）$/;
 
 // 手順の画面に出すもの（docs/ui-guide.md の8節「AI に入れる」）。選択肢から外した入れる先は組み立てないので、確かめるのは選択肢に出すものだけである。
-const PROCEDURES: Record<string, { heading: string; where: string; steps: string[]; figures: number }> = {
+const PROCEDURES: Record<string, { heading: string; where: string; steps: string[]; figures: number; flows?: string[] }> = {
   '/install/claude/': {
     heading: 'Claude に入れる',
     where: 'パソコンのブラウザーで、claude.ai を開いて進めます。',
@@ -33,6 +35,7 @@ const PROCEDURES: Record<string, { heading: string; where: string; steps: string
     where: 'ターミナルで1行実行して入れます。',
     steps: ['ターミナルで実行する', '聞いてみる'],
     figures: 0,
+    flows: [ASK_EXAMPLE],
   },
 };
 
@@ -45,7 +48,7 @@ const linesOf = (page: Page, selector: string) =>
   page.locator(selector).evaluate((el) => Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)));
 const shortTargets = (page: Page) =>
   page
-    .locator('main a, main button')
+    .locator('main a, main button, main summary')
     .evaluateAll((els) => els.filter((el) => el.checkVisibility() && el.getBoundingClientRect().height < 44).map((el) => el.textContent?.trim()));
 
 // 入力の行に打ち込まれた文字を、毎フレーム集める。打ち込みは 370ms で終わるので、外から待つと見逃す。
@@ -61,6 +64,36 @@ const watchTyped = (page: Page) =>
     requestAnimationFrame(tick);
   });
 const typedSeen = (page: Page) => page.evaluate(() => [...(window as unknown as { typedSeen: Set<string> }).typedSeen]);
+
+const questionTop = (page: Page) => page.locator('.auq-q').evaluate((el) => el.getBoundingClientRect().top + scrollY);
+
+// 流れの図は、問い、スキルを読み込んだ行から始まる AI の行い、答えの抜粋、確かめた環境と回数の順に出す。
+async function expectFlow(figure: Locator, question: string) {
+  await expect(figure).toBeVisible();
+  await expect(figure.locator('figcaption')).toHaveText('チャットでの流れの例');
+  await expect(figure.locator('.flow-q p').last()).toHaveText(question);
+  await expect(figure.locator('.flow-steps li').first()).toHaveText('スキルを読み込みました yomimasu');
+  await expect(figure.locator('.flow-a .flow-who')).toHaveText('答え（抜粋）');
+  await expect(figure.locator('.flow-note')).toHaveText(FLOW_NOTE);
+  await expect(figure.locator('img, svg, picture')).toHaveCount(0);
+}
+
+// 「たとえば」の各行は閉じた文だけで出て、押すとその行の文を問いにした流れの図を開き、もう一度押すと閉じる。
+async function expectExamplesOpenAndClose(page: Page) {
+  const rows = page.locator('.examples > details');
+  await expect(rows).toHaveCount(4);
+  for (const row of await rows.all()) {
+    const summary = row.locator('summary');
+    const figure = row.locator('.flow');
+    const question = await summary.evaluate((el) => el.lastChild?.textContent ?? '');
+    await expect(figure).toBeHidden();
+    await summary.click();
+    await expect(row).toHaveAttribute('open', '');
+    await expectFlow(figure, question);
+    await summary.click();
+    await expect(figure).toBeHidden();
+  }
+}
 
 test('JS なしでも、尋ねる画面の選択肢のリンクで手順の画面へ移れ、保存は ZIP へのリンクである', async ({ browser, baseURL }) => {
   const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
@@ -84,6 +117,21 @@ test('JS なしでも、尋ねる画面の選択肢のリンクで手順の画�
   await context.close();
 });
 
+test('JS なしでも、「たとえば」の各行は押すと流れの図を開き、もう一度押すと閉じる', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+  const page = await context.newPage();
+  await page.goto('/install/');
+  await expectExamplesOpenAndClose(page);
+  await context.close();
+});
+
+test('入口から開いた「/インストール」でも、「たとえば」の各行は押すと流れの図を開き、もう一度押すと閉じる', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: /\/インストール/ }).click();
+  await expect(page).toHaveURL(/\/install\/$/);
+  await expectExamplesOpenAndClose(page);
+});
+
 test('入口から「/インストール」を開くと、見出し、説明、例、問いと選択肢を出し、入力の行を出さない', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('link', { name: /\/インストール/ }).click();
@@ -94,12 +142,14 @@ test('入口から「/インストール」を開くと、見出し、説明、�
   await expect(page.locator('main h2')).toHaveText('あなたのAIに、読みの知識をインストール。');
   await expect(page.locator('main h2 + p')).toHaveText('このアプリにはない、あなた自身の「やりたいこと」が手のひらに。');
   await expect(page.locator('main h3')).toHaveText('たとえば');
-  const examples = page.locator('.examples > div');
+  const examples = page.locator('.examples > details > summary');
   await expect(examples).toHaveCount(4);
   await expect(examples.locator('.prio')).toHaveText(['コーディングエージェントで', 'コーディングエージェントで']);
   await expect(examples.nth(0).locator('.prio')).toHaveCount(0);
   await expect(examples.nth(1)).toContainText('Wikipedia などの音声学の資料も読ませて、競技かるたの読みで');
   await expect(examples.nth(2)).toContainText('自分の読みで、大山札が決まり字の前に聞き分けられるか、聞き取りテストを作って');
+  await expect(page.locator('.examples .flow')).toHaveCount(4);
+  for (const figure of await page.locator('.examples .flow').all()) await expect(figure).toBeHidden();
   const pick = page.getByRole('group', { name: ASK_QUESTION });
   await expect(pick.locator('.auq-q')).toHaveText(ASK_QUESTION);
   await expect(pick.getByRole('link')).toHaveText(OPTION_TEXTS);
@@ -168,6 +218,9 @@ for (const path of OFFERED) {
       expect(label).toMatch(/の略図。.+(押す|オンにする)$/);
     }
     await expect(page.locator('main img, main image, main picture')).toHaveCount(0);
+    const flows = page.locator('main .flow');
+    await expect(flows).toHaveCount(expected.flows?.length ?? 0);
+    for (const [i, question] of (expected.flows ?? []).entries()) await expectFlow(flows.nth(i), question);
 
     if (path === '/install/agent/') {
       await expect(page.locator('.cmd code')).toHaveText(['npx skills add ko1ynnky/yomimasu', '/yomimasu 余韻の3秒はどこから数える？']);
@@ -265,6 +318,34 @@ test('手順の画面から戻った尋ねる画面で「戻る」を押すと�
   await expect(back).toBeFocused();
 });
 
+// 閉じた行は文だけにし、問い「どこに入れますか？」の位置を、行が文だけだった版（左右 14px、15px、行の高さ 1.6 の <div>）と変えない（2026-11-06 のユーザーの判断）。
+test('閉じた「たとえば」の行は、文だけの行に置き換えても問いの位置が変わらず、開いて閉じると元の位置に戻る', async ({ page }) => {
+  for (const [width, height] of [
+    [393, 659],
+    [375, 812],
+    [360, 640],
+    [320, 640],
+  ] as const) {
+    await page.setViewportSize({ width, height });
+    await page.goto('/install/');
+    const closed = await questionTop(page);
+    const first = page.locator('.examples summary').first();
+    await first.click();
+    expect(await questionTop(page), `${width} 開いた`).toBeGreaterThan(closed);
+    await first.click();
+    expect(await questionTop(page), `${width} 閉じた`).toBe(closed);
+    await page.locator('.examples').evaluate((card) => {
+      for (const row of [...card.querySelectorAll(':scope > details')]) {
+        const div = document.createElement('div');
+        div.style.cssText = 'padding: 10px 14px; font-size: 15px; line-height: 1.6';
+        div.append(...row.querySelector('summary')!.childNodes);
+        row.replaceWith(div);
+      }
+    });
+    expect(await questionTop(page), `${width} 文だけの行`).toBe(closed);
+  }
+});
+
 for (const [width, height] of [
   [393, 659],
   [360, 640],
@@ -279,7 +360,23 @@ for (const [width, height] of [
     expect(await shortTargets(page)).toEqual([]);
     mkdirSync(ARTIFACTS_DIR, { recursive: true });
     if (width !== 360) await page.screenshot({ path: join(ARTIFACTS_DIR, `install-${width}x${height}.png`) });
-    if (width === 393) await page.screenshot({ path: join(ARTIFACTS_DIR, `install-${width}x${height}-full.png`), fullPage: true });
+    if (width === 393) {
+      await page.screenshot({ path: join(ARTIFACTS_DIR, `install-${width}x${height}-full.png`), fullPage: true });
+      await page.locator('main h3').evaluate((el) => el.scrollIntoView({ block: 'start' }));
+      await page.screenshot({ path: join(ARTIFACTS_DIR, `install-figures-closed-${width}x${height}.png`) });
+      const first = page.locator('.examples summary').first();
+      await first.click();
+      await first.evaluate((el) => el.scrollIntoView({ block: 'start' }));
+      await page.screenshot({ path: join(ARTIFACTS_DIR, `install-figures-open-${width}x${height}.png`) });
+    }
+    // 図を全部開いても、横スクロールが出ず、図の文字は 13px を下回らない（docs/ui-guide.md の3節）。
+    for (const row of await page.locator('.examples > details').all()) if ((await row.getAttribute('open')) === null) await row.locator('summary').click();
+    expect(await noHorizontalScroll(page), '図を開いた /install/').toBe(true);
+    const sizes = await page
+      .locator('.flow *')
+      .evaluateAll((els) => els.filter((el) => el.checkVisibility() && [...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && n.textContent?.trim())).map((el) => parseFloat(getComputedStyle(el).fontSize)));
+    expect(Math.min(...sizes)).toBeGreaterThanOrEqual(13);
+    if (width === 393) await page.screenshot({ path: join(ARTIFACTS_DIR, `install-figures-open-${width}x${height}-full.png`), fullPage: true });
 
     for (const path of OFFERED) {
       await page.goto(path);
@@ -298,6 +395,10 @@ for (const [width, height] of [
       if (width === 393 && (name === 'claude' || name === 'chatgpt' || name === 'agent')) {
         await page.screenshot({ path: join(ARTIFACTS_DIR, `install-${name}-${width}x${height}.png`) });
         await page.screenshot({ path: join(ARTIFACTS_DIR, `install-${name}-${width}x${height}-full.png`), fullPage: true });
+      }
+      if (width === 393 && name === 'agent') {
+        await page.locator('main .flow').evaluate((el) => el.scrollIntoView({ block: 'start' }));
+        await page.screenshot({ path: join(ARTIFACTS_DIR, `install-agent-figure-${width}x${height}.png`) });
       }
     }
   });
