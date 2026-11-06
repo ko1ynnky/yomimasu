@@ -192,7 +192,7 @@ const CARD_MARKS_NOTE: Record<'vowel' | 'nasal', string> = {
 const cardMouthCaption = (mark: 'vowel' | 'nasal') =>
   `図は、一般の音声学の資料（<a href="/about/#src-phonetics">Wikipedia ほか</a>）をもとにこのアプリが描いたスケッチで、寸法は測っていません。${CARD_MARKS_NOTE[mark]}`;
 
-// 1首のページの、その札の最後の音の図。「ん」の位置の説明は長いので、「ポイントを知る」の作者の経験のカードの中の折りたたみ（id="yoin-n"）へ案内する。
+// 1首のページの、その札の最後の音の図。「ん」の位置の説明は長いので、「ポイントを知る」の「余韻が消えるまで口の形を変えない」の行（id="yoin-oto"）の中の折りたたみ（id="yoin-n"）へ案内する。
 export function cardMouthHtml(card: Card): string {
   const { vowel } = finalSound(card);
   const nasal = vowel === 'ん' ? '<p>話し言葉の研究では、発話の終わりの「ん」をどこで閉じるかは、人によって違いました。研究でわかっていることと、このアプリの考えは、<a href="/point/#yoin-n">ポイントを知る</a>にあります。</p>' : '';
