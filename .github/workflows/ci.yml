@@ -21,6 +21,15 @@ on:
         description: deny-names が、scan_base から先の各コミットで足した行とファイル名も見る
         type: boolean
         default: false
+      # 公開すると、main の外のコミットと、Issue と PR の文も読める。この2つを公開の前に見るための入力である。
+      scan_refs:
+        description: deny-names が、ブランチ、タグ、PR の参照から辿れて main から辿れない各コミットで、コミットメッセージ、足した行、ファイル名も見る（main で起動する）
+        type: boolean
+        default: false
+      scan_text:
+        description: deny-names-text が、Issue と PR の題、本文、コメント、レビューを、変える前の題と編集する前の版も含めて見る
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -198,6 +207,16 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      # checkout が取るのはブランチとタグだけなので、スカッシュする前の PR のコミットを refs/pull/<番号>/head から取る。
+      # 鍵を .git/config に残さず、DENY_NAMES を読む step にも渡さないよう、この step の git の設定にだけ認証を渡す。
+      - name: PR の参照を取る
+        if: ${{ inputs.scan_refs }}
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          auth=$(printf 'x-access-token:%s' "$TOKEN" | base64 -w0)
+          echo "::add-mask::$auth"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" fetch --no-tags origin '+refs/pull/*/head:refs/remotes/pull/*'
       # secret を読むので、変更の中のスクリプトではなく base のスクリプトを実行する。
       # 新しいブランチの push や force push で base を読めないときは、main の版を使う。
       # 読める base にスクリプトがないのは導入のときだけなので、そのときだけ取り出した版を実行し、ログに残す。
@@ -208,6 +227,7 @@ jobs:
           DENY_NAMES: ${{ secrets.DENY_NAMES }}
           SCAN_BASE: ${{ github.event.pull_request.base.sha || github.event.before || inputs.scan_base }}
           SCAN_HISTORY: ${{ inputs.scan_history && '1' || '' }}
+          SCAN_REFS: ${{ inputs.scan_refs && '1' || '' }}
           SCRIPT_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           script="$RUNNER_TEMP/deny-names.sh"
@@ -221,3 +241,25 @@ jobs:
             cp "$source_path" "$script"
           fi
           bash "$script"
+
+  # Issue と PR を読む権限が要るので、ほかの検査と分け、手動の起動で選んだときだけ動かす。
+  deny-names-text:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.scan_text }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    steps:
+      # secret を読むので、deny-names の手動の起動と同じく main の版を実行する。
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Issue と PR の文から公開できない名前を探す
+        env:
+          DENY_NAMES: ${{ secrets.DENY_NAMES }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: bash .github/scripts/deny-names-text.sh
