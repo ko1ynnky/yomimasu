@@ -174,3 +174,26 @@ test('マイクを許可しないときの案内から、例の録音で見る�
   await expect(result(page).getByText('例の録音です')).toBeVisible();
   await expect(result(page).locator('.res')).toBeVisible();
 });
+
+test('録音を始められないときの案内からも、例の録音で見るで例の録音の結果へ進む', async ({ page }) => {
+  // アプリの中のブラウザーで録音の API がない場合を、API の境界で再現する（e2e/record.spec.ts と同じ）。
+  await page.addInitScript(() => {
+    localStorage.setItem('yomimasu.recHelpDone', '1');
+    Object.defineProperty(navigator, 'mediaDevices', { value: undefined });
+  });
+  await serveExample(page, { ...standardReading, maSec: 1.6 });
+  await page.goto('/read/rec/');
+  await page.getByRole('button', { name: '読み始める' }).click();
+
+  const alert = page.getByRole('alert');
+  await expect(alert).toContainText('録音を始められませんでした。');
+  const entry = alert.getByRole('link', { name: '例の録音で見る' });
+  await expect(entry).toHaveAttribute('href', '/result/example/');
+  mkdirSync(ARTIFACTS_DIR, { recursive: true });
+  await page.screenshot({ path: join(ARTIFACTS_DIR, 'example-unavailable.png') });
+
+  await entry.click();
+  await expect(page).toHaveURL(/\/result\/example\/$/);
+  await expect(result(page).getByText('例の録音です')).toBeVisible();
+  await expect(result(page).locator('.res')).toBeVisible();
+});

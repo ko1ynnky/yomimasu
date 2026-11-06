@@ -28,7 +28,7 @@ const LIMIT_SEC = 25;
 // 「読み始める」と「やめる」は同じ高さにあるので、続けて押すと始めた録音をすぐ止めてしまう。止めた直後の「読み始める」も同じである。
 const RESTART_GUARD_MS = 500;
 const HELP_KEY = 'yomimasu.recHelpDone';
-// 声を出せない人とマイクを許可しない人が、録音しないで結果の画面まで進む入口（C9）。
+// 声を出せない人と、マイクを許可しないか使えない人が、録音しないで結果の画面まで進む入口（C9）。
 const EXAMPLE_RESULT = '/result/example/';
 const RESULT = '/result/';
 // 録音のあとに結果の画面の実行の行の下へ出す行（docs/ui-guide.md の8節）。
@@ -40,9 +40,11 @@ const READING_PROGRESS = '2 / 3 読む';
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+// SNS から来た人は、アプリの中のブラウザーで開くことが多い。そこで録音の API がないときと、許可の拒否（NotAllowedError）でない理由で開けないときは unavailable になる。
+// 同じブラウザーで開き直すだけでは抜けられないことがあるので、ほかのブラウザーを案内する（2026-11-07 のユーザーの判断）。実機では確かめていない。
 const FAILURES: Record<Failure, [string, string]> = {
   denied: ['マイクを使えませんでした。', 'ブラウザーの設定でマイクを許可すると、読んで測れます。教科書とお手本はこのまま使えます。'],
-  unavailable: ['録音を始められませんでした。', 'ページを開き直してください。'],
+  unavailable: ['録音を始められませんでした。', 'ページを開き直してください。アプリの中のブラウザーで開いているときは、Safari か Chrome で開き直してください。'],
 };
 
 function helpDone() {
@@ -368,11 +370,9 @@ function Recorder({ fix }: { fix?: string }) {
               もう一度試す
             </button>
             <div class="pair">
-              {view.failure === 'denied' && (
-                <a class="btn btn--line" href={EXAMPLE_RESULT}>
-                  例の録音で見る
-                </a>
-              )}
+              <a class="btn btn--line" href={EXAMPLE_RESULT}>
+                例の録音で見る
+              </a>
               <a class="btn btn--line" href="/">
                 教科書へ戻る
               </a>
