@@ -289,3 +289,16 @@ test('お手本を再生のボタンは歌の枠のすぐ下に置き、JS が�
   );
   assert.match(pageOf(0), /<yomimasu-karuta-play data-no="0">/);
 });
+
+test('出さない助言の行は、その札のページに同じことを言う項目があるときだけで、長音の一覧は決まった13首の行だけを出さない', () => {
+  const hidden = advice.filter((a) => a.hiddenOn);
+  const sameAs = (a: (typeof advice)[number]) =>
+    a.group === '大山札の6首' || /大山札|あさぼらけう/.test(a.text) ? ['oyama'] : a.group === '初句が6字の8首' || a.text.startsWith('初句は') ? ['shoku6'] : a.cards.includes(81) ? ['ichiji'] : ['choon', 'hagyo'];
+  for (const a of hidden) {
+    for (const c of cards.filter((c) => adviceFor(c, [a]).length > 0 && (a.hiddenOn === 'all' || a.hiddenOn!.includes(c.no)))) {
+      assert.ok(rulePoints(c).some((p) => sameAs(a).includes(p.id)), `${c.no}番の「${a.text}」`);
+    }
+  }
+  const choon = hidden.filter((a) => a.source.includes('長音の一覧')).flatMap((a) => a.cards);
+  assert.deepEqual(choon, [8, 22, 40, 45, 48, 56, 61, 63, 76, 78, 85, 96, 99]);
+});
