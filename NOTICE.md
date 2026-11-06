@@ -11,10 +11,12 @@
 | 次に直す1点の文 | `.claude/skills/yomimasu/assets/next-point.json` | 権利を留保します。読むことと、個人の練習で使うことだけを認めます。知識の文章と同じ扱いで、再利用を認めません |
 | 札の文字のデータ | `.claude/skills/yomimasu/assets/cards.json` の本文の列 | 再利用を認めません。元のデータの権利は[外部のデータ](#外部のデータ)のとおりです |
 | そのほかのデータ | 置くときにここへ書きます | 再利用を認めません。出典と権利は、置くときにここへ書きます |
-| 札ごとの読みの表 | `.claude/skills/yomimasu/assets/cards.json`。同じ値を含む `scripts/cards/corrections.ts`、`.claude/skills/yomimasu/scripts/cards.ts` の札の番号、`test/cards/` の期待値（ふりがな、注、別の読み、余韻の印の値は `test/cards/table.test.ts`、`test/cards/assemble.test.ts`、`test/cards/sound.test.ts`）、`docs/ui-sample.html` の見本の3首と100首の決まり字、`test/site/lyrics.test.ts`、`test/site/karuta.test.ts`、`test/site/mouth.test.ts`、`e2e/stage.spec.ts`、`e2e/textbook.spec.ts`、`e2e/mouth.spec.ts` の期待値。教科書の1首のページと100首の一覧は、組み立てのときにこの表から作ります | 再利用を認めません。伸ばす箇所は抜粋版の、ふりがな、注、別の読み、余韻の印は完全版の内容として、全日本かるた協会の回答の範囲で使っています |
+| 札ごとの読みの表 | `.claude/skills/yomimasu/assets/cards.json`。同じ値を含む `scripts/cards/corrections.ts`、`.claude/skills/yomimasu/scripts/cards.ts` の札の番号、`test/cards/` の期待値（ふりがな、注、別の読み、余韻の印の値は `test/cards/table.test.ts`、`test/cards/assemble.test.ts`、`test/cards/sound.test.ts`）、`docs/ui-sample.html` の見本の3首と100首の決まり字、`test/site/lyrics.test.ts`、`test/site/karuta.test.ts`、`test/site/mouth.test.ts`、`test/site/kimariji-stream.test.ts`、`e2e/stage.spec.ts`、`e2e/textbook.spec.ts`、`e2e/mouth.spec.ts` の期待値。教科書の1首のページと100首の一覧は、組み立てのときにこの表から作ります | 再利用を認めません。伸ばす箇所は抜粋版の、ふりがな、注、別の読み、余韻の印は完全版の内容として、全日本かるた協会の回答の範囲で使っています |
 | ロゴ、図、画像 | 置くときにここへ書きます | 再利用を認めません |
 | AI に入れる手順の略図 | `site/install.ts`（/install/claude/、/install/chatgpt/、/install/gemini/ に出ます） | 再利用を認めません。このアプリが描いた略図で、各社の画面を写しておらず、ロゴも使っていません。項目の名前は、各社の画面の文字をそのまま書いています |
 | 口の形と「ん」の位置の図 | `content/karuta/mouth.ts`（教科書の「ポイントを知る」と1首のページに出ます） | 再利用を認めません。このアプリが一般の音声学の資料と研究をもとに描いたもので、ほかの図を写していません。出典は `.claude/skills/yomimasu/references/mouth-shapes.md` の「出典」にあります。読手テキストの調音点・調音法の一覧と口腔断面図は使っていません |
+| 入口の絵（決まり字で組んだ読手の絵） | `site/client/kv-live.js`（入口に出ます。置き方と動かし方は `site/client/kv.ts`） | 再利用を認めません。このアプリのために作った人形と動きを、スクリプトで描いたもので、ほかの図や画像を写していません |
+| 入口の絵の決まり字の列 | 組み立てのときに、`site/kimariji-stream.ts` が札ごとの読みの表の上の句の仮名と音から作り、入口の絵のスクリプトと同じファイルに入れます。リポジトリには置きません | 再利用を認めません。札ごとの読みの表から作ったもので、表と同じ扱いです |
 | 音声 | リポジトリには置きません。お手本と例の録音は公開しない R2 のバケットに置き、アプリがお手本を `/audio/v1/`、例の録音を `/audio/examples/v1/` で配ります | 録音した人の権利のままです。再利用を認めません。出典は[音声](#音声)に書きます |
 
 ## 外部のデータ
@@ -28,6 +30,42 @@
 | 伸ばす箇所 | 全日本かるた協会 競技かるた部（読唱）『小倉百人一首 競技かるた読手テキスト』HP掲載用抜粋版、令和7年4月1日改訂版、読み方一覧 p.5-15 | 協会の回答により、5・3・1・6の方式と各歌の伸ばす箇所を使っています | ページは札ごとに `origin.stretches.page` に残します。許可の範囲の外のものは載せません。範囲は[協会の資料](#協会の資料)にあります。33番、44番、74番の本文はこの一覧の形に合わせました。発音の列は規則で作り、語の切れ目は一覧のふりがなと比べて確かめました。そのうえで一覧のふりがなの「ー」と注の字を当てたので、30句の発音の列は次の行の値を含みます。54番の四句の1か所は、ユーザーの判断（2026-11-04）で、一覧の「ー」を当てていません |
 | ふりがな、注、別の読み、余韻の印 | 全日本かるた協会 競技かるた部（読唱）『小倉百人一首 競技かるた読手テキスト』冊子（完全版）、令和2年4月1日初版と、HP掲載用抜粋版、令和7年4月1日改訂版の読み方一覧 p.5-15 | 協会の回答により、完全版の内容として使っています | `cards.json` の `furigana`、`notes`、`alternatives`、`yoin` の列と、ふりがなの「ー」と注の字を当てた30句の `sound` と `diffs` です。値は抜粋版の文字のデータと画像の位置から読み取り、完全版のスキャンと目で照らしました。一致を目で確かめたのは、ふりがな707か所のうち706か所と、注、別の読み、余韻の印のすべてです。33番のふりがな1か所は読み方一覧のスキャンで濁点が判別できず、完全版 p.27 が同じ語を「しづごころ」と印刷していることと、冊子の実物で確かめました。抜粋版だけにある値と、両版で違う値は入れていません。ページは札ごとに `origin.notation.page` に残します |
 | お手本の音声 | A級公認読手の読み。序歌と100首の上の句と下の句の202本です。許諾と使う場面は[音声](#音声)にあります | 録音した人の権利のままです。再利用を認めません | リポジトリに置かず、公開しない R2 のバケット `yomimasu-audio` に `v1/NNN_N.m4a` の名前で置きます。NNN は札の番号の3桁（000 は序歌）、最後の数字は 1 が上の句、2 が下の句です。形式は AAC、48 kHz、モノラル、96 kbps です。アプリの Worker（`site/worker.ts`）が同じオリジンの `/audio/v1/` で配ります |
+
+## 外部のコード
+
+`site/kimariji-stream.ts` の乱数（`PythonRandom`）は、MT19937 の参照実装 mt19937ar.c（2002年1月26日に初期化を改めた版。<http://www.math.sci.hiroshima-u.ac.jp/m-mat/MT/MT2002/CODES/mt19937ar.c>）の初期化（`init_by_array`）と生成の手順を、CPython の `random` と同じ引き方で TypeScript に書き直したものです。元のコードの著作権表示と条件を、元のとおり次に載せます。
+
+```
+   Copyright (C) 1997 - 2002, Makoto Matsumoto and Takuji Nishimura,
+   All rights reserved.
+
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions
+   are met:
+
+     1. Redistributions of source code must retain the above copyright
+        notice, this list of conditions and the following disclaimer.
+
+     2. Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution.
+
+     3. The names of its contributors may not be used to endorse or promote
+        products derived from this software without specific prior written
+        permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+   A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+   EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+   PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+   PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+   LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+   SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
 
 ## 公認や提携
 

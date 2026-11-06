@@ -14,6 +14,7 @@ const ELEMENTS: Record<string, () => Promise<Mount>> = {
   'yomimasu-records': () => import('./records.tsx').then((m) => m.mountRecords),
   'yomimasu-karuta-list': () => import('./karuta-list.ts').then((m) => m.mountKarutaList),
   'yomimasu-band': () => import('./band-figure.tsx').then((m) => m.mountBandFigure),
+  'yomimasu-kv': () => import('./kv.ts').then((m) => m.mountKv),
 };
 
 // 取ってきた HTML を差し込んでも動くように、枠組みの島ではなくカスタム要素で読み込む。
