@@ -20,7 +20,9 @@
   - ファイルを組に分ける表は `ci.yml` の `SHARD_FILES` に置く。1行に「組の番号 ファイル」を書く。前の組は `--test-list` で表のファイルだけを流し、最後の組は `--test-list-invert` で、表で前の組に入れなかったファイルをすべて流す。新しいファイルは最後の組に入る。組の番号は `strategy.job-index` から数えるので、matrix の数を変えても、どの組にも入らないファイルは出ない。
   - いまの組：1 は result と listen-back、2 は record と next-point、3 は kv-lens、kv、records、4 は残りの12ファイル。
   - Playwright のブラウザーは、`~/.cache/ms-playwright` を `actions/cache` で `@playwright/test` の版ごとに残し、`npx playwright install chromium` で入れる。`--with-deps` は付けない。
-  - `--with-deps` が入れていた日本語と中国語のフォント（`fonts-ipafont-gothic`、`fonts-wqy-zenhei`）は、.deb を同じキャッシュに残し、`apt-get install` で入れる。apt から取るのは、キャッシュにないときだけである。入れたあとに `fc-list :lang=ja` が空なら落とす。
+  - `--with-deps` が入れていた日本語と中国語のフォント（`fonts-ipafont-gothic`、`fonts-wqy-zenhei`）は、.deb を同じキャッシュに残し、`dpkg -i` で入れる。apt から取るのは、キャッシュにないときだけである。入れたあとに `fc-list :lang=ja` が空なら落とす。
+    - 試行錯誤：はじめは .deb を `apt-get install` に渡していたが、PR #76 の最初の実行で、同じ版を apt のリポジトリから取り直していた（`Need to get 11.0 MB of archives.`）。キャッシュがあっても apt の取得が残るので、`dpkg -i` に替えた。入るのはこの2つだけで、ほかに足りないパッケージはなかった（`2 newly installed`）。
+    - 同じ実行で、入れる前の runner に日本語のフォントがないことも確かめた。apt は2つを新しく入れ（`The following NEW packages will be installed`）、入れたあとの `fc-list :lang=ja` は IPAGothic と WenQuanYi Zen Hei Mono の2つだけだった。
   - 組の上限は10分にする。`after-merge.sh` が15分待つ理由の注記を、この上限と、そのあとに動く `e2e` に合わせて直した。
 - 理由：
   - PR のマージが `e2e` を待っていた。ほかの検査は1分かからないが、`e2e` は14〜23分かかった（`ci.yml` の直近約100回）。`npm run e2e` の step が13〜16分で、213件を1 worker で流し、1件ごとの時間の合計は 767 秒だった（run 42236921683）。録音を実時間で流すテストが多く、時間は CPU ではなく待ちである。runner を分ければ、待ちが並んで進む。

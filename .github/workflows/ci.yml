@@ -100,7 +100,8 @@ jobs:
           for package in "${packages[@]}"; do
             debs+=("$fonts/${package}"_*.deb)
           done
-          sudo apt-get install -y --no-install-recommends "${debs[@]}"
+          # apt-get install に .deb を渡しても、同じ版が apt のリポジトリにあるとそちらから取り直すので、dpkg で入れる。
+          sudo dpkg -i "${debs[@]}"
           if ! fc-list :lang=ja family | grep .; then
             echo '::error::日本語のフォントがありません。'
             exit 1
