@@ -48,9 +48,14 @@ jobs:
       - name: ビルド
         run: npm run build
 
-  e2e:
+  # 録音の E2E は音を実時間で流すので、1台では13〜16分かかる。ファイルを組に分け、組ごとに別の runner で流す。
+  e2e-shard:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -60,18 +65,103 @@ jobs:
           node-version-file: .node-version
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npm run e2e
+      - name: Playwright の版を読む
+        id: playwright
+        run: echo "version=$(jq -r .version node_modules/@playwright/test/package.json)" >>"$GITHUB_OUTPUT"
+      # --with-deps の apt は、遅い回に取得だけで10分かかった。ubuntu-latest には Google Chrome とその依存のライブラリーが入っている。
+      # 日本語のフォントは入っていないので、--with-deps が入れていた2つの .deb をブラウザーと一緒に残す。
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cache/ms-playwright
+            ~/.cache/e2e-fonts
+          key: e2e-${{ runner.os }}-playwright-${{ steps.playwright.outputs.version }}-fonts-ipafont-gothic-wqy-zenhei
+      - run: npx playwright install chromium
+      # フォントがないと字が豆腐で描かれ、横スクロールの検査がはみ出しを見逃す。画面の画像も読めなくなる。
+      - name: 日本語のフォントを入れる
+        timeout-minutes: 5
+        run: |
+          fonts=~/.cache/e2e-fonts
+          packages=(fonts-ipafont-gothic fonts-wqy-zenhei)
+          missing=()
+          for package in "${packages[@]}"; do
+            compgen -G "$fonts/${package}_*.deb" >/dev/null || missing+=("$package")
+          done
+          if ((${#missing[@]})); then
+            mkdir -p "$fonts"
+            sudo apt-get update
+            (cd "$fonts" && apt-get download "${missing[@]}")
+          fi
+          debs=()
+          for package in "${packages[@]}"; do
+            debs+=("$fonts/${package}"_*.deb)
+          done
+          sudo apt-get install -y --no-install-recommends "${debs[@]}"
+          if ! fc-list :lang=ja family | grep .; then
+            echo '::error::日本語のフォントがありません。'
+            exit 1
+          fi
+      - name: E2E
+        env:
+          JOB_INDEX: ${{ strategy.job-index }}
+          JOB_TOTAL: ${{ strategy.job-total }}
+          # 1行に「組の番号 e2e/ からのファイル名」を書く。番号は1から数え、最後の組の番号は書かない。
+          # 最後の組は、ここで前の組に入れなかったファイルを、新しいファイルも含めてすべて流す。
+          # Playwright の --shard は件数で前から切るので、遅いテストが集まる record から result までが1つの組に入る。
+          # 2026-11-07 の実測の時間で、どの組も約200秒になるように分けた（docs/decisions.md）。
+          SHARD_FILES: |
+            1 result.spec.ts
+            1 listen-back.spec.ts
+            2 record.spec.ts
+            2 next-point.spec.ts
+            3 kv-lens.spec.ts
+            3 kv.spec.ts
+            3 records.spec.ts
+        # 組の番号は matrix の値ではなく job-index から数える。matrix を書き換えても、どの組にも入らないファイルが出ない。
+        # 前の組と最後の組は同じ files_of でファイルを選ぶ。式が分かれると、どちらにも入らない番号が出る。
+        # 公開すると runner が4 vCPU になり、workers の既定が2に増える。録音の E2E の時間の条件を変えないよう、1に固定する。
+        run: |
+          files_of() {
+            awk -v from="$1" -v to="$2" '$1 ~ /^[0-9]+$/ && $1 >= from && $1 <= to { print $2 }' <<<"$SHARD_FILES"
+          }
+          shard=$((JOB_INDEX + 1))
+          list="$RUNNER_TEMP/e2e-files.txt"
+          if ((shard < JOB_TOTAL)); then
+            files_of "$shard" "$shard" >"$list"
+            option=--test-list
+          else
+            files_of 1 $((JOB_TOTAL - 1)) >"$list"
+            option=--test-list-invert
+          fi
+          npm run e2e -- --workers=1 "$option" "$list"
       # 音は OS の一時フォルダーにあるので、この2種類だけを上げれば声は成果物に入らない。
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
         with:
-          name: e2e
+          name: e2e-${{ matrix.shard }}
           path: |
             e2e-artifacts/*.png
             e2e-artifacts/*.json
           if-no-files-found: warn
           retention-days: 7
+
+  # 必須の検査は job の名前 e2e で結んでいるので、組の結果をここにまとめる。
+  # needs だけだと、組が落ちたときにこの job が飛ばされ、飛ばされた検査は通った扱いになる。
+  # !cancelled() も使わない。組の時間切れは取り消しとして出るので、そのときに飛ばされて通ってしまう。
+  e2e:
+    needs: e2e-shard
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: すべての組が通ったか見る
+        env:
+          RESULT: ${{ needs.e2e-shard.result }}
+        run: |
+          if [[ $RESULT != success ]]; then
+            echo "::error::E2E の組の結果が $RESULT です。すべての組が通ったときだけ通します。"
+            exit 1
+          fi
 
   no-audio:
     runs-on: ubuntu-latest
