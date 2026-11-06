@@ -34,8 +34,8 @@ yomimasu-kv { position: relative; -webkit-touch-callout: none; -webkit-user-sele
 .menu span { white-space: nowrap; }
 .menu .first { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; min-height: 64px; background: var(--shu); color: var(--on-shu); font-size: 17px; font-weight: 600; }
 .menu .first small { color: inherit; text-align: left; }
-/* 「/練習モード」は太字だけで強調する。朱の地を2つにすると気が散ったので、朱は先頭だけにする（docs/ui-guide.md の8節） */
-.menu .emph { font-weight: 600; }
+/* 「/練習モード」は名前の字だけを朱にする。朱の地は先頭だけにする。地を朱で塗ると朱が2か所になって気が散り、太字も微妙だった（docs/ui-guide.md の8節） */
+.menu .emph span { color: var(--shu); }
 /* 一覧の最後の項目と取り違えて押さないよう、一覧から 28px 離す */
 .footnote { padding-top: 28px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .foot-link { display: inline-flex; align-items: center; min-height: 44px; padding-inline: 4px; font-family: var(--f-mono); color: var(--ink-2); }
