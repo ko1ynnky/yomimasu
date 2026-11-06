@@ -33,6 +33,14 @@ const figurePoint = async (page: Page) => {
   return { x: box.x + box.width * 0.45, y: box.y + box.height * 0.6 };
 };
 
+// 動いた時刻（CDP の timestamp、秒）を決めて送るマウス。Playwright の move は1歩ずつ届くのを待つので、
+// 重い環境では、押してから動かすまでに実際に 350ms を超えてしまい、長押しとして正しく開く
+const timedMouse = async (page: Page, y: number) => {
+  const cdp = await page.context().newCDPSession(page);
+  return (type: 'mousePressed' | 'mouseMoved' | 'mouseReleased', x: number, timestamp: number) =>
+    cdp.send('Input.dispatchMouseEvent', { type, x, y, button: 'left', buttons: type === 'mouseReleased' ? 0 : 1, clickCount: 1, timestamp });
+};
+
 const lens = (page: Page) => page.locator('.kv-lens');
 const lensBox = async (page: Page) => (await lens(page).boundingBox())!;
 const inkedPixels = (page: Page) =>
@@ -99,11 +107,26 @@ test('短く押しただけのときと、開く前に 8px 以上動かしたと
   await page.waitForTimeout(400);
   await expect(lens(page)).toHaveCount(0);
 
-  await page.mouse.down();
-  await page.mouse.move(at.x + 12, at.y, { steps: 3 });
+  const mouse = await timedMouse(page, at.y);
+  const pressed = Date.now() / 1000;
+  await mouse('mousePressed', at.x, pressed);
+  for (const [i, dx] of [4, 8, 12].entries()) await mouse('mouseMoved', at.x + dx, pressed + 0.04 * (i + 1));
   await page.waitForTimeout(500);
   await expect(lens(page)).toHaveCount(0);
-  await page.mouse.up();
+  await mouse('mouseReleased', at.x + 12, Date.now() / 1000);
+});
+
+test('押してから 350ms 未満に 8px 以上動いた指の動きが、虫眼鏡を開いたあとに届いても閉じる', async ({ page }) => {
+  // 描画のコマが遅れると、動きは開くタイマーより遅れて届く
+  await openHome(page);
+  const at = await figurePoint(page);
+  const mouse = await timedMouse(page, at.y);
+  const pressed = Date.now() / 1000;
+  await mouse('mousePressed', at.x, pressed);
+  await expect(lens(page)).toBeVisible();
+  await mouse('mouseMoved', at.x + 12, pressed + 0.1);
+  await expect(lens(page)).toHaveCount(0);
+  await mouse('mouseReleased', at.x + 12, Date.now() / 1000);
 });
 
 test('押したまま動かすと虫眼鏡が付いてきて、画面からはみ出さない', async ({ page }) => {
@@ -248,8 +271,8 @@ test.describe('指で触る端末', () => {
     await openHome(page);
     // 指の動きは CDP で送る。押してから離すまでを、1つのセッションで送る
     const cdp = await page.context().newCDPSession(page);
-    const touch = (_: Page, type: 'touchStart' | 'touchMove' | 'touchEnd', x = 0, y = 0) =>
-      cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }] });
+    const touch = (_: Page, type: 'touchStart' | 'touchMove' | 'touchEnd', x = 0, y = 0, timestamp?: number) =>
+      cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y }], timestamp });
     const at = await figurePoint(page);
     await touch(page, 'touchStart', at.x, at.y);
     await expect(lens(page)).toBeVisible();
@@ -261,9 +284,11 @@ test.describe('指で触る端末', () => {
     expect(await page.evaluate(() => scrollY)).toBe(0);
     await expect(lens(page)).toHaveCount(0);
 
-    await touch(page, 'touchStart', at.x, at.y);
-    for (let dy = 10; dy <= 120; dy += 10) await touch(page, 'touchMove', at.x, at.y - dy);
-    await touch(page, 'touchEnd');
+    // 開く前のなぞりは、動いた時刻を決めて送る（timedMouse と同じ理由）
+    const touched = Date.now() / 1000;
+    await touch(page, 'touchStart', at.x, at.y, touched);
+    for (let dy = 10; dy <= 120; dy += 10) await touch(page, 'touchMove', at.x, at.y - dy, touched + dy / 1000);
+    await touch(page, 'touchEnd', 0, 0, touched + 0.13);
     await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(0);
     await expect(lens(page)).toHaveCount(0);
   });

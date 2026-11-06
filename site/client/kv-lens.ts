@@ -12,7 +12,14 @@ const MARGIN = 4;
 
 export type LensHooks = { open(): void; close(): void };
 
-type Press = { id: number; x: number; y: number; timer: number };
+type Press = { id: number; x: number; y: number; at: number; timer: number };
+
+const far = (moved: PointerEvent, press: Press) => Math.hypot(moved.clientX - press.x, moved.clientY - press.y) >= SLOP_PX;
+// 開いたあとに届いた move でも、押してから HOLD_MS 未満に SLOP_PX 以上動いていたら、長押しではなかったとして閉じる。
+// move は描画のコマに合わせてまとめて届くので、コマが遅れると、開くタイマーのあとに届く（実機でも起こりうる）。
+// 届いた時刻ではなく動いた時刻（timeStamp）で比べ、まとめられた動きも1つずつ見る
+const slipped = (event: PointerEvent, press: Press) =>
+  [...(event.getCoalescedEvents?.() ?? []), event].some((moved) => moved.timeStamp - press.at < HOLD_MS && far(moved, press));
 
 export function attachLens(element: HTMLElement, hooks: LensHooks): () => void {
   let press: Press | null = null;
@@ -83,15 +90,15 @@ export function attachLens(element: HTMLElement, hooks: LensHooks): () => void {
     }
     if (event.button !== 0) return;
     element.setPointerCapture(event.pointerId);
-    press = { id: event.pointerId, x: event.clientX, y: event.clientY, timer: window.setTimeout(open, HOLD_MS) };
+    press = { id: event.pointerId, x: event.clientX, y: event.clientY, at: event.timeStamp, timer: window.setTimeout(open, HOLD_MS) };
   };
   const move = (event: PointerEvent) => {
     if (!press || event.pointerId !== press.id) return;
-    if (lens) {
+    if (lens ? slipped(event, press) : far(event, press)) {
+      release();
+    } else if (lens) {
       event.stopPropagation();
       place(event.clientX, event.clientY);
-    } else if (Math.hypot(event.clientX - press.x, event.clientY - press.y) >= SLOP_PX) {
-      release();
     }
   };
   const up = (event: PointerEvent) => {
