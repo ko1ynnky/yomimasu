@@ -24,6 +24,10 @@ export function selectCards(cards: readonly Card[], selectors: readonly string[]
   if (selectors.length === 0) throw new Error('札を1つ以上指定してください（札の番号か、決まり字の頭の仮名）');
   const chosen = new Map<number, Card>();
   for (const selector of selectors) {
+    // 空の指定は startsWith で全首に当たるので、番号でも平仮名でもない指定は、選ぶ前に止める。前後の空白も削らずに止める。
+    if (!/^(\d+|\p{Script=Hiragana}+)$/u.test(selector)) {
+      throw new Error(`「${selector}」は、札の番号でも、決まり字の頭の仮名（平仮名）でもない`);
+    }
     const hits = /^\d+$/.test(selector)
       ? cards.filter((card) => card.no === Number(selector))
       : cards.filter((card) => card.kimariji?.kana.startsWith(selector)).sort((a, b) => a.no - b.no);

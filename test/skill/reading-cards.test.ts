@@ -46,6 +46,12 @@ test('当たる札のない指定は、どの指定かを示して止める', ()
   assert.throws(() => selectCards(cards, ['ゑ']), /ゑ/);
   assert.throws(() => selectCards(cards, []), /札/);
 });
+
+test('空の指定と、番号でも仮名でもない指定は、全首を選ばずに、その指定を示して止める', () => {
+  assert.throws(() => selectCards(cards, ['']), /「」/);
+  assert.throws(() => selectCards(cards, [' た']), /「 た」/);
+  assert.throws(() => selectCards(cards, ['タ']), /「タ」/);
+});
 test('読み札には、本文の出典と、再利用を認めないことが付く', () => {
   const output = readingCards(deck, ['た']);
   assert.ok(output.includes(deck.sources.csv.url));
