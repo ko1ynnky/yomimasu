@@ -103,6 +103,8 @@ yomimasu-band .seg > span { font-size: 13.5px; }
 .pt > summary::after { content: ""; position: absolute; right: 16px; top: 50%; width: 8px; height: 8px; margin-top: -6px; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(45deg); }
 .pt[open] > summary::after { margin-top: -2px; transform: rotate(-135deg); }
 .pt-body { padding: 0 14px 12px; display: grid; gap: 4px; }
+/* 出典の印は文の終わりに小さく付け、印の途中で折り返さない（2026-11-07 のユーザーの判断）。13px より小さくしない（docs/ui-guide.md の3節） */
+.pt-body span.src { display: inline-block; max-width: 100%; }
 .toc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 4px; }
 .toc a { min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 4px 10px; color: var(--ink); text-decoration: none; border-radius: 8px; }
 .toc a small { font-family: var(--f-mono); color: var(--ink-3); }
