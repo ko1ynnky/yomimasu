@@ -9,6 +9,10 @@
     "run_worker_first": ["/audio/*"]
   },
   "r2_buckets": [{ "binding": "AUDIO", "bucket_name": "yomimasu-audio" }],
+  // 提出と案内に使う URL を1つにするため、本番は独自ドメインだけで開き、yomimasu.karutalog.workers.dev には出さない。
+  // workers_dev を切っても、ブランチのプレビューは preview_urls の設定で workers.dev に出つづける。
+  "routes": [{ "pattern": "yomimasu.karutalog.com", "custom_domain": true }],
+  "workers_dev": false,
   "preview_urls": true,
   // プレビューは上の束縛を受け継がないので、同じバケットをもう一度書く。Worker はバケットを読むだけなので、プレビュー用のバケットに分けない。
   "previews": {
