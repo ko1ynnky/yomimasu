@@ -4,8 +4,8 @@ import { join } from 'node:path';
 
 const ARTIFACTS_DIR = 'e2e-artifacts';
 
-// テーマの名前と順、52枚は、2026-11-06 にユーザーが決めた案 B（docs/decisions.md）。
-const THEMES = ['1組と、余韻と間', '決まり字まで', '読み間違いと札の扱い', '伸ばす所', '声と発音', '仮名の読み方', '試合の進め方', '練習のしかた'];
+// テーマの名前、初めて読む人がつまずく順の並び、52枚は、2026-11-06 にユーザーが決めた案 B（docs/decisions.md）。
+const THEMES = ['読み間違いと札の扱い', '試合の進め方', '1組と、余韻と間', '決まり字まで', '伸ばす所', '仮名の読み方', '声と発音', '練習のしかた'];
 const ROW_COUNT = 52;
 const RANK: Record<string, number> = { '優先 高': 0, '優先 中': 1, '優先 低': 2 };
 
@@ -141,7 +141,7 @@ test('393×659 の最初の画面、1行を開いた画面、ページ全体の�
   await page.screenshot({ path: join(ARTIFACTS_DIR, 'point-393-first.png') });
   const row = rows(page).first();
   await row.locator('summary').click();
-  await page.locator('#t-yoin').evaluate((heading) => heading.scrollIntoView());
+  await page.locator('.screen > h3').first().evaluate((heading) => heading.scrollIntoView());
   await expect(row.locator('.pt-body p').first()).toBeInViewport();
   await page.screenshot({ path: join(ARTIFACTS_DIR, 'point-393-open.png') });
   await row.locator('summary').click();
