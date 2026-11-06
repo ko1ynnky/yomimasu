@@ -329,6 +329,126 @@ void main(){
     }
   }
 
+  // WebGL2 がない端末で、止めた1コマ（still）を描くための写し方。シェーダーの map と陰影を、同じ式のまま JS に写した。
+  // 1コマに数十〜数百 ms かかるので、動かす mount では使わない。
+  // WebGL1 に落とす案は採らなかった。WebGL そのものを切った端末（iOS のロックダウンモードなど）で、絵が何も出なくなるからである。
+  const l3 = (x, y, z) => Math.sqrt(x * x + y * y + z * z);
+  // GLSL の v * M（列ごとの内積）。M は uniformMatrix3fv に渡すのと同じ、列を並べた9つの数
+  const vm = (v, M) => [v[0] * M[0] + v[1] * M[1] + v[2] * M[2], v[0] * M[3] + v[1] * M[4] + v[2] * M[5], v[0] * M[6] + v[1] * M[7] + v[2] * M[8]];
+  const sdEll = (q, r) => {
+    const k0 = l3(q[0] / r[0], q[1] / r[1], q[2] / r[2]);
+    const k1 = l3(q[0] / (r[0] * r[0]), q[1] / (r[1] * r[1]), q[2] / (r[2] * r[2]));
+    return (k0 * (k0 - 1)) / Math.max(k1, 1e-6);
+  };
+  const sdCap = (p, a, b, ra, rb) => {
+    const pa = sub(p, a), ba = sub(b, a);
+    const t = clamp(dot(pa, ba) / dot(ba, ba), 0, 1);
+    return l3(pa[0] - ba[0] * t, pa[1] - ba[1] * t, pa[2] - ba[2] * t) - (ra + (rb - ra) * t);
+  };
+  const sdBox = (q, h, rr) => {
+    const dx = Math.abs(q[0]) - (h[0] - rr), dy = Math.abs(q[1]) - (h[1] - rr), dz = Math.abs(q[2]) - (h[2] - rr);
+    return l3(Math.max(dx, 0), Math.max(dy, 0), Math.max(dz, 0)) + Math.min(Math.max(dx, dy, dz), 0) - rr;
+  };
+  const smin = (a, b, k) => { const h = clamp(0.5 + (0.5 * (b - a)) / k, 0, 1); return b + (a - b) * h - k * h * (1 - h); };
+
+  class CpuTracer {
+    constructor(reason) { this.reason = reason; }
+    map(p) {
+      const u = this.u;
+      let d, m;
+      const U = (e, n) => { if (e < d) { d = e; m = n; } };
+      d = sdEll(vm(sub(p, u.uHeadC), u.uHeadM), [0.077, 0.098, 0.097]);
+      d = smin(d, sdEll(vm(sub(p, u.uJawC), u.uHeadM), [0.058, 0.055, 0.062]), 0.035);
+      d = smin(d, sdCap(p, u.uNeckA, u.uNeckB, 0.05, 0.047), 0.035);
+      m = 1;
+      let body = sdBox(vm(sub(p, u.uTorsoC), u.uTorsoM), [0.165, 0.26, 0.095], 0.09);
+      body = smin(body, sdCap(p, u.uShL, u.uShR, 0.06, 0.06), 0.07);
+      body = smin(body, sdCap(p, u.uCollarA, u.uCollarB, 0.062, 0.055), 0.07);
+      U(body, 2);
+      let ar = sdEll(sub(p, u.uShR), [0.06, 0.062, 0.06]);
+      ar = smin(ar, sdCap(p, u.uShR, u.uElbR, 0.054, 0.045), 0.04);
+      ar = smin(ar, sdCap(p, u.uElbR, u.uWriR, 0.043, 0.032), 0.04);
+      U(ar, 2);
+      let hr = sdCap(p, u.uWriR, u.uPalmR, 0.027, 0.024);
+      hr = smin(hr, sdEll(vm(sub(p, u.uPalmR), u.uHandR), [0.036, 0.042, 0.017]), 0.012);
+      hr = smin(hr, sdCap(p, u.uThA, u.uThB, 0.0105, 0.0095), 0.012);
+      U(hr, 1);
+      let al = sdEll(sub(p, u.uShL), [0.06, 0.062, 0.06]);
+      al = smin(al, sdCap(p, u.uShL, u.uElbL, 0.054, 0.045), 0.04);
+      al = smin(al, sdCap(p, u.uElbL, u.uWriL, 0.043, 0.032), 0.04);
+      U(al, 2);
+      let hl = sdCap(p, u.uWriL, u.uPalmL, 0.027, 0.024);
+      hl = smin(hl, sdEll(vm(sub(p, u.uPalmL), u.uHandL), [0.036, 0.042, 0.017]), 0.012);
+      U(hl, 1);
+      if (u.uCardOn > 0.5) U(sdBox(vm(sub(p, u.uCardC), u.uCardM), u.uCardHalf, 0), 3);
+      const outer = sdBox(sub(p, u.uBoxC), u.uBoxHalf, 0.004);
+      const inner = sdBox(sub(p, add(u.uBoxC, [0, 0.016, 0])), sub(u.uBoxHalf, [0.008, 0, 0.008]), 0);
+      U(Math.max(outer, -inner), 4);
+      U(sdBox(sub(p, u.uStackC), u.uStackHalf, 0.002), 5);
+      U(sdBox(sub(p, u.uTableC), u.uTableHalf, 0.004), 6);
+      U(sdBox(sub(p, u.uPileC), u.uPileHalf, 0.002), 3);
+      return [d, m];
+    }
+    nrm(p) {
+      const e = 4e-4;
+      const a = this.map([p[0] + e, p[1] - e, p[2] - e])[0], b = this.map([p[0] - e, p[1] - e, p[2] + e])[0];
+      const c = this.map([p[0] - e, p[1] + e, p[2] - e])[0], f = this.map([p[0] + e, p[1] + e, p[2] + e])[0];
+      return norm([a - b - c + f, -a - b + c + f, -a + b - c + f]);
+    }
+    shadow(o, L) {
+      let s = 1, t = 0.01;
+      for (let i = 0; i < 40; i++) {
+        const d = this.map(add(o, mul(L, t)))[0];
+        s = Math.min(s, clamp((10 * d) / t, 0, 1));
+        t += clamp(d, 0.004, 0.05);
+        if (s < 0.01 || t > 2) break;
+      }
+      return s;
+    }
+    occl(p, n) {
+      let a = 1;
+      for (let i = 1; i <= 5; i++) { const h = 0.012 * i; a -= ((h - this.map(add(p, mul(n, h)))[0]) * (0.6 / 2 ** i)) / 0.012; }
+      return clamp(a, 0, 1);
+    }
+    trace(w, h, uniforms) {
+      // still は、濃さの幅を決める1枚と描く1枚に、同じ場面を2回写す。2回目は前の結果を返す
+      const key = JSON.stringify([w, h, uniforms]);
+      if (key === this.key) return this.px;
+      this.key = key;
+      this.u = uniforms;
+      const px = (this.px = new Uint8Array(w * h * 4));
+      const { uCamPos: o, uCam: C, uTan: tan, uLight: L } = uniforms;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const ux = (((x + 0.5) / w) * 2 - 1) * tan[0], uy = (((y + 0.5) / h) * 2 - 1) * tan[1];
+          const rd = norm([C[0] * ux + C[3] * uy + C[6], C[1] * ux + C[4] * uy + C[7], C[2] * ux + C[5] * uy + C[8]]);
+          let t = 0.05, hit = null;
+          for (let i = 0; i < 160; i++) {
+            const r = this.map(add(o, mul(rd, t)));
+            if (r[0] < 2e-4) { hit = r; break; }
+            t += Math.max(r[0], 1e-4) * 0.85;
+            if (t > 8) break;
+          }
+          if (!hit) continue;
+          const p = add(o, mul(rd, t)), n = this.nrm(p), m = hit[1];
+          const diff = clamp(dot(n, L), 0, 1);
+          const sh = this.shadow(add(p, mul(n, 1e-3)), L);
+          const ao = this.occl(p, n);
+          const alb = m < 1.5 ? 0.95 : m < 2.5 ? 0.55 : m < 3.5 ? 1.0 : m < 4.5 ? 0.5 : m < 5.5 ? 0.9 : 0.75;
+          const rim = (1 - clamp(Math.abs(dot(n, rd)), 0, 1)) ** 2.5;
+          let b = clamp(alb * (0.22 + 0.85 * diff * (0.35 + 0.65 * sh)) * (0.55 + 0.45 * ao) - 0.25 * rim, 0, 1);
+          if (m > 2.5 && m < 3.5) b = 0.8 + 0.2 * diff;
+          const k = (y * w + x) * 4;
+          px[k] = Math.round(b * 255);
+          px[k + 1] = 255;
+          px[k + 2] = Math.round((m / 8) * 255);
+          px[k + 3] = Math.round(clamp((t - 1) / 3, 0.004, 1) * 255);
+        }
+      }
+      return px;
+    }
+  }
+
   // ------------------------------------------------------------ カメラ
   const TARGET = [-0.03, 1.3, 0.1];
   const RADIUS = 2.45, FOV = 24;
@@ -430,7 +550,7 @@ void main(){
         if (level < 0.12) { out.push([r, c, '・', 0.8]); continue; }
         if (level < 0.24) { out.push([r, c, 'ー', 0.85]); continue; }
         if (level < 0.36) { out.push([r, c, '＋', 0.9]); continue; }
-        const ch = stream[(order(r, c, cols, rows) + stream.length - (opt.shift % stream.length)) % stream.length];
+        const ch = stream[order(r, c, cols, rows) % stream.length];
         out.push([r, c, ch, 0.32 + 0.68 * ((level - 0.36) / 0.64)]);
       }
     }
@@ -449,9 +569,13 @@ void main(){
   const wrap = (d) => ((((d + 180) % 360) + 360) % 360) - 180;
 
   // ------------------------------------------------------------ 描く
-  // WebGL の文脈は1つを使い回す。1コマごとに写して読み戻すので、絵が何枚あっても同時には使わない
+  // WebGL の文脈は1つを使い回す。1コマごとに写して読み戻すので、絵が何枚あっても同時には使わない。
+  // WebGL2 の文脈を作れなければ CpuTracer に替える。mount はそれを断り、still だけが使う
   let shared = null;
-  const tracer = () => shared || (shared = new Tracer());
+  const tracer = () => {
+    if (!shared) try { shared = new Tracer(); } catch (err) { shared = new CpuTracer(String(err.message || err)); }
+    return shared;
+  };
 
   function inkOf(el, mode) {
     const cs = getComputedStyle(el);
@@ -480,18 +604,9 @@ void main(){
     return c;
   }
 
-  // 読むあいだだけ、字の列を読む速さ（1秒に6字ほど）で送る。上の句の17音を3秒ほどで読む速さに合わせた
-  const FLOW_RATE = 6;
-  function flowShift(t) {
-    t = ((t % LOOP) + LOOP) % LOOP;
-    const read = clamp(t, READ_SPAN[0], READ_SPAN[1]) - READ_SPAN[0];
-    return Math.floor(read * FLOW_RATE);
-  }
-
   function paint(ctx, ink, opt, cols, rows, t, yaw, pitch) {
     const calib = calibrate(ink.mode, cols, rows, opt.ss, opt.yaw, opt.pitch);
-    const shift = opt.flow ? flowShift(t) + opt.loops * Math.floor((READ_SPAN[1] - READ_SPAN[0]) * FLOW_RATE) : 0;
-    const list = glyphs(stats(t, yaw, pitch, cols, rows, opt.ss), cols, rows, { ...opt, mode: ink.mode, shift }, calib);
+    const list = glyphs(stats(t, yaw, pitch, cols, rows, opt.ss), cols, rows, { ...opt, mode: ink.mode }, calib);
     const cw = opt.cell;
     ctx.clearRect(0, 0, cols * cw, rows * cw);
     ctx.fillStyle = ink.color;
@@ -519,7 +634,7 @@ void main(){
     return { cols, rows };
   }
 
-  const DEFAULTS = { cell: 9, ss: 3, layout: 'tate', mode: 'auto', flow: false, loops: 0, yaw: 55, pitch: 8, fps: 30, playing: true, time: 0, gyroGain: 1, tapGyro: true };
+  const DEFAULTS = { cell: 9, ss: 3, layout: 'tate', mode: 'auto', yaw: 55, pitch: 8, fps: 30, playing: true, time: 0, gyroGain: 1, tapGyro: true };
 
   // 止めた1コマを描く。コマ送りや、動かさない設定（prefers-reduced-motion）の代わりに使う
   function still(el, options) {
@@ -544,7 +659,7 @@ void main(){
     view.style.cssText = 'display:block;touch-action:pan-y;cursor:grab;-webkit-user-select:none;user-select:none';
     el.appendChild(view);
     const ctx = view.getContext('2d');
-    try { tracer(); } catch (err) { el.dataset.kvError = String(err.message || err); return null; }
+    if (tracer() instanceof CpuTracer) { el.dataset.kvError = tracer().reason; view.remove(); return null; }
 
     const s = {
       cols: 0, rows: 0, t: opt.time, last: 0, acc: 0,
@@ -553,7 +668,10 @@ void main(){
       frames: 0, fpsT: 0, fps: 0, cost: 0, count: 0, visible: true, drag: null, raf: 0,
     };
 
-    const draw = () => { if (s.cols) s.count = paint(ctx, inkOf(el, opt.mode), opt, s.cols, s.rows, s.t, s.yaw, s.pitch); };
+    // 止めたあとは、時刻が変わらず、向きも 1.5 度より動かないあいだは描き直さない。止めても毎コマ写し続けると、熱と電池の負担が動いているときと変わらない。
+    // 向きを細かく比べないのは、許可の要らない端末が mount の時点から傾きを受け、手に持った端末のぶれだけでも写し直すからである
+    const draw = () => { if (s.cols) { s.count = paint(ctx, inkOf(el, opt.mode), opt, s.cols, s.rows, s.t, s.yaw, s.pitch); s.drawn = { t: s.t, yaw: s.yaw, pitch: s.pitch }; } };
+    const unchanged = () => s.drawn && !s.drag && s.t === s.drawn.t && Math.abs(s.yaw - s.drawn.yaw) < 1.5 && Math.abs(s.pitch - s.drawn.pitch) < 1.5;
     const resize = () => { Object.assign(s, sizeCanvas(view, ctx, el, opt.cell)); draw(); };
 
     function tick(now) {
@@ -567,10 +685,11 @@ void main(){
       const k = 1 - Math.exp(-dt * 14);
       s.yaw += (tYaw - s.yaw) * k;
       s.pitch += (tPitch - s.pitch) * k;
-      if (opt.playing) { s.t += dt; if (s.t >= LOOP) { s.t -= LOOP; opt.loops++; } }
+      if (opt.playing) { s.t += dt; if (s.t >= LOOP) s.t -= LOOP; }
       s.acc += dt;
       if (s.acc < 1 / opt.fps) return;
       s.acc = 0;
+      if (unchanged()) return;
       const t0 = performance.now();
       draw();
       s.cost = performance.now() - t0;
@@ -643,7 +762,8 @@ void main(){
 
     return {
       state: s,
-      set(next) { Object.assign(opt, next); if (next.time != null) s.t = next.time; draw(); },
+      // 升目の大きさを変えたら、列と段の数から測り直す
+      set(next) { Object.assign(opt, next); if (next.time != null) s.t = next.time; if (next.cell != null) resize(); else draw(); },
       front,
       orient: onOrient,
       enableGyro,
