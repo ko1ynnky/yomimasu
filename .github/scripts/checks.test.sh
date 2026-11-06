@@ -154,6 +154,140 @@ repo=$(new_repo)
 expect fail 'no-secrets: git grep の失敗を一致なしとして通さない' '' in_repo "$repo" env PATH="$fake_bin:$PATH" bash "$scripts/no-secrets.sh"
 expect fail 'deny-names: git grep の失敗を一致なしとして通さない' '' in_repo "$repo" env PATH="$fake_bin:$PATH" DENY_NAMES="$name" bash "$scripts/deny-names.sh"
 
+# 履歴の検査のログの行が、コミットの SHA と件数か、見たコミットの数だけでできているかを見る。
+# テストのリポジトリは core.quotepath が true なので、パスが漏れると8進数の表記で出て、名前との比べでは見つからない。
+expect_counts_only() {
+  local what=$1 output
+  shift
+  output=$("$@" 2>&1)
+  if grep -vqE '^足した(ファイル名|行)に公開できない名前があります：[0-9a-f]{40}（[0-9]+ (件|行)）$|^deny-names: [0-9]+ 件のコミットで、足した行とファイル名を見ました。$' <<<"$output"; then
+    ng "$what（出力 $output）"
+  fi
+}
+
+repo=$(new_repo)
+expect fail 'deny-names: SCAN_HISTORY だけでは見る範囲が分からないので落ちる' '' in_repo "$repo" env DENY_NAMES="$name" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+
+repo=$(new_repo)
+root=$(git -C "$repo" rev-parse HEAD)
+plant "$repo" docs/場所.md "文の中に$nameがある"
+added=$(git -C "$repo" rev-parse HEAD)
+plant "$repo" docs/場所.md 'ok'
+expect pass 'deny-names: 履歴を見ないときは、足してから消した名前で落ちない' '' in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" bash "$scripts/deny-names.sh"
+expect fail 'deny-names: 履歴を見ると、足してから消した名前で落ち、名前をログに出さない' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+expect_counts_only 'deny-names: 履歴の本文の一致では、SHA と件数だけを出す' in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+output=$(in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh" 2>&1)
+[[ $output == *"$added"* ]] || ng "deny-names: 履歴の一致は、名前を足したコミットを示す（出力 $output）"
+
+repo=$(new_repo)
+plant "$repo" docs/a.md "文の中に$nameがある"
+plant "$repo" "docs/$name.md" 'ok'
+base=$(git -C "$repo" rev-parse HEAD)
+plant "$repo" docs/a.md 'ok'
+git -C "$repo" rm -q "docs/$name.md"
+git -C "$repo" commit -qm remove
+expect pass 'deny-names: 履歴は SCAN_BASE より後で足した行とファイル名だけを見て、消したものは数えない' '' in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$base" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+
+repo=$(new_repo)
+root=$(git -C "$repo" rev-parse HEAD)
+plant "$repo" "docs/$name.md" 'ok'
+added=$(git -C "$repo" rev-parse HEAD)
+plant "$repo" "docs/$name.md" 'changed'
+git -C "$repo" rm -q "docs/$name.md"
+git -C "$repo" commit -qm remove
+expect fail 'deny-names: 履歴で足したファイル名の一致も落とし、名前をログに出さない' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+expect_counts_only 'deny-names: 履歴のファイル名の一致では、パスを出さず SHA と件数だけを出す' in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+output=$(in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh" 2>&1)
+if [[ $output != *"$added"* || $(grep -cE '[0-9a-f]{40}' <<<"$output") != 1 ]]; then
+  ng "deny-names: 履歴のファイル名の一致は、足したコミットだけを示す（出力 $output）"
+fi
+
+repo=$(new_repo)
+root=$(git -C "$repo" rev-parse HEAD)
+git -C "$repo" mv README.md "$name.md"
+git -C "$repo" commit -qm rename
+git -C "$repo" mv "$name.md" README.md
+git -C "$repo" commit -qm rename
+expect fail 'deny-names: 履歴で名前を変えた先のファイル名も見る' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+expect_counts_only 'deny-names: 名前を変えた先のファイル名の一致でも、SHA と件数だけを出す' in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+
+repo=$(new_repo)
+root=$(git -C "$repo" rev-parse HEAD)
+plant "$repo" .gitattributes '* -diff'
+plant "$repo" docs/a.md "文の中に$nameがある"
+plant "$repo" docs/a.md 'ok'
+expect fail 'deny-names: 履歴でも .gitattributes でバイナリ扱いにしたファイルの本文を見る' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+
+# NUL を含むファイルは、.gitattributes がなくても git がバイナリと見なす。
+repo=$(new_repo)
+root=$(git -C "$repo" rev-parse HEAD)
+mkdir -p "$repo/docs"
+printf 'x\0%s\n' "$name" >"$repo/docs/a.bin"
+git -C "$repo" add docs/a.bin
+git -C "$repo" commit -qm 'add binary'
+plant "$repo" docs/a.bin 'ok'
+expect fail 'deny-names: 履歴で NUL を含むファイルに足した名前も見る' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+
+# 足した行は差分では「+++」で始まり、ファイルの頭の「+++ b/パス」と行の頭が同じになる。
+repo=$(new_repo)
+root=$(git -C "$repo" rev-parse HEAD)
+plant "$repo" docs/a.md "++ $name"
+plant "$repo" docs/a.md 'ok'
+expect fail 'deny-names: 履歴で「++」で始まる行を足しても見落とさない' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+
+# side のブランチをマージし、マージのコミットで第2引数のファイルに第3引数を書く。
+merge_side() {
+  git -C "$1" checkout -qb side
+  plant "$1" docs/b.md 'ok'
+  git -C "$1" checkout -q -
+  git -C "$1" merge -q --no-ff --no-commit side >/dev/null 2>&1
+  mkdir -p "$(dirname "$1/$2")"
+  printf '%s\n' "$3" >"$1/$2"
+  git -C "$1" add "$2"
+  git -C "$1" commit -qm merge
+}
+
+repo=$(new_repo)
+root=$(git -C "$repo" rev-parse HEAD)
+merge_side "$repo" docs/c.md "$name"
+plant "$repo" docs/c.md 'ok'
+expect fail 'deny-names: 履歴でマージのときに足した行も見る' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+
+repo=$(new_repo)
+root=$(git -C "$repo" rev-parse HEAD)
+merge_side "$repo" "docs/$name.md" 'ok'
+git -C "$repo" rm -q "docs/$name.md"
+git -C "$repo" commit -qm remove
+expect fail 'deny-names: 履歴でマージのときに足したファイル名も見る' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+expect_counts_only 'deny-names: マージで足したファイル名の一致でも、SHA と件数だけを出す' in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+
+repo=$(new_repo)
+root=$(git -C "$repo" rev-parse HEAD)
+plant "$repo" docs/a.md 'ok'
+plant "$repo" docs/a.md '++ ok'
+merge_side "$repo" docs/c.md 'ok'
+expect pass 'deny-names: 履歴に名前がなければ通る' '' in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+
+# 履歴の検査の grep を、引数の頭が FAIL_GREP のときだけ失敗させる。名前のない履歴なので、失敗を一致なしとして扱うと通ってしまう。
+fake_grep_bin=$(mktemp -d "$work/bin.XXXXXX")
+cat >"$fake_grep_bin/grep" <<EOF
+#!/usr/bin/env bash
+if [[ \$1 == "\$FAIL_GREP" ]]; then exit 2; fi
+exec "$(command -v grep)" "\$@"
+EOF
+chmod +x "$fake_grep_bin/grep"
+expect fail 'deny-names: 履歴の行の頭を読む grep の失敗を一致なしとして通さない' '' in_repo "$repo" env PATH="$fake_grep_bin:$PATH" FAIL_GREP=-naoE DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+expect fail 'deny-names: 履歴の名前を探す grep の失敗を一致なしとして通さない' '' in_repo "$repo" env PATH="$fake_grep_bin:$PATH" FAIL_GREP=-naoiF DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+
+# 根のコミットそのものに名前を入れる。
+repo=$(new_repo)
+printf '%s\n' "$name" >"$repo/README.md"
+git -C "$repo" commit -qa --amend -m first
+root=$(git -C "$repo" rev-parse HEAD)
+plant "$repo" README.md 'ok'
+expect fail 'deny-names: 根のコミットを SCAN_BASE にすると、根で足した名前も見る' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+expect fail 'deny-names: SCAN_BASE がすべて0でも、根で足した名前を見る' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE=0000000000000000000000000000000000000000 SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+
 # 第1引数の番号が選ばれるか（空なら何も選ばれないか）を見る。第3引数は Issue の一覧の JSON である。
 picked() {
   local want=$1 what=$2 got
