@@ -4,16 +4,25 @@ import { marked } from 'marked';
 import { build } from 'vite';
 import deck from '../.claude/skills/yomimasu/assets/cards.json' with { type: 'json' };
 import type { Card } from '../.claude/skills/yomimasu/scripts/cards.ts';
-import { cardPage, expandCardRefs, finalSoundCounts, listHtml, parseAdvice } from './karuta.ts';
-import { outputPathOf, parseSource, renderDocument } from './render.ts';
+import { commandAt } from '../.claude/skills/yomimasu/scripts/commands.ts';
+import { mouthFiguresHtml, nasalEndingsText, nasalFigureHtml } from '../content/karuta/mouth.ts';
+import { cardName, cardPage, cardUrl, expandCardRefs, finalSoundCounts, listHtml, parseAdvice } from './karuta.ts';
+import { outputPathOf, parseSource, renderDocument, runFor } from './render.ts';
 
 const CONTENT_DIR = 'content';
 const OUT_DIR = 'dist';
-const CLIENT_ENTRY = 'site/client/main.ts';
+// 画面の部品（main.ts）と、本文を入れ替える殻（ui/shell.ts）を読み込む入口である。
+const CLIENT_ENTRY = 'site/client/ui/app.ts';
 const ADVICE_PATH = '.claude/skills/yomimasu/references/card-advice-candidates.md';
 // 100首の一覧は札の読みの表から組むので、一覧.md には置き場の印だけを書く。
 const LIST_MARK = '<!-- 100首の一覧 -->';
 const FINAL_SOUND_MARK = '<!-- 最後の音の数 -->';
+// 口の形の図と「ん」の数も、文に書き写さず、組み立てのたびに作る。
+const MARKS: Record<string, () => string> = {
+  '<!-- 最後の音の口の形 -->': mouthFiguresHtml,
+  '<!-- 「ん」の位置の図 -->': nasalFigureHtml,
+  '<!-- 「ん」で終わる札の数 -->': () => nasalEndingsText(cards),
+};
 
 await build({
   logLevel: 'warn',
@@ -29,6 +38,8 @@ const stylePaths = (manifest[CLIENT_ENTRY].css ?? []).map((file: string) => `/${
 rmSync(manifestDir, { recursive: true });
 
 const cards = deck.cards as unknown as Card[];
+const cardNames = new Map(cards.map((card) => [cardUrl(card.no).split('/')[2], cardName(card)]));
+const urlOf = (outputPath: string) => `/${outputPath.replace(/index\.html$/, '')}`;
 
 function writePage(path: string, html: string) {
   const outputPath = join(OUT_DIR, path);
@@ -39,9 +50,13 @@ function writePage(path: string, html: string) {
 for (const entry of readdirSync(CONTENT_DIR, { recursive: true, withFileTypes: true })) {
   if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
   const sourcePath = join(entry.parentPath, entry.name);
+  const contentPath = relative(CONTENT_DIR, sourcePath);
   const { title, command, readName, tool, slug, markdown } = parseSource(readFileSync(sourcePath, 'utf8'));
-  const bodyHtml = expandCardRefs((await marked.parse(markdown)).replace(LIST_MARK, () => listHtml(cards)).replace(FINAL_SOUND_MARK, () => finalSoundCounts(cards)), cards);
-  writePage(outputPathOf(relative(CONTENT_DIR, sourcePath), slug), renderDocument({ title, bodyHtml, scriptPath, stylePaths, command, readName, tool }));
+  const outputPath = outputPathOf(contentPath, slug);
+  const run = runFor(contentPath, { command, readName }, commandAt(urlOf(outputPath), (token) => cardNames.get(token)));
+  const parsed = (await marked.parse(markdown)).replace(LIST_MARK, () => listHtml(cards)).replace(FINAL_SOUND_MARK, () => finalSoundCounts(cards));
+  const bodyHtml = expandCardRefs(Object.entries(MARKS).reduce((html, [mark, make]) => html.replace(mark, make), parsed), cards);
+  writePage(outputPath, renderDocument({ title, bodyHtml, scriptPath, stylePaths, ...run, tool }));
 }
 
 // 1首のページは手で書かず、札の読みの表、規則、助言の候補から組む。表が変わってもページが追いつくようにするためである。

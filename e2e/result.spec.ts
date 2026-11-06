@@ -56,14 +56,14 @@ async function record(page: Page, plan: ReadingPlan) {
   await expect(page.getByTestId('take')).toBeAttached();
 }
 
-// 画面どうしをつなぐ処理はまだないので、結果のページの本文を取ってきて差し替える。録音は差し替えても端末のメモリーに残る。
-async function showResult(page: Page, { example = false } = {}) {
-  await page.evaluate(async (example) => {
-    const next = new DOMParser().parseFromString(await (await fetch('/result/')).text(), 'text/html');
-    const main = document.adoptNode(next.querySelector('main')!);
-    if (example) main.querySelector('yomimasu-result')!.setAttribute('example', '');
-    document.querySelector('main')!.replaceWith(main);
-  }, example);
+// 読み終えると、殻が開き直さずに /result/ へ移す。ほかの結果の画面（例の録音）へは、結果のページの本文を取ってきて差し替える。録音は差し替えても端末のメモリーに残る。
+async function showResult(page: Page, path = '/result/') {
+  if (new URL(page.url()).pathname !== path) {
+    await page.evaluate(async (path) => {
+      const next = new DOMParser().parseFromString(await (await fetch(path)).text(), 'text/html');
+      document.querySelector('main')!.replaceWith(document.adoptNode(next.querySelector('main')!));
+    }, path);
+  }
   await expect(page.locator('yomimasu-result .res')).toBeVisible();
 }
 
@@ -104,9 +104,11 @@ test('間の長い読みを録ると、下の句＋余韻、間、上の句の3�
   await expect(result).toContainText('明瞭さは測っていません。お手本と聴き比べてください。');
   await expect(result).toContainText('録音は端末の外へ出ません。');
   await expect(result).not.toContainText('決まり字');
-  await expect(result).not.toContainText(/総合|点数|\d+\s*点/);
+  // 「次に直す1点」はカードの見出しで、点数ではない（docs/ui-guide.md の10節）。
+  await expect(result).not.toContainText(/総合|点数|(?<!直す)\d+\s*点/);
   await expect(result).not.toContainText('例の録音です');
-  await expect(page.locator('.bar .step')).toHaveText('補助あり');
+  // 読み終えると殻が開き直さずに結果の画面へ移るので、読む流れの進み具合に続けて補助の有無を出す。
+  await expect(page.locator('.bar .step')).toHaveText('3 / 3 結果・補助あり');
 
   expect(sent).toEqual([]);
   expect(await beacons()).toEqual([]);
@@ -148,12 +150,23 @@ test('間のない読みでは、どの行も測れませんでしたと出し�
   await browser.close();
 });
 
-test('例の録音のときは、先頭に例の録音ですと出す', async ({ baseURL }) => {
+test('読んだあとに例の録音の画面を開いても、自分の録音ではなく例の音声を測って出し、例を前回と比べる画面に混ぜない', async ({ baseURL }) => {
   const browser = await launchWithFakeMic(synthesize(longMa), longMa.sampleRate);
   const { page } = await openPage(browser, baseURL, '/read/rec/');
+  // 例の音声は、自分の読み（間 1.6 秒）と見分けられるよう、間を短くした合成音にする。中身は WAV のまま m4a の名前で返す。
+  const example: ReadingPlan = { ...standardReading, maSec: 0.6 };
+  await page.route('**/audio/examples/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'audio/mp4', body: Buffer.from(encodeWav(synthesize(example), example.sampleRate)) }),
+  );
   await record(page, longMa);
-  await showResult(page, { example: true });
+  await showResult(page, '/result/example/');
+
   await expect(page.locator('yomimasu-result').getByText('例の録音です')).toBeVisible();
+  const ma = (await rowsOf(page))[1];
+  expect(Math.abs(secondsOf(ma) - example.maSec)).toBeLessThanOrEqual(0.15);
+
+  await page.goto('/result/compare/');
+  await expect(page.getByRole('list', { name: '残っている録音' }).getByRole('listitem')).toHaveCount(1);
   await browser.close();
 });
 

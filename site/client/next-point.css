@@ -1,0 +1,6 @@
+/* 次に直す1点のカード。値は docs/ui-sample.html の .one と docs/ui-guide.md の3節、6節に合わせる。 */
+
+.one { display: grid; gap: 4px; padding: 14px; border-color: var(--ink); }
+.one .l { font-size: 13px; font-weight: 700; color: var(--shu-deep); }
+.one .t { font-family: var(--f-serif); font-size: 22px; font-weight: 700; line-height: 1.45; }
+.one p { font-size: 15px; line-height: 1.7; color: var(--ink-2); }

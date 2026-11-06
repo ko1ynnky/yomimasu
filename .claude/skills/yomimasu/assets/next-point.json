@@ -1,0 +1,133 @@
+{
+  "about": "次に直す1点の文。scripts/next-point.ts が読む。文はスキル yomimasu の references/ の知識をもとに書き、basis に、もとにしたファイルと見出しと、資料の版とページ（講習資料はスライドの番号）を1つずつ残す。判定の幅の値は書き写さない。MIT License の範囲外で、扱いは NOTICE.md にある。clear は直す点がないときの文で、資料ではなく docs/ui-sample.html の見本の文から来たので basis を持たない",
+  "clear": {
+    "fix": "今回はありません",
+    "reason": "測った項目はどれも目安の幅の中でした。練習会の本番には補助がないので、補助を外して読んでみましょう。"
+  },
+  "points": {
+    "ma": {
+      "link": "間を詳しく",
+      "above": {
+        "fix": "間を1.0秒にそろえる",
+        "reason": "間が目安より長めです。間の標準は1.0秒です。競技者は余韻と間でタイミングを計るので、間は毎回同じ長さにそろえます。",
+        "how": "余韻を読み終えたら、ひと息吸ってすぐ上の句に入ってみてください。息を吸うひと呼吸が、1秒ほどの目安になります。",
+        "basis": {
+          "fix": [
+            { "file": "timing.md", "heading": "間合い", "source": "完全版 p.3" },
+            { "file": "timing.md", "heading": "間合い", "source": "講習資料 s.23" }
+          ],
+          "reason": [
+            { "file": "timing.md", "heading": "間合い", "source": "完全版 p.3" },
+            { "file": "timing.md", "heading": "間合い", "source": "講習資料 s.23" },
+            { "file": "timing.md", "heading": "5・3・1・6の方式", "source": "講習資料 s.9" }
+          ],
+          "how": [
+            { "file": "timing.md", "heading": "間合い", "source": "講習資料 s.23" }
+          ]
+        }
+      },
+      "below": {
+        "fix": "息を吸ってから上の句へ",
+        "reason": "間が目安より短めです。間の標準は1.0秒です。競技者は余韻と間でタイミングを計るので、間は毎回同じ長さにそろえます。",
+        "how": "余韻を読み終えてから息を吸い、そのあとで上の句を始めてみてください。時計の秒針に合わせて1秒の長さを体で覚えておくと、毎回そろえやすくなります。",
+        "basis": {
+          "fix": [
+            { "file": "timing.md", "heading": "間合い", "source": "講習資料 s.23" }
+          ],
+          "reason": [
+            { "file": "timing.md", "heading": "間合い", "source": "完全版 p.3" },
+            { "file": "timing.md", "heading": "間合い", "source": "講習資料 s.23" },
+            { "file": "timing.md", "heading": "5・3・1・6の方式", "source": "講習資料 s.9" }
+          ],
+          "how": [
+            { "file": "timing.md", "heading": "間合い", "source": "講習資料 s.23" },
+            { "file": "timing.md", "heading": "長さを毎回そろえる方法", "source": "講習資料 s.23" }
+          ]
+        }
+      }
+    },
+    "shimoPlusYoin": {
+      "link": "下の句の札を見る",
+      "above": {
+        "fix": "下の句と余韻を8秒程度に縮める",
+        "reason": "下の句と余韻を合わせた長さが目安より長めです。標準は下の句が5秒程度、余韻が3.0秒です。1組の中で長さの配分がずれると、競技者はタイミングを計りにくくなります。",
+        "how": "下の句と余韻のどちらで長くなったかは、この測定では分けられません。余韻は最後の字から3秒を数えてみてください。下の句の終わりの2字（札によって3字）の間に、余計な伸ばしが入っているのかもしれません。",
+        "basis": {
+          "fix": [
+            { "file": "timing.md", "heading": "5・3・1・6の方式", "source": "完全版 p.3" }
+          ],
+          "reason": [
+            { "file": "timing.md", "heading": "5・3・1・6の方式", "source": "完全版 p.3" },
+            { "file": "timing.md", "heading": "長さを毎回そろえる方法", "source": "講習資料 s.8" }
+          ],
+          "how": [
+            { "file": "timing.md", "heading": "余韻", "source": "完全版 p.3" },
+            { "file": "timing.md", "heading": "余韻", "source": "講習資料 s.8" },
+            { "file": "timing.md", "heading": "長さを毎回そろえる方法", "source": "講習資料 s.23" },
+            { "file": "stretches.md", "heading": "下の句の終わり", "source": "完全版 p.4" },
+            { "file": "stretches.md", "heading": "下の句の終わり", "source": "完全版 p.27" }
+          ]
+        }
+      },
+      "below": {
+        "fix": "下の句と余韻を8秒程度に延ばす",
+        "reason": "下の句と余韻を合わせた長さが目安より短めです。標準は下の句が5秒程度、余韻が3.0秒です。1組の中で長さの配分がずれると、競技者はタイミングを計りにくくなります。",
+        "how": "下の句と余韻のどちらで短くなったかは、この測定では分けられません。余韻は最後の字から3秒を数えて伸ばしてみてください。下の句では、四句の途中の伸ばしが抜けているのかもしれません。",
+        "basis": {
+          "fix": [
+            { "file": "timing.md", "heading": "5・3・1・6の方式", "source": "完全版 p.3" }
+          ],
+          "reason": [
+            { "file": "timing.md", "heading": "5・3・1・6の方式", "source": "完全版 p.3" },
+            { "file": "timing.md", "heading": "長さを毎回そろえる方法", "source": "講習資料 s.8" }
+          ],
+          "how": [
+            { "file": "timing.md", "heading": "余韻", "source": "完全版 p.3" },
+            { "file": "timing.md", "heading": "余韻", "source": "講習資料 s.8" },
+            { "file": "timing.md", "heading": "長さを毎回そろえる方法", "source": "講習資料 s.23" },
+            { "file": "stretches.md", "heading": "四句の途中", "source": "完全版 p.5-15" }
+          ]
+        }
+      }
+    },
+    "kami": {
+      "link": "上の句の札を見る",
+      "above": {
+        "fix": "上の句を6秒程度に縮める",
+        "reason": "上の句が目安より長めです。上の句の標準は6秒程度です。1組の中で長さの配分がずれると、競技者はタイミングを計りにくくなります。",
+        "how": "句の途中の伸ばしが長くなっているのかもしれません。上の句の終わりは、最後の1字（札によって2字）の手前で少しだけ伸ばして終えてみてください。",
+        "basis": {
+          "fix": [
+            { "file": "timing.md", "heading": "5・3・1・6の方式", "source": "完全版 p.3" }
+          ],
+          "reason": [
+            { "file": "timing.md", "heading": "5・3・1・6の方式", "source": "完全版 p.3" },
+            { "file": "timing.md", "heading": "長さを毎回そろえる方法", "source": "講習資料 s.8" }
+          ],
+          "how": [
+            { "file": "timing.md", "heading": "5・3・1・6の方式", "source": "完全版 p.26" },
+            { "file": "stretches.md", "heading": "上の句の終わり", "source": "完全版 p.4" }
+          ]
+        }
+      },
+      "below": {
+        "fix": "上の句を6秒程度に延ばす",
+        "reason": "上の句が目安より短めです。上の句の標準は6秒程度です。1組の中で長さの配分がずれると、競技者はタイミングを計りにくくなります。",
+        "how": "句の終わりの伸ばしが短くなっているのかもしれません。各句の終わりで伸ばし、上の句の終わりは最後の1字（札によって2字）の手前で少し伸ばして終えてみてください。",
+        "basis": {
+          "fix": [
+            { "file": "timing.md", "heading": "5・3・1・6の方式", "source": "完全版 p.3" }
+          ],
+          "reason": [
+            { "file": "timing.md", "heading": "5・3・1・6の方式", "source": "完全版 p.3" },
+            { "file": "timing.md", "heading": "長さを毎回そろえる方法", "source": "講習資料 s.8" }
+          ],
+          "how": [
+            { "file": "stretches.md", "heading": "基本の形", "source": "完全版 p.26" },
+            { "file": "stretches.md", "heading": "上の句の終わり", "source": "完全版 p.4" }
+          ]
+        }
+      }
+    }
+  }
+}

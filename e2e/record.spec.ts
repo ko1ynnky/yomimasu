@@ -90,18 +90,23 @@ const takeOf = async (page: Page) => {
   };
 };
 
-// 打ち込みは 370ms で終わるので、待って見るのではなく、実行の行に出た文字をすべて記録する。
+// 打ち込みは 370ms で終わるので、待って見るのではなく、実行の行と入力の行に出た文字をすべて記録する。
+// 入力の行は結果の画面にあり、殻（ui/shell.ts）が「次は？」のリンクの打ち込みに使う。
 const watchRunLine = (page: Page) =>
   page.evaluate(() => {
     const seen: string[] = [];
+    const typed: string[] = [];
     const note = () => {
       const text = document.querySelector('.run > div')?.textContent ?? '';
       if (seen.at(-1) !== text) seen.push(text);
+      const line = document.querySelector('.ask-line')?.textContent;
+      if (line && typed.at(-1) !== line) typed.push(line);
     };
     new MutationObserver(note).observe(document.body, { subtree: true, childList: true, characterData: true });
-    Object.assign(window, { runLineSeen: seen });
+    Object.assign(window, { runLineSeen: seen, askLineSeen: typed });
   });
 const runLineSeen = (page: Page) => page.evaluate(() => (window as unknown as { runLineSeen: string[] }).runLineSeen);
+const askLineSeen = (page: Page) => page.evaluate(() => (window as unknown as { askLineSeen: string[] }).askLineSeen);
 
 // 開き直すと置き場の録音が消えるので、開いたときの印が残っているかで、開き直していないことを確かめる。
 const markDocument = (page: Page) => page.evaluate(() => Object.assign(window, { sameDocument: true }));
@@ -140,7 +145,7 @@ test('合図は数字だけで音を鳴らさず、録音は合図の前から�
   await browser.close();
 });
 
-// 結果の画面に移ったことは、結果の部品が出す行と、実行の行で見る。
+// 結果の画面に移ったことは、結果の部品が出す行と、実行の行で見る。殻が本文を /result/ に入れ替える。
 const showsResult = async (page: Page) => {
   await expect(page.locator('.res')).toBeVisible({ timeout: 30_000 });
   await expect(page.locator('.run')).toHaveText(/^> \/yomimasu 結果を見る\s*● 録音しました$/);
@@ -171,7 +176,7 @@ test('読み終えたは上の句の区間から押せ、押すと「読み終�
   await showsResult(page);
   expect(await runLineSeen(page)).toContain('> /yomimasu 読み終えた');
   expect(await sameDocument(page)).toBe(true);
-  expect(new URL(page.url()).pathname).toBe('/read/rec/');
+  expect(new URL(page.url()).pathname).toBe('/result/');
   await expect(page.locator('.bar .step')).toHaveText('3 / 3 結果・補助あり');
   expect(await microphonesClosed(page)).toEqual([true]);
   await expect(recState(page)).toHaveCount(0);
@@ -183,11 +188,13 @@ test('読み終えたは上の句の区間から押せ、押すと「読み終�
   expect(take.lengthSec).toBeLessThanOrEqual(wallSec);
   expect(take).toMatchObject({ assisted: 'true', pair: '81-45' });
 
+  // 上の句に入った直後に押したので、どの行も測れず、「次は？」の塗りのボタンは「読み直す」になる（docs/ui-guide.md の10節）。
   await expect(page.getByRole('button', { name: '自分の読み' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'お手本' })).toBeVisible();
-  await expect(page.getByRole('button', { name: '読み直す' })).toBeVisible();
+  await expect(page.getByText('再生はまだ使えません。')).toHaveCount(0);
+  await expect(page.getByRole('link', { name: '読み直す' })).toHaveAttribute('href', '/read/rec/?shimo=81&kami=45');
   await expect(page.getByRole('link', { name: '結果を見る' })).toHaveCount(0);
-  await expect(page.locator('yomimasu-recorder > :not([hidden])').last()).toHaveText('録音は端末の外へ出ません。');
+  await expect(page.locator('yomimasu-result > :not([hidden])').last()).toHaveText('録音は端末の外へ出ません。');
 
   mkdirSync(ARTIFACTS_DIR, { recursive: true });
   await page.screenshot({ path: join(ARTIFACTS_DIR, 'result-after-reading.png'), fullPage: true });
@@ -196,9 +203,12 @@ test('読み終えたは上の句の区間から押せ、押すと「読み終�
     JSON.stringify({ expectedReadingStartSec: COUNT_SEC, recordedReadingStartSec: take.readingStartSec, recordedLengthSec: take.lengthSec, wallSec }, null, 2),
   );
 
-  await page.getByRole('button', { name: '読み直す' }).click();
+  // 読み直すは「次は？」のリンクなので、殻が行き先のコマンドを入力の行に打ち込み、開き直さずに同じ組の読む画面へ戻る。
+  await page.getByRole('link', { name: '読み直す' }).click();
   await expect(startButton(page)).toBeVisible();
-  expect(await runLineSeen(page)).toContain('> /yomimasu 読み直す');
+  expect(await askLineSeen(page)).toContain('> /yomimasu 読む ほ あはれ');
+  expect(await sameDocument(page)).toBe(true);
+  expect(new URL(page.url()).search).toBe('?shimo=81&kami=45');
   await expect(lyrics).toBeVisible();
   await expect(page.locator('.bar .step')).toHaveText('2 / 3 読む');
   await expect(page.locator('.run')).toHaveText('> /yomimasu 読む ほ あはれ');
@@ -423,14 +433,18 @@ test('動きを減らす設定では、読み終えたを押しても打ち込�
   await showsResult(page);
   expect(await runLineSeen(page)).not.toContain('> /yomimasu 読み終えた');
 
-  await page.getByRole('button', { name: '読み直す' }).click();
+  await page.getByRole('link', { name: '読み直す' }).click();
   await expect(startButton(page)).toBeVisible();
-  expect(await runLineSeen(page)).not.toContain('> /yomimasu 読み直す');
+  expect(await askLineSeen(page)).toEqual(['> /yomimasu ']);
   await browser.close();
 });
 
 test('読む流れの上の帯の右に、聞く画面は「1 / 3 聞く」、読む画面は「2 / 3 読む」と出す', async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem('yomimasu.recHelpDone', '1'));
+  // 聞く画面は、導入を見終えたあとの段で「1 / 3 聞く」になる。導入の段の「はじめに 1 / 3」は e2e/listen.spec.ts が確かめる。
+  await page.addInitScript(() => {
+    localStorage.setItem('yomimasu.recHelpDone', '1');
+    localStorage.setItem('yomimasu.introDone', '1');
+  });
   await page.goto('/read/');
   await expect(page.locator('.bar .step')).toHaveText('1 / 3 聞く');
   await page.goto('/read/rec/');
@@ -486,12 +500,11 @@ test('読み始めるを押すと、読む前の説明を閉じて覚える', as
   await browser.close();
 });
 
-test('録音の前の説明は、端末の外へ送らないことだけを書き、持ち方の案内を出さない', async ({ page }) => {
+test('録音の前の説明は、端末に残ることと外へ送らないことだけを書き、持ち方の案内を出さない', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('yomimasu.recHelpDone', '1'));
   await page.goto('/read/rec/');
-  await expect(page.locator('yomimasu-recorder .fine')).toHaveText(/^録音はこの端末の外へ送りません。\s*読み方の説明$/);
+  await expect(page.locator('yomimasu-recorder .fine')).toHaveText(/^録音は端末に残り、外へ送りません。\s*読み方の説明$/);
   await expect(page.locator('body')).not.toContainText('持ち');
-  await expect(page.getByText('例の録音で見る')).toHaveCount(0);
 });
 
 test('マイクを許可しないときは、理由と次の操作を出す', async ({ browser, baseURL }) => {
@@ -509,7 +522,6 @@ test('マイクを許可しないときは、理由と次の操作を出す', as
   await expect(alert).toContainText('マイクを使えませんでした。ブラウザーの設定でマイクを許可すると、読んで測れます。教科書とお手本はこのまま使えます。');
   await expect(page.getByRole('button', { name: 'もう一度試す' })).toBeVisible();
   await expect(page.getByRole('link', { name: '教科書へ戻る' })).toBeVisible();
-  await expect(page.getByText('例の録音で見る')).toHaveCount(0);
   mkdirSync(ARTIFACTS_DIR, { recursive: true });
   await page.screenshot({ path: join(ARTIFACTS_DIR, 'denied.png') });
 });

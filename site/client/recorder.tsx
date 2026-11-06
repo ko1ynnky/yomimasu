@@ -1,26 +1,22 @@
 import { render } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { startCapture, type Capture, type VoiceProcessing } from './capture.ts';
+import { startCapture, type Capture } from './capture.ts';
 import { pairLines } from './lyrics.ts';
 import { segmentsOf } from './pair.ts';
-import { Result } from './result.tsx';
-import { putLastTake, type Take } from './take.ts';
+import { keepTake } from './records.ts';
+import type { Take } from './take.ts';
+import { go } from './ui/shell.ts';
 import { cards, pairOf, Stage } from './ui/stage.tsx';
 
 type Failure = 'denied' | 'unavailable';
-// 読み終えたら、聴き返す画面を挟まずに結果を出す（docs/ui-guide.md の10節）。
-// 本文を入れ替える仕組み（#13）ができるまでは、/result/ へ移らずにこの部品の中で結果を描く。
-// Take は take.ts の変数にしかないので、ページを開き直すと消える。そのため URL も /read/rec/ のままにし、戻る操作の履歴を足さない。
+// 読み終えたら、聴き返す画面を挟まずに結果の画面（/result/）へ移る（docs/ui-guide.md の10節）。殻（ui/shell.ts）が本文を入れ替えるので、端末のメモリーの録音はそのまま渡る。
+// 結果をこの部品の中で描く案は採らなかった。読む画面には入力の欄がないので「次は？」（もう1回読む、前回と比べる）を置けず、URL が /read/rec/ のままなので、開き直すと結果が消えるからである。
 type View =
   | { kind: 'idle' }
   | { kind: 'starting' }
   | { kind: 'count'; beat: number; elapsed: number }
   | { kind: 'reading'; t: number; elapsed: number }
-  | { kind: 'result'; take: RecordedTake }
   | { kind: 'failed'; failure: Failure };
-
-// 声の処理の結果は録音と一緒に置き、take.ts の型に入れるのは記録を残す C8 で決める。
-type RecordedTake = Take & { voiceProcessing: VoiceProcessing };
 
 type Session = { capture: Capture; countStart: number; assisted: boolean; frame: number; releaseWake: () => void };
 
@@ -32,11 +28,13 @@ const LIMIT_SEC = 25;
 // 「読み始める」と「やめる」は同じ高さにあるので、続けて押すと始めた録音をすぐ止めてしまう。止めた直後の「読み始める」も同じである。
 const RESTART_GUARD_MS = 500;
 const HELP_KEY = 'yomimasu.recHelpDone';
+// 声を出せない人とマイクを許可しない人が、録音しないで結果の画面まで進む入口（C9）。
+const EXAMPLE_RESULT = '/result/example/';
+const RESULT = '/result/';
 // 押したら実行の行に打ち込み、ひと呼吸置いてから移る（docs/ui-guide.md の8節「押したあとの動き」）。
 const TYPE_MS = 280;
 const SEND_HOLD_MS = 90;
 const READING_PROGRESS = '2 / 3 読む';
-const RESULT_PROGRESS = '3 / 3 結果';
 
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -97,10 +95,8 @@ const Icon = ({ path }: { path: string }) => (
 );
 const REC_ICON = 'M6 1a5 5 0 1 0 0 10A5 5 0 0 0 6 1z';
 const STOP_ICON = 'M2 2h8v8H2z';
-const PLAY_ICON = 'M2 1l9 5-9 5z';
 
 // 進み具合と録音中の表示は上の帯の右に出す。帯は画面の組み立て（render.ts）が置き、この部品の外にある。
-// 結果の進み具合は結果の部品が出すので、結果を出すあいだはこの部品を外す。
 function RecState({ elapsed }: { elapsed: number | null }) {
   useEffect(() => {
     const step = document.querySelector<HTMLElement>('.bar .step');
@@ -163,8 +159,8 @@ function Recorder({ fix }: { fix?: string }) {
     end()?.capture.cancel();
   }
 
-  // マイクを閉じ、録音を置き場に入れる。結果へ移すのは呼ぶ側で、打ち込むかどうかが違う。
-  async function finish(): Promise<RecordedTake | null> {
+  // マイクを閉じ、録音を端末に残す。結果へ移すのは呼ぶ側で、打ち込むかどうかが違う。
+  async function finish(): Promise<Take | null> {
     const current = end();
     if (!current) return null;
     const { capture } = current;
@@ -173,7 +169,7 @@ function Recorder({ fix }: { fix?: string }) {
     const { pcm, sampleRate, voiceProcessing } = await capture.stop(capture.now());
     if (stopping.current !== capture) return null;
     stopping.current = null;
-    const take: RecordedTake = {
+    const take: Take = {
       pcm,
       sampleRate,
       readingStartSec,
@@ -181,7 +177,7 @@ function Recorder({ fix }: { fix?: string }) {
       pair,
       voiceProcessing,
     };
-    putLastTake(take);
+    await keepTake(take);
     return take;
   }
 
@@ -196,17 +192,12 @@ function Recorder({ fix }: { fix?: string }) {
   }
 
   // 録音の終わりは押した時刻にする。打ち込むあいだもマイクを開いたままにしない。
+  // 打ち込んだ「読み終えた」は、殻が本文を入れ替えるまで実行の行に残す。
   async function finishByUser() {
     if (!session.current) return;
     const [take] = await Promise.all([finish(), typeRun('読み終えた')]);
-    setTyped(null);
-    if (take) setView({ kind: 'result', take });
-  }
-
-  async function retry() {
-    await typeRun('読み直す');
-    setTyped(null);
-    setView({ kind: 'idle' });
+    if (take) go(RESULT);
+    else setTyped(null);
   }
 
   function tick() {
@@ -217,7 +208,7 @@ function Recorder({ fix }: { fix?: string }) {
       setView({ kind: 'count', beat: COUNT_FROM - Math.floor(elapsed / COUNT_BEAT_SEC), elapsed });
     } else if (elapsed - COUNT_SEC >= LIMIT_SEC) {
       // 利用者が押していない動きなので、打ち込まずに移る（docs/ui-guide.md の8節）。
-      void finish().then((take) => take && setView({ kind: 'result', take }));
+      void finish().then((take) => take && go(RESULT));
       return;
     } else {
       setView({ kind: 'reading', t: elapsed - COUNT_SEC, elapsed });
@@ -283,60 +274,17 @@ function Recorder({ fix }: { fix?: string }) {
   const guide = view.kind === 'reading' ? Math.min(view.t, total) : 0;
   const kimariji = [pair.shimo, pair.kami].map((no) => cards.find((card) => card.no === no)?.kimariji?.kana ?? `${no}番`).join(' ');
 
-  const shown = view.kind === 'result';
   const sending = typed !== null;
-  const command = typed ?? (shown ? '結果を見る' : `読む ${kimariji}`);
-  // 読み直しの1行は実行の行の代わりに出す。打ち込むときと結果では、実行の行に戻す。
-  const run =
-    fix && !shown && !sending ? (
-      <div class="fix-chip">直す1点：{fix}</div>
-    ) : (
-      <div class="run">
-        <div>
-          <span class="gt">&gt;</span> /yomimasu {command}
-        </div>
-        {shown && <div class="read">● 録音しました</div>}
+  // 読み直しの1行は実行の行の代わりに出す。打ち込むときは、実行の行に戻す。
+  const run = fix && !sending ? (
+    <div class="fix-chip">直す1点：{fix}</div>
+  ) : (
+    <div class="run">
+      <div>
+        <span class="gt">&gt;</span> /yomimasu {typed ?? `読む ${kimariji}`}
       </div>
-    );
-
-  if (view.kind === 'result') {
-    const { take } = view;
-    return (
-      <>
-        {run}
-        <Result take={take} example={false} progress={RESULT_PROGRESS}>
-          {/* 再生は Y-17 で動かす。それまでは場所だけを取り、押せない理由を下に書く */}
-          <div class="pair">
-            <button class="btn" type="button" disabled>
-              <Icon path={PLAY_ICON} />
-              自分の読み
-            </button>
-            <button class="btn" type="button" disabled>
-              <Icon path={PLAY_ICON} />
-              お手本
-            </button>
-          </div>
-          <p class="fine">再生はまだ使えません。</p>
-          {/* ガイドの10節では、塗りのボタンは「次は？」の「もう1回読む」で、測れなかったときだけ「読み直す」にする。
-              「次は？」と次に直す1点（C7）がまだないので、どちらの場合も、同じ組をもう一度読む「読み直す」を置く（Issue #23 の完了の条件） */}
-          <div class="result-next">
-            <button class="btn btn--fill" type="button" disabled={sending} onClick={retry}>
-              読み直す
-            </button>
-          </div>
-        </Result>
-        <div
-          hidden
-          data-testid="take"
-          data-length-sec={(take.pcm.length / take.sampleRate).toFixed(3)}
-          data-reading-start-sec={take.readingStartSec.toFixed(3)}
-          data-assisted={String(take.assisted)}
-          data-pair={`${take.pair.shimo}-${take.pair.kami}`}
-          data-voice-processing={JSON.stringify(take.voiceProcessing)}
-        />
-      </>
-    );
-  }
+    </div>
+  );
 
   return (
     <>
@@ -365,10 +313,16 @@ function Recorder({ fix }: { fix?: string }) {
       <div class="controls">
         {view.kind === 'idle' && (
           <>
-            <button class="btn btn--fill" type="button" onClick={start}>
-              <Icon path={REC_ICON} />
-              読み始める
-            </button>
+            {/* 見本は「例の録音で見る」を注記の行に置くが、注記の行が2段になり、360×560 で 41px はみ出した。読み始めると同じ場所に「やめる」「読み終えた」が並ぶ */}
+            <div class="pair">
+              <button class="btn btn--fill" type="button" onClick={start}>
+                <Icon path={REC_ICON} />
+                読み始める
+              </button>
+              <a class="btn btn--line" href={EXAMPLE_RESULT}>
+                例の録音で見る
+              </a>
+            </div>
             <div class="pair">
               <button class="btn" type="button" aria-pressed={assisted} onClick={() => setAssisted(true)}>
                 補助あり
@@ -378,7 +332,8 @@ function Recorder({ fix }: { fix?: string }) {
               </button>
             </div>
             <p class="fine">
-              録音はこの端末の外へ送りません。{' '}
+              {/* 「あとから消せます」も書きたいが、足すと 360×560 の1画面に収まらない。消し方は前回と比べる画面で伝える */}
+              録音は端末に残り、外へ送りません。{' '}
               <button class="link-inline" type="button" onClick={() => setHelp(true)}>
                 読み方の説明
               </button>
@@ -404,9 +359,16 @@ function Recorder({ fix }: { fix?: string }) {
             <button class="btn btn--fill" type="button" onClick={start}>
               もう一度試す
             </button>
-            <a class="btn btn--line" href="/">
-              教科書へ戻る
-            </a>
+            <div class="pair">
+              {view.failure === 'denied' && (
+                <a class="btn btn--line" href={EXAMPLE_RESULT}>
+                  例の録音で見る
+                </a>
+              )}
+              <a class="btn btn--line" href="/">
+                教科書へ戻る
+              </a>
+            </div>
           </div>
         )}
       </div>
