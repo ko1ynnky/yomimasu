@@ -173,10 +173,20 @@ function swap(doc: Document, url: URL) {
   prefetchNames();
 }
 
+// hash の先が閉じた <details>（「ポイントを知る」のたたんだ行と、その中の「ん」の説明）の中にあると、見えないまま移ることになる。
+// 先を含む <details> をすべて開き、先が <details> ならそれも開いてから移る。殻が画面を入れ替えたとき、URL を直接開いたとき、hashchange の3つで使う。
+// ブラウザーには任せない。hash の先を含む <details> を開くかはブラウザーによる。Chromium は開くが、先が <details> のときそれ自身は開かない（2026-11-06 に Playwright で確かめた）。殻の入れ替えは pushState なので、ブラウザーは先へ移りもしない。
+// 「ポイントを知る」の部品（main.ts のカスタム要素）にもしない。殻が入れ替えたあとに hash の先へ移す所（scrollAfter）はここにあり、開く所と移る所が2か所に分かれる。
+function showTarget(hash: string): boolean {
+  const target = hash && document.getElementById(decodeURIComponent(hash.slice(1)));
+  if (!target) return false;
+  for (let details = target.closest('details'); details; details = details.parentElement?.closest('details') ?? null) details.open = true;
+  target.scrollIntoView();
+  return true;
+}
+
 function scrollAfter(url: URL, y: number) {
-  const target = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
-  if (target) target.scrollIntoView();
-  else scrollTo(0, y);
+  if (!showTarget(url.hash)) scrollTo(0, y);
 }
 
 // 画面の部品が実行の行に足すと、部品は差し込んだあとで読み込んで描くので、reveal() が読んだ行を集めたあとになり、110ms 隠す順から漏れる。
@@ -349,9 +359,16 @@ document.addEventListener('click', (event) => {
   if (!(link instanceof HTMLAnchorElement) || link.target) return;
   if (link.hasAttribute('download')) return void (link.closest('main') && echo(link.textContent?.trim() ?? ''));
   const url = new URL(link.href);
-  // 画面は / で終わる URL にある。ファイルや外のページ、同じ画面の中の見出しへのリンクはブラウザーに任せる。
-  if (url.origin !== location.origin || !url.pathname.endsWith('/') || (pathOf(url) === shown && url.hash)) return;
+  // 画面は / で終わる URL にある。ファイルや外のページへのリンクはブラウザーに任せる。
+  if (url.origin !== location.origin || !url.pathname.endsWith('/')) return;
   event.preventDefault();
+  // 同じ画面の中の見出しへのリンク（「ポイントを知る」の目次）は、打ち込まず、履歴を積まずに移る。
+  // ブラウザーに任せると state のない履歴が積まれ、「戻る」が前の画面（history.state.prev）を見失う。積んだ項目へ history.back() で戻っても、パスが同じなので popstate は画面を入れ替えない。
+  if (pathOf(url) === shown && url.hash) {
+    history.replaceState(history.state, '', url.href);
+    showTarget(url.hash);
+    return;
+  }
   if (busy) return;
   if (link.matches('[data-back]')) void back(link);
   else if (link.closest('[data-pick]')) void pick(link, url);
@@ -421,4 +438,8 @@ addEventListener('popstate', () => {
   void arrive(url, load(url), mine, { push: false, motion, scrollY: history.state?.scrollY });
 });
 
+// アドレスバーで hash だけを替えたときと、戻る・進むで hash だけが変わったときは、ブラウザーが移したあとで、閉じた <details> の中の先を開いて移り直す。目次のリンクは click の処理で開いて移るので、ここを通らない。
+addEventListener('hashchange', () => showTarget(location.hash));
+
 prefetchNames();
+showTarget(location.hash);

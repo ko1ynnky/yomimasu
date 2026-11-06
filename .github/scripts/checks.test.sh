@@ -288,6 +288,284 @@ plant "$repo" README.md 'ok'
 expect fail 'deny-names: 根のコミットを SCAN_BASE にすると、根で足した名前も見る' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
 expect fail 'deny-names: SCAN_BASE がすべて0でも、根で足した名前を見る' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE=0000000000000000000000000000000000000000 SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
 
+# 参照の検査のログの行が、参照とコミットの SHA と件数か、参照の名前の件数か、見た数だけでできているかを見る。
+expect_refs_counts_only() {
+  local what=$1 output
+  shift
+  output=$("$@" 2>&1)
+  if grep -vqE '^(コミットメッセージ|足した(ファイル名|行))に公開できない名前があります：(PR #[0-9]+|名前を伏せた参照|[A-Za-z0-9._/-]+) [0-9a-f]{40}（[0-9]+ (件|行)）$|^参照の名前に公開できない名前があります：[0-9]+ 件$|^deny-names: [0-9]+ 個の参照から辿れて HEAD から辿れない [0-9]+ 件のコミットで、コミットメッセージ、足した行、ファイル名を見ました。$' <<<"$output"; then
+    ng "$what（出力 $output）"
+  fi
+}
+
+# PR をスカッシュでマージした形にする。途中のコミットは main から辿れず、PR の参照からだけ辿れる。
+repo=$(new_repo)
+root=$(git -C "$repo" rev-parse HEAD)
+git -C "$repo" checkout -q --detach
+plant "$repo" docs/a.md "文の中に$nameがある"
+added=$(git -C "$repo" rev-parse HEAD)
+plant "$repo" docs/a.md 'ok'
+git -C "$repo" update-ref refs/remotes/pull/3 HEAD
+git -C "$repo" checkout -q -
+plant "$repo" docs/a.md 'ok' squash
+expect pass 'deny-names: 参照を見ないときは、PR の参照にだけある名前で落ちない' '' in_repo "$repo" env DENY_NAMES="$name" SCAN_BASE="$root" SCAN_HISTORY=1 bash "$scripts/deny-names.sh"
+expect fail 'deny-names: 参照を見ると、PR のスカッシュする前のコミットで足した名前で落ち、名前をログに出さない' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh"
+expect_refs_counts_only 'deny-names: PR の参照の一致では、PR の番号と SHA と件数だけを出す' in_repo "$repo" env DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh"
+output=$(in_repo "$repo" env DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh" 2>&1)
+[[ $output == *"PR #3 $added"* ]] || ng "deny-names: PR の参照の一致は、PR の番号と名前を足したコミットを示す（出力 $output）"
+
+# CI では、ブランチを refs/remotes/origin/ に取る。
+repo=$(new_repo)
+git -C "$repo" checkout -q --detach
+plant "$repo" "docs/$name.md" 'ok'
+added=$(git -C "$repo" rev-parse HEAD)
+git -C "$repo" update-ref refs/remotes/origin/feat/x HEAD
+git -C "$repo" checkout -q -
+expect fail 'deny-names: 参照を見ると、main にないブランチで足したファイル名で落ち、名前をログに出さない' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh"
+expect_refs_counts_only 'deny-names: ブランチの一致では、ブランチの名前と SHA と件数だけを出す' in_repo "$repo" env DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh"
+output=$(in_repo "$repo" env DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh" 2>&1)
+[[ $output == *"origin/feat/x $added"* ]] || ng "deny-names: ブランチの一致は、ブランチの名前と名前を足したコミットを示す（出力 $output）"
+
+repo=$(new_repo)
+git -C "$repo" checkout -qb side
+plant "$repo" docs/a.md 'ok' "$name"
+added=$(git -C "$repo" rev-parse HEAD)
+git -C "$repo" checkout -q -
+expect fail 'deny-names: 参照を見ると、main にないブランチのコミットメッセージの名前で落ち、名前をログに出さない' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh"
+expect_refs_counts_only 'deny-names: 参照のコミットメッセージの一致でも、参照と SHA と件数だけを出す' in_repo "$repo" env DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh"
+output=$(in_repo "$repo" env DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh" 2>&1)
+[[ $output == *"side $added"* ]] || ng "deny-names: 参照のコミットメッセージの一致は、ブランチの名前とコミットを示す（出力 $output）"
+expect fail 'deny-names: 参照のコミットメッセージを見る grep の失敗を一致なしとして通さない' '' in_repo "$repo" env PATH="$fake_grep_bin:$PATH" FAIL_GREP=-caiF DENY_NAMES='ほかの名前' SCAN_REFS=1 bash "$scripts/deny-names.sh"
+
+# 2つの PR の参照から辿れるコミットは、番号の小さい PR の分として1回だけ示す。番号を文字の順に並べると 12 が 9 より先になる。
+repo=$(new_repo)
+git -C "$repo" checkout -q --detach
+plant "$repo" docs/a.md 'ok' "$name"
+added=$(git -C "$repo" rev-parse HEAD)
+git -C "$repo" update-ref refs/remotes/pull/12 HEAD
+git -C "$repo" update-ref refs/remotes/pull/9 HEAD
+git -C "$repo" checkout -q -
+output=$(in_repo "$repo" env DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh" 2>&1)
+if [[ $(grep -c "$added" <<<"$output") != 1 || $output != *"PR #9 $added"* ]]; then
+  ng "deny-names: 2つの参照から辿れるコミットは、番号の小さい PR の分として1回だけ示す（出力 $output）"
+fi
+
+repo=$(new_repo)
+git -C "$repo" branch "feat/$name"
+git -C "$repo" tag "v1-$name"
+git -C "$repo" checkout -qb "fix/$name"
+plant "$repo" docs/a.md 'ok' "$name"
+added=$(git -C "$repo" rev-parse HEAD)
+git -C "$repo" checkout -q -
+expect fail 'deny-names: 参照を見ると、ブランチとタグの名前の一致で落ち、名前をログに出さない' "$name" in_repo "$repo" env DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh"
+expect_refs_counts_only 'deny-names: ブランチとタグの名前の一致では、件数だけを出す' in_repo "$repo" env DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh"
+output=$(in_repo "$repo" env DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh" 2>&1)
+if [[ $output != *'参照の名前に公開できない名前があります：3 件'* || $output != *"名前を伏せた参照 $added"* ]]; then
+  ng "deny-names: 名前に一致したブランチのコミットは、ブランチの名前を伏せて示す（出力 $output）"
+fi
+
+# 見るコミットのない参照だけを置き、参照の名前を見る grep だけを失敗させる。
+repo=$(new_repo)
+git -C "$repo" branch feat/x
+expect fail 'deny-names: 参照の名前を見る grep の失敗を一致なしとして通さない' '' in_repo "$repo" env PATH="$fake_grep_bin:$PATH" FAIL_GREP=-ciaF DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh"
+
+# HEAD で足してから消した名前は、履歴の検査が見る。参照の検査は HEAD から辿れるコミットを見ない。
+repo=$(new_repo)
+plant "$repo" docs/a.md "文の中に$nameがある"
+plant "$repo" docs/a.md 'ok'
+git -C "$repo" checkout -qb side
+plant "$repo" docs/b.md 'ok'
+git -C "$repo" update-ref refs/remotes/pull/5 HEAD
+git -C "$repo" tag v1
+git -C "$repo" checkout -q -
+expect pass 'deny-names: 参照の検査は HEAD から辿れるコミットを見ず、参照に名前がなければ通る' '' in_repo "$repo" env DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh"
+output=$(in_repo "$repo" env DENY_NAMES="$name" SCAN_REFS=1 bash "$scripts/deny-names.sh" 2>&1)
+[[ $output == *'4 個の参照から辿れて HEAD から辿れない 1 件のコミットで'* ]] || ng "deny-names: 参照の検査は、見た参照とコミットの数を出す（出力 $output）"
+
+# 偽の gh は、deny-names-text が読む場所ごとに場面のファイルを返す。fail-<種類> があれば、その種類の読み出しを失敗させる。
+# GraphQL の nodes は、場面の nodes.json から id ごとに返し、ない id には null を返す。
+text_gh=$(mktemp -d "$work/text-gh.XXXXXX")
+cat >"$text_gh/gh" <<'EOF'
+#!/usr/bin/env bash
+case "$*" in
+  'api --paginate repos/{owner}/{repo}/issues?state=all&per_page=100') kind=issues file=issues ;;
+  'api --paginate repos/{owner}/{repo}/issues/events?per_page=100') kind=events file=events ;;
+  'api --paginate repos/{owner}/{repo}/issues/comments?per_page=100') kind=comments file=comments ;;
+  'api --paginate repos/{owner}/{repo}/pulls/comments?per_page=100') kind=review-comments file=review-comments ;;
+  'api --paginate repos/{owner}/{repo}/pulls/'*'/reviews?per_page=100')
+    pull=${3#*/pulls/}
+    kind=reviews file=reviews-${pull%%/*}
+    ;;
+  'api graphql --input '*)
+    [[ ! -f $GH_FIXTURES/fail-edits ]] || exit 1
+    # GitHub と同じく、1回に100個を超える node は受けない。
+    jq -e '.variables.ids | length <= 100' "$4" >/dev/null || exit 1
+    jq -c --slurpfile nodes "$GH_FIXTURES/nodes.json" '{data: {nodes: [.variables.ids[] as $id | $nodes[0][$id]]}}' "$4"
+    exit
+    ;;
+  *) exit 64 ;;
+esac
+if [[ -f $GH_FIXTURES/fail-$kind ]]; then
+  echo 'gh: Not Found (HTTP 404)' >&2
+  exit 1
+fi
+cat "$GH_FIXTURES/$file.json"
+EOF
+chmod +x "$text_gh/gh"
+
+# 名前のない場面を作る。Issue とコメントの一覧は2ページに分け、#2 を PR にする。#1 の本文と題には前の版が1つずつある。
+text_scene() {
+  text_dir=$(mktemp -d "$work/text.XXXXXX")
+  jq -cn '[{number: 1, node_id: "I_1", title: "題", body: "本文の1行目\r\n本文の2行目"}, {number: 2, node_id: "PR_2", title: "PR の題", body: null, pull_request: {}}]' >"$text_dir/issues.json"
+  jq -cn '[{number: 3, node_id: "I_3", title: "次のページの題", body: ""}]' >>"$text_dir/issues.json"
+  jq -cn '[{id: 41, event: "renamed", issue: {number: 1}, rename: {from: "前の題", to: "題"}}, {id: 42, event: "labeled", issue: {number: 2, pull_request: {}}}]' >"$text_dir/events.json"
+  jq -cn '[{id: 11, node_id: "IC_11", issue_url: "https://api.github.com/repos/o/r/issues/1", html_url: "https://github.com/o/r/issues/1#issuecomment-11", body: "コメント"}]' >"$text_dir/comments.json"
+  jq -cn '[{id: 12, node_id: "IC_12", issue_url: "https://api.github.com/repos/o/r/issues/2", html_url: "https://github.com/o/r/pull/2#issuecomment-12", body: "PR のコメント"}]' >>"$text_dir/comments.json"
+  jq -cn '[{id: 21, node_id: "PRRC_21", pull_request_url: "https://api.github.com/repos/o/r/pulls/2", body: "行へのコメント"}]' >"$text_dir/review-comments.json"
+  jq -cn '[{id: 31, node_id: "PRR_31", body: "レビューの本文"}, {id: 32, node_id: "PRR_32", body: ""}]' >"$text_dir/reviews-2.json"
+  jq -cn '
+    def node($type; $fields): $fields + {__typename: $type, userContentEdits: {totalCount: 0, nodes: []}};
+    {I_1: node("Issue"; {number: 1}), PR_2: node("PullRequest"; {number: 2}), I_3: node("Issue"; {number: 3}),
+     IC_11: node("IssueComment"; {fullDatabaseId: "11", issue: {number: 1}, pullRequest: null}),
+     IC_12: node("IssueComment"; {fullDatabaseId: "12", issue: {number: 2}, pullRequest: {number: 2}}),
+     PRRC_21: node("PullRequestReviewComment"; {fullDatabaseId: "21", pullRequest: {number: 2}}),
+     PRR_31: node("PullRequestReview"; {fullDatabaseId: "31", pullRequest: {number: 2}}),
+     PRR_32: node("PullRequestReview"; {fullDatabaseId: "32", pullRequest: {number: 2}})}
+    | .I_1.userContentEdits = {totalCount: 1, nodes: [{diff: "前の本文"}]}' >"$text_dir/nodes.json"
+}
+
+# 第1引数のファイルを、第2引数の jq の式で書き換える。式の中では名前を $name で使える。
+text_edit() {
+  jq -c --arg name "$name" "$2" "$text_dir/$1.json" >"$text_dir/$1.new" && mv "$text_dir/$1.new" "$text_dir/$1.json"
+}
+
+run_text() {
+  env PATH="$text_gh:$PATH" GH_FIXTURES="$text_dir" DENY_NAMES="${text_names-$name}" bash "$scripts/deny-names-text.sh"
+}
+
+# ログの行が、場所と件数か、見た数だけでできているかを見る。文が1字でも漏れると、この形に合わない。
+expect_text_counts_only() {
+  local what=$1 output
+  output=$(run_text 2>&1)
+  if grep -vqE '^公開できない名前があります：(issue|pr) #[0-9]+ (title|body|comment [0-9]+|review [0-9]+|review-comment [0-9]+|renamed [0-9]+)( edit)?（[0-9]+ 行）$|^deny-names-text: Issue [0-9]+ 件、PR [0-9]+ 件、題の変更 [0-9]+ 件、コメント [0-9]+ 件、レビューのコメント [0-9]+ 件、レビュー [0-9]+ 件、編集の前の版 [0-9]+ 件の文を見ました。$' <<<"$output"; then
+    ng "$what（出力 $output）"
+  fi
+}
+
+# 第2引数の場所の一致だけで落ち、ログに名前を出さないかを見る。
+expect_text_hit() {
+  local what=$1 where=$2 output code
+  output=$(run_text 2>&1)
+  code=$?
+  if [[ $code != 1 || $output == *"$name"* || $(grep -c '^公開できない名前があります：' <<<"$output") != 1 || $output != *"：$where（"* ]]; then
+    ng "$what（期待 $where、exit $code、出力 $output）"
+  fi
+  expect_text_counts_only "$what"
+}
+
+text_scene
+expect pass 'deny-names-text: 名前がなければ通る' '' run_text
+output=$(run_text 2>&1)
+[[ $output == *'Issue 2 件、PR 1 件、題の変更 1 件、コメント 2 件、レビューのコメント 1 件、レビュー 2 件、編集の前の版 1 件の文を見ました。'* ]] || ng "deny-names-text: 見た文の数を出す（出力 $output）"
+expect_text_counts_only 'deny-names-text: 名前がないときも、見た数だけを出す'
+
+text_scene
+text_edit issues '(.[] | select(.number == 1) | .title) |= "題に\($name)がある"'
+expect_text_hit 'deny-names-text: Issue の題の名前で落ち、文と名前をログに出さない' 'issue #1 title'
+
+text_scene
+text_edit issues '(.[] | select(.number == 3) | .title) |= "題に\($name)がある"'
+expect_text_hit 'deny-names-text: 2ページ目の Issue も見る' 'issue #3 title'
+
+text_scene
+text_edit issues '(.[] | select(.number == 1) | .body) |= "1行目の\($name)\r\n2行目\r\n3行目にも\($name)"'
+expect_text_hit 'deny-names-text: Issue の本文の名前で落ちる' 'issue #1 body'
+output=$(run_text 2>&1)
+[[ $output == *'issue #1 body（2 行）'* ]] || ng "deny-names-text: 本文の一致は、名前のある行の数を出す（出力 $output）"
+
+text_scene
+text_edit issues '(.[] | select(.number == 2) | .title) |= "題に\($name)がある"'
+expect_text_hit 'deny-names-text: PR の題の名前で落ちる' 'pr #2 title'
+
+text_scene
+text_edit events '(.[] | select(.id == 41) | .rename.from) |= "前の題に\($name)がある"'
+expect_text_hit 'deny-names-text: 変える前の題の名前で落ちる' 'issue #1 renamed 41'
+
+text_scene
+text_edit comments '(.[] | select(.id == 11) | .body) |= "コメントに\($name)がある"'
+expect_text_hit 'deny-names-text: Issue のコメントの名前で落ち、文と名前をログに出さない' 'issue #1 comment 11'
+
+text_scene
+text_edit comments '(.[] | select(.id == 12) | .body) |= "コメントに\($name)がある"'
+expect_text_hit 'deny-names-text: 2ページ目の PR のコメントの名前で落ちる' 'pr #2 comment 12'
+
+text_scene
+text_edit reviews-2 '(.[] | select(.id == 31) | .body) |= "レビューに\($name)がある"'
+expect_text_hit 'deny-names-text: レビューの本文の名前で落ち、文と名前をログに出さない' 'pr #2 review 31'
+
+text_scene
+text_edit review-comments '(.[] | select(.id == 21) | .body) |= "行へのコメントに\($name)がある"'
+expect_text_hit 'deny-names-text: レビューのコメントの名前で落ちる' 'pr #2 review-comment 21'
+
+# 編集の前の版。今の文には名前がない。
+text_scene
+text_edit nodes '.I_1.userContentEdits.nodes[0].diff = "前の本文に\($name)がある"'
+expect_text_hit 'deny-names-text: Issue の本文の前の版の名前で落ち、文と名前をログに出さない' 'issue #1 body edit'
+
+text_scene
+text_edit nodes '.PR_2.userContentEdits = {totalCount: 1, nodes: [{diff: "前の版に\($name)がある"}]}'
+expect_text_hit 'deny-names-text: PR の本文の前の版の名前で落ちる' 'pr #2 body edit'
+
+text_scene
+text_edit nodes '.IC_12.userContentEdits = {totalCount: 1, nodes: [{diff: "前の版に\($name)がある"}]}'
+expect_text_hit 'deny-names-text: PR のコメントの前の版の名前で落ちる' 'pr #2 comment 12 edit'
+
+text_scene
+text_edit nodes '.PRR_31.userContentEdits = {totalCount: 1, nodes: [{diff: "前の版に\($name)がある"}]}'
+expect_text_hit 'deny-names-text: レビューの本文の前の版の名前で落ちる' 'pr #2 review 31 edit'
+
+text_scene
+text_edit nodes '.PRRC_21.userContentEdits = {totalCount: 1, nodes: [{diff: "前の版に\($name)がある"}]}'
+expect_text_hit 'deny-names-text: レビューのコメントの前の版の名前で落ちる' 'pr #2 review-comment 21 edit'
+
+# node が101個以上あると、GraphQL を2回に分けて読む。最後の node だけに名前を置く。
+text_scene
+jq -cn '[range(100; 250) | {id: ., node_id: "IC_\(.)", issue_url: "https://api.github.com/repos/o/r/issues/1", html_url: "https://github.com/o/r/issues/1#issuecomment-\(.)", body: "コメント"}]' >>"$text_dir/comments.json"
+text_edit nodes '. + ([range(100; 250) | {key: "IC_\(.)", value: {__typename: "IssueComment", fullDatabaseId: "\(.)", issue: {number: 1}, pullRequest: null, userContentEdits: {totalCount: 0, nodes: []}}}] | from_entries)
+  | .IC_249.userContentEdits = {totalCount: 1, nodes: [{diff: "前の版に\($name)がある"}]}'
+expect_text_hit 'deny-names-text: node が100個を超えても、分けて全部の前の版を見る' 'issue #1 comment 249 edit'
+
+text_scene
+text_edit nodes '.I_1.userContentEdits.totalCount = 101'
+expect error 'deny-names-text: 読み残した前の版があれば、一致なしとして通さない' '' run_text
+
+text_scene
+text_edit nodes 'del(.PRR_32)'
+expect error 'deny-names-text: 前の版を読めない node があれば、一致なしとして通さない' '' run_text
+
+text_scene
+text_edit comments '(.[] | select(.id == 11) | .body) |= "Sample Name appears"'
+text_names='sample name' expect fail 'deny-names-text: 大文字と小文字の違いを無視する' 'Sample Name' run_text
+
+text_scene
+text_names='' expect fail 'deny-names-text: 一覧が空なら検査できないので落ちる' '' run_text
+text_names=$'\n \n' expect fail 'deny-names-text: 空行だけの一覧でも落ちる' '' run_text
+
+for kind in issues events comments review-comments reviews edits; do
+  text_scene
+  : >"$text_dir/fail-$kind"
+  expect error "deny-names-text: $kind を読めなければ、一致なしとして通さない" '' run_text
+done
+
+for file in issues events comments review-comments reviews-2; do
+  text_scene
+  printf '{"message":"Bad credentials"}' >"$text_dir/$file.json"
+  expect error "deny-names-text: $file の一覧の代わりに別の形が返っても、一致なしとして通さない" '' run_text
+done
+
+text_scene
+expect fail 'deny-names-text: 名前を探す grep の失敗を一致なしとして通さない' '' env PATH="$fake_grep_bin:$text_gh:$PATH" FAIL_GREP=-naoiF GH_FIXTURES="$text_dir" DENY_NAMES="$name" bash "$scripts/deny-names-text.sh"
+
 # 第1引数の番号が選ばれるか（空なら何も選ばれないか）を見る。第3引数は Issue の一覧の JSON である。
 picked() {
   local want=$1 what=$2 got
