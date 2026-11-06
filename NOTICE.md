@@ -11,9 +11,11 @@
 | 次に直す1点の文 | `.claude/skills/yomimasu/assets/next-point.json` | 権利を留保します。読むことと、個人の練習で使うことだけを認めます。知識の文章と同じ扱いで、再利用を認めません |
 | 札の文字のデータ | `.claude/skills/yomimasu/assets/cards.json` の本文の列 | 再利用を認めません。元のデータの権利は[外部のデータ](#外部のデータ)のとおりです |
 | そのほかのデータ | 置くときにここへ書きます | 再利用を認めません。出典と権利は、置くときにここへ書きます |
-| 札ごとの読みの表 | `.claude/skills/yomimasu/assets/cards.json`。同じ値を含む `scripts/cards/corrections.ts`、`.claude/skills/yomimasu/scripts/cards.ts` の札の番号、`test/cards/` の期待値（ふりがな、注、別の読み、余韻の印の値は `test/cards/table.test.ts`、`test/cards/assemble.test.ts`、`test/cards/sound.test.ts`）、`docs/ui-sample.html` の見本の3首と100首の決まり字、`test/site/lyrics.test.ts`、`test/site/karuta.test.ts`、`test/site/mouth.test.ts`、`e2e/stage.spec.ts`、`e2e/textbook.spec.ts`、`e2e/mouth.spec.ts` の期待値。教科書の1首のページと100首の一覧は、組み立てのときにこの表から作ります | 再利用を認めません。伸ばす箇所は抜粋版の、ふりがな、注、別の読み、余韻の印は完全版の内容として、全日本かるた協会の回答の範囲で使っています |
+| 札ごとの読みの表 | `.claude/skills/yomimasu/assets/cards.json`。同じ値を含む `scripts/cards/corrections.ts`、`.claude/skills/yomimasu/scripts/cards.ts` の札の番号、`test/cards/` の期待値（ふりがな、注、別の読み、余韻の印の値は `test/cards/table.test.ts`、`test/cards/assemble.test.ts`、`test/cards/sound.test.ts`）、`docs/ui-sample.html` の見本の3首と100首の決まり字、`test/site/lyrics.test.ts`、`test/site/karuta.test.ts`、`test/site/mouth.test.ts`、`test/site/kimariji-stream.test.ts`、`e2e/stage.spec.ts`、`e2e/textbook.spec.ts`、`e2e/mouth.spec.ts` の期待値。教科書の1首のページと100首の一覧は、組み立てのときにこの表から作ります | 再利用を認めません。伸ばす箇所は抜粋版の、ふりがな、注、別の読み、余韻の印は完全版の内容として、全日本かるた協会の回答の範囲で使っています |
 | ロゴ、図、画像 | 置くときにここへ書きます | 再利用を認めません |
 | 口の形と「ん」の位置の図 | `content/karuta/mouth.ts`（教科書の「ポイントを知る」と1首のページに出ます） | 再利用を認めません。このアプリが一般の音声学の資料と研究をもとに描いたもので、ほかの図を写していません。出典は `.claude/skills/yomimasu/references/mouth-shapes.md` の「出典」にあります。読手テキストの調音点・調音法の一覧と口腔断面図は使っていません |
+| 入口の絵（決まり字で組んだ読手の絵） | `site/client/kv-live.js`（入口に出ます。置き方と動かし方は `site/client/kv.ts`） | 再利用を認めません。このアプリのために作った人形と動きを、スクリプトで描いたもので、ほかの図や画像を写していません |
+| 入口の絵の決まり字の列 | 組み立てのときに、`site/kimariji-stream.ts` が札ごとの読みの表の上の句の仮名と音から作り、入口の絵のスクリプトと同じファイルに入れます。リポジトリには置きません | 再利用を認めません。札ごとの読みの表から作ったもので、表と同じ扱いです |
 | 音声 | リポジトリには置きません。お手本は公開しない R2 のバケットに置き、アプリが `/audio/v1/` で配ります | 録音した人の権利のままです。再利用を認めません。出典は[音声](#音声)に書きます |
 
 ## 外部のデータ
