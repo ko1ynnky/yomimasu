@@ -12,6 +12,8 @@
 // - 全部かほとんどの札に当たる規則（余韻で伸ばす音、四句の途中の伸ばし、鼻濁音）。同じ文が101ページに並び、札ごとの点が埋もれる。
 //   「ポイントを知る」に同じ規則があり、1首のページはそこへ案内する。余韻で伸ばす音は、口の形の図の見出しに出す。
 // - 句切れと掛詞、字余り、2020年の改訂。当たる札で同じ文になるか、札ごとの読み方の助言がない。「ポイントを知る」にもないが、ユーザーの判断で出さない。
+// 歴史的かなづかいの読み替え（ハ行、「む」、「ゐ」「ゑ」「ぢ」「づ」、長音）は項目として残すが、決まりの一般論は書かず、その歌の箇所だけを書く（2026-11-06 のユーザーの判断）。
+// 一般論は当たる札のどれでも同じ文になるので、「ポイントを知る」に任せる。
 import { soundOffset, type Card, type Phrase } from '../../.claude/skills/yomimasu/scripts/cards.ts';
 
 export type Priority = '高' | '中' | '低';
@@ -208,7 +210,7 @@ function hagyo(card: Card): Point[] {
     .map((k) => spotText(card.phrases[k.phrase], k.at, 1));
   if (shifted.length === 0 && kept.length === 0) return [];
   const body = [
-    shifted.length > 0 ? `語の頭にないハ行の音は、ワ行かア行の音で読みます。この札では${join(shifted)}と読みます。` : '',
+    shifted.length > 0 ? `${join(shifted)}と読みます。` : '',
     kept.length > 0 ? `${join(kept)}は、合わさった語の後ろの語の頭なので、ハ行のまま読みます。` : '',
   ].join('');
   // 読み替えのない札（語の頭のハ行だけの札）は、card-rules.md の「当たる札」に入らないので別の id にする。
@@ -233,7 +235,7 @@ function choon(card: Card): Point[] {
       id: 'choon',
       priority: '中',
       title: '長音で読む綴りがある',
-      body: `母音の後に「う」の音が続くと、音が変わって長音になります。この札では${join(spellings)}と読みます。`,
+      body: `${join(spellings)}と読みます。`,
       source: '冊子 p.23',
       count: spellings.length,
     },
@@ -245,7 +247,7 @@ function mu(card: Card): Point[] {
   const kept = card.origin.sound.kept.filter((k) => k.kana === 'む').map((k) => ({ text: spotText(card.phrases[k.phrase], k.at, 1), why: k.why }));
   if (toN.length === 0 && kept.length === 0) return [];
   const body = [
-    toN.length > 0 ? `助動詞の「む」「らむ」「けむ」の「む」は「ん」と読みます。この札では${join(toN)}です。` : '',
+    toN.length > 0 ? `${join(toN)}は「ん」と読みます。` : '',
     ...kept.map((k) => `${k.text}は${k.why === '語の頭' ? '語の頭' : '語の一部'}なので、「む」のまま読みます。`),
   ].join('');
   return [{ id: 'mu', priority: '中', title: '「む」を「ん」と読むか', body, source: '冊子 p.24' }];
@@ -264,7 +266,7 @@ function kana(card: Card): Point[] {
       id: 'kana',
       priority: '中',
       title: '「ゐ」「ゑ」「ぢ」「づ」の読み方',
-      body: `「ゐ」「ゑ」は「い」「え」、「ぢ」「づ」は「じ」「ず」と読みます。この札では${join(spots)}と読みます。読み方一覧のふりがなでも確かめられます。`,
+      body: `${join(spots)}と読みます。`,
       source: '冊子 p.5-15',
     },
   ];

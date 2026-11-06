@@ -146,7 +146,7 @@ test('全部かほとんどの札に当たる点は1首のページに出さず�
   for (const c of cards) {
     const html = cardPage(c, cards, advice).bodyHtml;
     for (const title of dropped) assert.ok(!html.includes(title), `${c.no}番に「${title}」`);
-    assert.match(html, /<p class="fine">全部の札に共通の点（余韻、四句の伸ばし、鼻濁音など）は<a href="\/point\/">ポイントを知る<\/a>にあります。<\/p>/, `${c.no}番`);
+    assert.match(html, /<p class="fine">全部の札に共通の点（余韻、四句の伸ばし、鼻濁音、仮名の読み方の決まりなど）は<a href="\/point\/">ポイントを知る<\/a>にあります。<\/p>/, `${c.no}番`);
   }
 });
 
@@ -301,4 +301,19 @@ test('出さない助言の行は、その札のページに同じことを言�
   }
   const choon = hidden.filter((a) => a.source.includes('長音の一覧')).flatMap((a) => a.cards);
   assert.deepEqual(choon, [8, 22, 40, 45, 48, 56, 61, 63, 76, 78, 85, 96, 99]);
+});
+
+test('歴史的かなづかいの4項目は、一般論を書かず、その歌の箇所だけを書く', () => {
+  assert.equal(
+    pointOf(17, 'hagyo')!.body,
+    '「川（がは）」の「は」は「わ」、「水くくるとは」の「は」は「わ」と読みます。「ちはやぶる」の「は」は、合わさった語の後ろの語の頭なので、ハ行のまま読みます。',
+  );
+  assert.equal(pointOf(22, 'mu')!.body.split('。')[0], '「嵐といふらむ」の「む」は「ん」と読みます');
+  assert.equal(pointOf(8, 'kana')!.body, '「世をうぢ」の「ぢ」は「じ」と読みます。');
+  assert.equal(pointOf(8, 'choon')!.body, '「いふ」は「ゆー」と読みます。');
+  const general = ['語の頭にないハ行の音は', '助動詞の「む」「らむ」「けむ」', '「ゐ」「ゑ」は「い」「え」', '読み方一覧のふりがなでも確かめられます', '母音の後に「う」の音が続くと', 'この札では'];
+  for (const c of cards) {
+    const html = cardPage(c, cards, advice).bodyHtml;
+    for (const text of general) assert.ok(!html.includes(text), `${c.no}番に「${text}」`);
+  }
 });

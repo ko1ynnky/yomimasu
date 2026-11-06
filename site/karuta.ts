@@ -237,7 +237,7 @@ const playHtml = (card: Card) =>
 const SOURCES_NOTE = '<p class="fine">出典は<a href="/about/#sources">このアプリについて</a>にまとめています。</p>';
 
 // 全部かほとんどの札に当たる点は、1首のページに並べず「ポイントを知る」へ案内する（content/karuta/rules.ts の冒頭）。
-const COMMON_NOTE = '<p class="fine">全部の札に共通の点（余韻、四句の伸ばし、鼻濁音など）は<a href="/point/">ポイントを知る</a>にあります。</p>';
+const COMMON_NOTE = '<p class="fine">全部の札に共通の点（余韻、四句の伸ばし、鼻濁音、仮名の読み方の決まりなど）は<a href="/point/">ポイントを知る</a>にあります。</p>';
 
 // 出だしが同じ札の1行は、優先の印も出典の行も付けず、カードの最初の行に置く。
 // 優先の断りは優先の印のある項目があるときだけ、カードは項目か出だしが同じ札があるときだけ出す。
