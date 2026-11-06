@@ -2,6 +2,31 @@
 
 あとの作業に影響する技術と設計の判断を、新しいものを上にして書く。理由と、採らなかった案も残す。結論を改めるときは、元の項目を消さずに、改めた日付と理由を足す。
 
+## 2026-11-06 公開を main だけにし、yomimasu.karutalog.com で出す
+
+- 決めたこと：
+  - 本番は `main` のビルドが出す。Workers Builds の本番のブランチを `production` から `main` に変えた。`production` ブランチは作らない。
+  - 本番の URL は https://yomimasu.karutalog.com にし、提出にもこの URL を使う。`wrangler.jsonc` の `routes` に `custom_domain: true` で書き、`main` のビルドの `wrangler deploy` が付ける。
+  - `workers_dev` は `false` にし、yomimasu.karutalog.workers.dev では開かない。`preview_urls` は `true` のままなので、`main` 以外のブランチは今までどおり `<ブランチ>-yomimasu.karutalog.workers.dev` のプレビューに出る。
+- 経緯：2026-11-02 の「アプリの技術を決める」で、公開は `production` ブランチだけにすると決めた。`production` はまだ作っておらず、本番には一度も出していなかった。2026-11-06 の昼に、ユーザーが GitHub Flow で `main` だけにすると改めた。
+- 理由：
+  - ブランチを1本にすると、`main` から `production` へ移す手順と、2本のずれを見る手間がなくなる。`main` に入る変更は、PR の必須の CI（`check`、`e2e`、`no-audio`、`no-secrets`、`deny-names` など）を通っている。
+  - 独自ドメインを `wrangler.jsonc` に書くと、設定がレビューできる差分になる。
+  - 提出と案内に使う URL を1つにするため、workers.dev の本番の URL は切る。karuta-edit の Web 版（edit.karutalog.com）と同じ形で、同じビルドのトークンが同じゾーンに独自ドメインを付けていることを、そのビルドのログで確かめた。
+- 設定を変えた場所：
+  - Workers Builds の本番のブランチ：Cloudflare の Workers Builds の設定で `main` にした。コードには残らないので、ここに書く。
+  - 独自ドメインと workers.dev：`wrangler.jsonc`。
+- 採らなかった案：
+  - `production` ブランチを作り、`main` から移したときだけ本番に出す案。上の理由。移す手順が増え、`production` の保護（自走の `git push origin auto/*` が `auto/x:production` も通す件）も要る。
+  - 独自ドメインをダッシュボードか API で付ける案。設定が差分に残らない。
+  - `workers_dev` を `true` のまま残す案。本番が2つの URL で開き、どちらを案内するかが揺れる。
+- 限界：
+  - `main` へのマージが、そのまま本番に出る。本番の前に止める段はない。
+  - 自走（`auto.yml`）は平日の昼に `go:merge` の PR をマージするので、ユーザーが見ていない間にも本番が変わる。`AGENTS.md` は「`night` に回すのは…本番への反映である」と書くが、マージがそのまま本番への反映になったので、この行の読み方はまだ決めていない。
+  - 本番を戻すときは、Cloudflare のロールバック（ダッシュボードの Worker の Deployments か `npx wrangler rollback`）で前の版に戻す。次の `main` のビルドが上書きするので、戻したら原因の変更を revert する PR も出す。ロールバックは Worker の版だけを戻し、R2 の音声は戻さない。
+  - `ci.yml` と `review.yml` の対象の `branches: [main, production]` は直していない。`production` ブランチを作らないので、`production` の側は動かない。
+- 根拠（確認日 2026-11-06）：[Custom Domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)、[Previews の custom domains](https://developers.cloudflare.com/workers/previews/custom-domains/)、[Version URLs](https://developers.cloudflare.com/workers/versions-and-deployments/version-urls/)、[Rollbacks](https://developers.cloudflare.com/workers/versions-and-deployments/rollbacks/)、[Workers Builds API](https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/)
+
 ## 2026-11-06 例の録音を配信から取り、利用者の録音と同じ定義でブラウザーの中で測る
 
 - 決めたこと（Issue #44、C9）：
@@ -515,6 +540,7 @@
   - `work` の job は書き込みの権限のまま、Claude のあとの step を動かす。要約のスクリプトは Claude の前に写すが、job を分けるまでは任意のコマンドから守れない。
     - 改めた点（2026-11-05）：Claude のあとの書き込みを `finish` の job に分け、`work` のトークンを読み取りだけにした。action が Claude の環境に `github.token` を渡すと分かったので、job を分けるだけでは足りなかった。「自走の Claude の job に書き込みのトークンを置かない」を見る。
   - `Bash(git push origin auto/*)` は `auto/x:production` も通す見込みである。`production` を作るときに保護する。
+    - 改めた点（2026-11-06）：`production` は作らないことにした。本番のブランチは保護された `main` である。「公開を main だけにし、yomimasu.karutalog.com で出す」を見る。
   - 修正の起動は保留が1本なので、別の実行に押し出されることがある。`stop` の間に起こした修正は動き直さない。`pick` の失敗は人に渡らない。どれも Issue を1本ずつ試す間は起きにくいので、試運転のあとに直す。
     - 改めた点（2026-11-03）：順に進めると押し出しがほぼ毎回起きるので、どの実行も状態から修正を待つ PR を拾う形にした。`stop` を外したあとの修正も、これで拾い直す。`pick` の失敗は今も人に渡らない。
   - GitHub の FAQ は、Claude の GitHub App に Workflow の書き込みの権限がないと書く。実物では試運転で確かめる。
@@ -588,7 +614,8 @@
   - お手本の音声は AAC の m4a にする。測定に通す音は WAV にして、自分のコードで読む。
   - 測定の結果は 0.01 秒の単位に丸めてから返す。
   - 依存は `preact`、`vite`、`marked`、`typescript`、`@types/node`、`wrangler`、`@playwright/test` の7つにする。この Mac に pnpm がないので、パッケージの管理は npm で行う。
-  - 公開は `production` ブランチだけにし、それ以外のブランチは Worker Previews に出す。
+  - 公開は `production` ブランチだけにし、それ以外のブランチは Worker Previews に出す。（2026-11-06 に改めた）
+    - 改めた点（2026-11-06）：`production` ブランチは作らず、`main` を本番に出す。「公開を main だけにし、yomimasu.karutalog.com で出す」を見る。
 - 理由：検索で読めるページと録音の画面を、依存を増やさずに1つのアプリで両立できる。測定のコードは1か所に置けるので、Web とスキルの定義がずれない。
 
 枠組みの実測（ダミーの104ページ、Mac で各1回）：
@@ -647,6 +674,7 @@
   - Android の実機と、GitHub Actions の x86-64 では動かしていない。
   - 合成音の結果は、測定の定義が実際の読みに合うことを示さない。
   - `production` ブランチの設定は文書で確かめただけで、実物では動かしていない。だめなら、GitHub Actions から `production` の push のときだけ `wrangler deploy` を実行する。
+    - 改めた点（2026-11-06）：本番のブランチを `main` にした。「公開を main だけにし、yomimasu.karutalog.com で出す」を見る。
   - 2つの音声を 1.0 秒あけて鳴らす処理は、まだ試していない。
 - 根拠（確認日 2026-11-02）：
   - [Build branches](https://developers.cloudflare.com/workers/ci-cd/builds/build-branches/)、[Workers Builds API](https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/)、[Worker Previews の設定](https://developers.cloudflare.com/workers/previews/configuration/)
