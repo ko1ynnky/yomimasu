@@ -3,6 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import type { Measurement } from '../../.claude/skills/yomimasu/scripts/measure.ts';
 import { nextPoint } from '../../.claude/skills/yomimasu/scripts/next-point.ts';
 import { loadExample } from './example.ts';
+import { ListenBack } from './listen-back.tsx';
 import { againUrl, NextPoint } from './next-point.tsx';
 import { latestKept, listRecords } from './records.ts';
 import { lastTake, measurementOf, type Take } from './take.ts';
@@ -38,7 +39,8 @@ function useHasKept(example: boolean) {
 const exampleAgain = (take: Take) => ({ label: '読んでみる', url: againUrl(take.pair) });
 
 // Take は声の処理の設定を持つが、measure に autoGainControl を渡していない。iPhone で設定の値を信じられるかを実機で確かめるまで渡さない（docs/measure.md）ので、声の大きさは出さない。
-// 聴き比べ（C6）の再生は、この take をそのまま鳴らす。例の録音は端末に残さないので、records.ts の loadTake では読み直せない。例のときは「自分の読み」と書かない。
+// 聴き比べ（C6）は、この take をそのまま鳴らす。例の録音は端末に残さないので、records.ts の loadTake では読み直せない。
+// 例の録音は利用者が読んだものではないので、「自分の読み」と書かない。
 function Result({ take, measurement, example }: { take: Take; measurement: Measurement; example: boolean }) {
   const notice = noticeOf(measurement);
   const level = levelSentence(measurement);
@@ -72,6 +74,7 @@ function Result({ take, measurement, example }: { take: Take; measurement: Measu
         more={hasKept ? [COMPARE] : []}
         again={example ? exampleAgain(take) : undefined}
       />
+      <ListenBack take={take} ownLabel={example ? '例の読み' : '自分の読み'} />
       <p class="fine">録音は端末の外へ出ません。</p>
     </>
   );

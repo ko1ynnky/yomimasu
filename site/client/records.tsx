@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { definition } from '../../.claude/skills/yomimasu/scripts/definition.ts';
 import { maSpread, pairLabel, recordedAtLabel, type MaSpread } from './compare.ts';
 import { AskNext, againUrl } from './next-point.tsx';
-import { playTake } from './play-take.ts';
+import { play, takeLoader } from './playback.ts';
 import { deleteAllRecords, deleteRecord, listRecords, loadTake, type TakeRecord } from './records.ts';
 import { resultRows } from './verdict.ts';
 import './result.css';
@@ -132,11 +132,9 @@ function Records() {
     stopPlaying.current();
     if (wasPlaying) return;
     setPlaying(record.id);
-    const stop = playTake(
-      () => loadTake(record),
-      () => setPlaying((current) => (current === record.id ? null : current)),
-    );
-    stopPlaying.current = stop;
+    const playback = play(takeLoader(() => loadTake(record)));
+    stopPlaying.current = playback.stop;
+    void playback.finished.then(() => setPlaying((current) => (current === record.id ? null : current)));
   }
 
   async function remove(id: number) {
