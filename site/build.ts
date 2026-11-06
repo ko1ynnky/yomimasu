@@ -10,7 +10,7 @@ import { INSTALL_MARKS, isOffered } from './install.ts';
 import { cardName, cardPage, cardUrl, expandCardRefs, finalSoundCounts, listHtml, parseAdvice } from './karuta.ts';
 import { kimarijiStream } from './kimariji-stream.ts';
 import { outputPathOf, parseSource, renderDocument, runFor } from './render.ts';
-import { skillZip } from './skill-zip.ts';
+import { chatgptPluginZip, skillZip } from './skill-zip.ts';
 
 const CONTENT_DIR = 'content';
 const OUT_DIR = 'dist';
@@ -75,4 +75,6 @@ for (const card of cards) {
 }
 
 // AI に入れる手順の画面が配るスキルのファイル。保存のボタンは <a href="/yomimasu.zip" download> である（docs/ui-guide.md の8節）。
+// ChatGPT にだけは、同じ知識をプラグインのアーカイブの形で配る（site/skill-zip.ts）。
 writeFileSync(join(OUT_DIR, 'yomimasu.zip'), skillZip());
+writeFileSync(join(OUT_DIR, 'yomimasu-chatgpt.zip'), chatgptPluginZip());

@@ -2,17 +2,18 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { crc32, deflateRawSync } from 'node:zlib';
 
-// 汎用の AI（Claude、ChatGPT、Gemini）に入れる /yomimasu.zip を、スキル yomimasu のフォルダーから作る。
-// ZIP の一番上は yomimasu/ にする。Claude の資料がこの形を求めている（docs/ui-guide.md の8節「保存するファイル」）。
+// 汎用の AI に入れる ZIP を、スキル yomimasu のフォルダーから2つ作る（docs/ui-guide.md の8節「保存するファイル」）。
+// - /yomimasu.zip（Claude と Gemini）：一番上を yomimasu/ にしたスキルの形。Claude の資料がこの形を求めている。
+// - /yomimasu-chatgpt.zip（ChatGPT）：一番上に plugin.json と skills/yomimasu/ を置くプラグインのアーカイブの形。
+// 2つの知識のファイルは同じで、skillZipFiles が1か所で選ぶ。
 
 const SKILL_DIR = '.claude/skills/yomimasu';
-const TOP = 'yomimasu/';
 
 // ZIP に入れるファイル（スキルのフォルダーからの相対パス）。中身の選び方はここだけで変える。
-// Claude、ChatGPT、Gemini に同じ ZIP を1つ配り、SKILL.md と references/ の Markdown だけを入れる。2026-11-06 にユーザーが Gemini で確かめた結果による。
+// SKILL.md と references/ の Markdown だけを入れる。2026-11-06 にユーザーが Gemini で確かめた結果による。
 // - Gemini の「スキルをアップロード」は commands.ts の入った ZIP を「unsupported file type」で拒んだ。ヘルプ（https://support.google.com/gemini/answer/17094296、同日に確認）も .ts を対応に挙げていない。
 // - URL のあるファイル（references/mouth-shapes.md）を入れると「このスキルを保存できませんでした（1124）」になった。assets/cards.json にも URL がある。
-// 汎用の AI ではスクリプトが動かない見込みなので、scripts/ が入らなくても知識の答えは変わらない。Claude と ChatGPT ではまだ試していない。
+// 汎用の AI ではスクリプトが動かない見込みなので、scripts/ が入らなくても知識の答えは変わらない。この中身で、Claude と Gemini は問いに対してスキルを読み込んで答えた（同日）。
 // 名前が . で始まるファイル（.DS_Store など）は入れない。Gemini のヘルプが、アップロードの失敗の元になると書いている。
 export const inZip = (path: string): boolean => path === 'SKILL.md' || /^references\/[^./][^/]*\.md$/.test(path);
 
@@ -65,7 +66,7 @@ export function editionSkill(skill: string, omitted: readonly string[]): string 
 
 // 利用の条件は、リポジトリの NOTICE.md と LICENSE を、そのまま写して添える。行を選んで抜き出すと、NOTICE.md の書き方を変えたときに条件が黙って抜け落ちる。
 export function editionNotice(notice: string, license: string): string {
-  return `この ZIP は、リポジトリ ko1ynnky/yomimasu のスキルのフォルダー \`${SKILL_DIR}/\` から、汎用の AI に入れるファイルを抜き出したものです。ファイルごとの扱いは、下に写したリポジトリの NOTICE.md のとおりです。表の場所はリポジトリの中のパスで、この ZIP の \`yomimasu/\` は \`${SKILL_DIR}/\` に当たります。たとえば \`SKILL.md\` は表の「スキルの \`SKILL.md\`」の行に、\`references/\` は「知識の文章」の行に当たります。LICENSE の本文は末尾に写しました。URL は外し、「${URL_NOTE}」と書きました。
+  return `この ZIP は、リポジトリ ko1ynnky/yomimasu のスキルのフォルダー \`${SKILL_DIR}/\` から、汎用の AI に入れるファイルを抜き出したものです。ファイルごとの扱いは、下に写したリポジトリの NOTICE.md のとおりです。表の場所はリポジトリの中のパスで、この ZIP の中の、\`SKILL.md\` のあるフォルダーは \`${SKILL_DIR}/\` に当たります。たとえば \`SKILL.md\` は表の「スキルの \`SKILL.md\`」の行に、\`references/\` は「知識の文章」の行に当たります。LICENSE の本文は末尾に写しました。URL は外し、「${URL_NOTE}」と書きました。
 
 ${notice.trimEnd()}
 
@@ -105,15 +106,16 @@ const DIR_MODE = 0o040755;
 
 type Entry = { name: string; method: 0 | 8; crc: number; size: number; body: Buffer; mode: number };
 
+// フォルダーの項目も入れる。ユーザーが Gemini で試した ZIP と同じ形である。
 function entriesOf(files: readonly ZipFile[]): Entry[] {
-  const dirs = new Set<string>([TOP]);
+  const dirs = new Set<string>();
   for (const { path } of files) {
     const parts = path.split('/').slice(0, -1);
-    parts.forEach((_, i) => dirs.add(`${TOP}${parts.slice(0, i + 1).join('/')}/`));
+    parts.forEach((_, i) => dirs.add(`${parts.slice(0, i + 1).join('/')}/`));
   }
   const entries: Entry[] = [
     ...[...dirs].map((name) => ({ name, method: 0 as const, crc: 0, size: 0, body: Buffer.alloc(0), mode: DIR_MODE })),
-    ...files.map(({ path, data }) => ({ name: TOP + path, method: 8 as const, crc: crc32(data), size: data.length, body: deflateRawSync(data, { level: 9 }), mode: FILE_MODE })),
+    ...files.map(({ path, data }) => ({ name: path, method: 8 as const, crc: crc32(data), size: data.length, body: deflateRawSync(data, { level: 9 }), mode: FILE_MODE })),
   ];
   return entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 }
@@ -177,4 +179,13 @@ function u32(value: number): Buffer {
   return buffer;
 }
 
-export const skillZip = (): Buffer => zip(skillZipFiles());
+const under = (folder: string, files: readonly ZipFile[]) => files.map(({ path, data }) => ({ path: `${folder}${path}`, data }));
+
+export const skillZip = (): Buffer => zip(under('yomimasu/', skillZipFiles()));
+
+// ChatGPT は、スキルとして上げると Work でしか使われず、プラグインのアーカイブにすると、ふだんの Chat でも使われた（2026-11-06 にユーザーのアカウントで確かめた）。
+// plugin.json は、そのとき通ったものと同じにする。$schema の URL は ChatGPT で通ったので、URL を外す決まりから外す。
+export const PLUGIN_JSON =
+  '{"$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json", "name": "yomimasu", "version": "0.1.0", "description": "競技かるたの読み（読唱）の知識。読手の読み方、時間の配分、余韻、間、伸ばす箇所を調べるときに使う。"}\n';
+
+export const chatgptPluginZip = (): Buffer => zip([{ path: 'plugin.json', data: Buffer.from(PLUGIN_JSON) }, ...under('skills/yomimasu/', skillZipFiles())]);

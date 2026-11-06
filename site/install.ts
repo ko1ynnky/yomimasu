@@ -48,19 +48,19 @@ export const SKETCHES: Record<string, Sketch> = {
     rows: [{ title: 'カスタマイズ' }, { tabs: [{ t: 'Skills', n: 2 }], action: { t: '＋ 追加', n: 3 } }],
     menu: [{ t: 'Skills をアップロード', n: 4 }, { t: 'Skills を作成' }],
   },
-  'chatgpt-upload': {
+  // ChatGPT にはプラグインのアーカイブを入れる（site/skill-zip.ts）。名前とたどる順は 2026-11-06 に確かめた画面のものである。
+  'chatgpt-plugin-upload': {
     host: 'chatgpt.com',
-    alt: 'ChatGPT の略図。左の「プラグイン」、「スキル」、「追加」、「コンピューターからアップロード」の順に押す',
-    side: [{ t: 'プラグイン', n: 1 }, { t: 'スキル', n: 2 }],
-    rows: [{ title: 'スキル', action: { t: '追加 ▾', n: 3 } }],
-    menu: [{ t: 'チャットで作成' }, { t: 'エディターで作成' }, { t: 'コンピューターからアップロード', n: 4 }],
+    alt: 'ChatGPT の略図。左の「プラグイン」、右上の「追加」、「プラグインアーカイブをアップロード」の順に押す',
+    side: [{ t: 'プラグイン', n: 1 }],
+    rows: [{ title: 'プラグイン', action: { t: '追加 ▾', n: 2 } }],
+    menu: [{ t: 'プラグインアーカイブをアップロード', n: 3 }],
   },
-  // ウェブの ChatGPT では、自分で上げたスキルは画面の上の「Work」でだけ使われ、ふだんの「Chat」では使われない（2026-11-06 に確かめた）。
-  'chatgpt-work': {
+  'chatgpt-plugin-install': {
     host: 'chatgpt.com',
-    alt: 'ChatGPT の略図。画面の上の「Chat」と「Work」のうち、「Work」を押して切り替える',
-    side: [{ t: 'プラグイン' }],
-    rows: [{ tabs: [{ t: 'Chat' }, { t: 'Work', n: 1 }] }],
+    alt: 'ChatGPT の略図。開いたページで「プラグインをインストール」を押す',
+    side: [],
+    rows: [{ title: 'yomimasu' }, { action: { t: 'プラグインをインストール', n: 1 } }],
   },
   'gemini-upload': {
     host: 'gemini.google.com',
@@ -88,7 +88,8 @@ export function sketchSvg(spec: Sketch): string {
   const mark = (item: { n?: number }, x: number, y: number, w: number, h: number) => {
     if (item.n) marks.push({ n: item.n, x, y, w, h });
   };
-  const sideW = Math.ceil(Math.max(...spec.side.map((item) => textW(item.t))) + 24);
+  // 左の列のない略図（開いたページの中だけを描くもの）もある。そのときは左の列を描かず、見出しを左端から置く。
+  const sideW = spec.side.length === 0 ? 0 : Math.ceil(Math.max(...spec.side.map((item) => textW(item.t))) + 24);
   const mainX = sideW + 12;
   let bottom = TOP;
   spec.side.forEach((item, i) => {
@@ -149,7 +150,7 @@ export function sketchSvg(spec: Sketch): string {
   const frame =
     `<rect x="0.5" y="0.5" width="${W - 1}" height="${H - 1}" rx="10" style="fill:var(--card);stroke:var(--rule)"/>` +
     `<path d="M1 ${TOP + 0.5}H${W - 1}" style="stroke:var(--rule-2)"/>` +
-    `<path d="M1 ${TOP + 1}H${sideW}V${H - 1}H11a10 10 0 0 1-10-10z" style="fill:var(--paper)"/>` +
+    (sideW > 0 ? `<path d="M1 ${TOP + 1}H${sideW}V${H - 1}H11a10 10 0 0 1-10-10z" style="fill:var(--paper)"/>` : '') +
     [14, 26, 38].map((cx) => `<circle cx="${cx}" cy="15" r="3.5" style="fill:var(--rule)"/>`).join('') +
     `<text x="52" y="20" style="font-size:${F}px;font-family:var(--f-mono);fill:var(--ink-3)">${escapeHtml(spec.host)}</text>`;
   const rings = marks.map((m) => `<rect x="${m.x}" y="${m.y}" width="${m.w}" height="${m.h}" rx="8" style="fill:none;stroke:var(--shu);stroke-width:2"/>`).join('');

@@ -2,27 +2,36 @@
 
 あとの作業に影響する技術と設計の判断を、新しいものを上にして書く。理由と、採らなかった案も残す。結論を改めるときは、元の項目を消さずに、改めた日付と理由を足す。
 
-## 2026-11-06 /install/ の画面を作り、汎用の AI には URL を外した知識の版の yomimasu.zip を配る
+## 2026-11-06 /install/ の画面を作り、汎用の AI には URL を外した知識の版を配る。ChatGPT にはプラグインの形で配る
 
 - 決めたこと（Issue #62）：
   - 尋ねる画面（`/install/`）と手順の4画面を `content/` の Markdown で書き、選択肢と略図は組み立てのときに差し込む（`site/install.ts`）。略図は見本の `sketchSvg` を組み立ての側へ移して SVG を書き出すので、JS がなくても出る。
-  - 選択肢の一覧は `site/install.ts` の `INSTALL_TARGETS` の1か所に置く。行を消した入れる先は、手順の画面も組み立てない。4つとも並べてある。各社で答えるかの結果は「限界」にある。
-  - `/yomimasu.zip` は組み立てで `dist/` に書き、静的なファイルとして配る。Worker が先に通すのは `/audio/*` だけなので、Worker は変えない。
-  - Claude、ChatGPT、Gemini に同じ ZIP を1つ配る。中身は `SKILL.md` と `references/` の Markdown だけにし、`scripts/` の `.ts` と `assets/` の `.json` は入れない。選び方は `site/skill-zip.ts` の `inZip` の1か所にある。
-  - 組み立てのときに、ZIP に入れるどのファイルからも `http://` と `https://` の URL を外し、「（URL はリポジトリの同じファイルにあります）」に置き換える（`withoutUrls`）。Markdown のリンクは文字を残す。資料の名前、節、参照日、ライセンスの文は残し、リポジトリのファイルは変えない。
+  - 選択肢の一覧は `site/install.ts` の `INSTALL_TARGETS` の1か所に置く。行を消した入れる先は、手順の画面も組み立てない。いまは4つとも出す。
+  - ZIP は2つ配り、どちらも組み立てで `dist/` に書いて、静的なファイルとして配る。Worker が先に通すのは `/audio/*` だけなので、Worker は変えない。
+    - `/yomimasu.zip`（Claude と Gemini）：一番上を `yomimasu/` にしたスキルの形。
+    - `/yomimasu-chatgpt.zip`（ChatGPT）：フォルダーを挟まず、一番上に `plugin.json` と `skills/yomimasu/` を置くプラグインのアーカイブ。`skills/yomimasu/` の中身は `/yomimasu.zip` の `yomimasu/` と同じである。`plugin.json` は、ChatGPT で通ったものと同じにする（`site/skill-zip.ts` の `PLUGIN_JSON`）。
+  - 知識は `SKILL.md` と `references/` の Markdown だけにし、`scripts/` の `.ts` と `assets/` の `.json` は入れない。選び方は `site/skill-zip.ts` の `inZip` の1か所にある。
+  - 組み立てのときに、ZIP に入れるどのファイルからも `http://` と `https://` の URL を外し、「（URL はリポジトリの同じファイルにあります）」に置き換える（`withoutUrls`）。Markdown のリンクは文字を残す。資料の名前、節、参照日、ライセンスの文は残し、リポジトリのファイルは変えない。`plugin.json` の `$schema` の URL だけは、ChatGPT で通った形なので残す。
   - ZIP の中の `SKILL.md` には、入れなかったフォルダー（`assets/` と `scripts/`）を知らせる節「この ZIP の版」を足す。この版のファイルがそこを指したときに中身を推測で埋めず、測ることを頼まれたら Web アプリを案内させるためである。リポジトリの `SKILL.md` は変えない。コーディングエージェントは `npx skills add` でリポジトリの `SKILL.md` をそのまま使う。説明（`description`）は変えない。スキルを読み込むかを決める文で、置き場を2つにすると食い違う。
-  - 利用の条件は、リポジトリの `NOTICE.md` の全文と `LICENSE` の本文を写した `yomimasu/NOTICE.md` を ZIP に入れて添える。冒頭に、ZIP の `yomimasu/` がリポジトリの `.claude/skills/yomimasu/` に当たることを書く。ここからも URL を外し、リポジトリは `ko1ynnky/yomimasu` と名前で書く。
+  - 利用の条件は、リポジトリの `NOTICE.md` の全文と `LICENSE` の本文を写した `NOTICE.md` を、`SKILL.md` と同じフォルダーに入れて添える。冒頭に、そのフォルダーがリポジトリの `.claude/skills/yomimasu/` に当たることを書く。ここからも URL を外し、リポジトリは `ko1ynnky/yomimasu` と名前で書く。
   - ZIP は依存を足さずに、Node の `zlib`（`deflateRawSync` と `crc32`）で書く。同じ中身から同じバイト列にするため、時刻は ZIP の日付の最小の 1980-01-01 00:00 に固定し、項目は名前の順に並べる。フォルダーの項目も入れる。ユーザーが Gemini で試した ZIP と同じ形である。
+  - スキルの `インストール` と `インストール Claude/ChatGPT/Gemini` の答え（`scripts/commands.ts`）は、Web の画面と同じ選択肢、例、段、文にする。Web とスキルは同じ内容を返す決まり（ガイド8節）だからである。食い違いは `test/site/install.test.ts` が見る。
   - 「yomimasu.zip を保存」と「コピー」は、ボタンの文字を打ち込むが、保存とクリップボードへの書き込みは押した時点で始める。
   - 尋ねる画面は入力の行がないので、道具の画面（`tool: true`）として組む。ブロックの間は道具の画面の 10px に詰めず、見本の `t-ai` と同じ 16px にする（`site/client/ui/install.css`）。
-- 経緯（2026-11-06 にユーザーが Gemini で確かめた。Gemini のヘルプ https://support.google.com/gemini/answer/17094296 も同日に確認）：
+- 経緯（2026-11-06。Gemini はユーザーが確かめた。ChatGPT は別のセッションがユーザーのアカウントで確かめた）：
   - はじめはガイドのとおり、スキルのフォルダーをそのまま入れていた。Gemini の「スキルをアップロード」は `commands.ts` の入った ZIP を「unsupported file type」で拒んだ。アップロードの画面は PDF、CSV、PY、TXT、MD を挙げ、ヘルプは `.json`、`.md`、`.js`、`.py` を対応、`.ts` を非対応としている。
   - `SKILL.md` と `references/` に絞っても、15ファイルを全部入れると「このスキルを保存できませんでした（1124）」になった。ユーザーが13通り試すと、落ちたのは URL のある `mouth-shapes.md` を入れたときだけで、その URL を消すと通った。日本語の URL を % で符号化しても落ちた。`assets/cards.json` にも URL がある。
   - ヘルプは、アーカイブの入れ子が非対応で、`.DS_Store` などの隠しファイルが失敗の元になり、合計は 100 MB までとしている。`inZip` は名前が `.` で始まるファイルを入れない。
+  - URL を外した版を3社に入れると、Claude と Gemini は問いに対してスキルを読み込んで答えた。ChatGPT はアップロードできたが、スキルを使わずに答えた。
+  - ウェブの ChatGPT では、自分で上げたスキルは画面の上の「Work」でだけ使われ、ふだんの「Chat」では使われなかった。Chat で「スキル yomimasu を使って」と頼んでも、利用できるスキルの一覧に yomimasu がないと答えた。説明（`description`）は関係しなかった。
+  - 同じ知識をプラグインのアーカイブにして入れると、ふだんの Chat で問いをそのまま聞いても使われた。入力欄で「@」を打って yomimasu を選んでも使われた。
+  - 出典：Gemini のヘルプ https://support.google.com/gemini/answer/17094296 、OpenAI の Package your plugin https://developers.openai.com/plugins/build/plugins 、Build skills https://learn.chatgpt.com/docs/build-skills 、Skills and plugins https://learn.chatgpt.com/docs/skills-and-plugins （どれも確認日 2026-11-06）。
 - 採らなかった案：
   - スキルのフォルダーをそのまま入れる案。Gemini が拒む。
-  - Gemini の対応する拡張子（`.md` と `.json`）を入れ、拡張子で選ぶ案。`cards.json` にも出典の URL が2つある。Gemini の切り分けのあとで、汎用の AI に配る ZIP は `SKILL.md` と `references/` だけにすると決めた（2026-11-06）。
-  - 入れる先ごとに別の ZIP を配る案。Claude と ChatGPT ではまだ試しておらず、分ける理由が分かっていない。保存のボタンとファイルを1つにしておく。
+  - Gemini の対応する拡張子（`.md` と `.json`）を入れ、拡張子で選ぶ案。`cards.json` にも出典の URL が2つある。Gemini の切り分けのあとで、汎用の AI に配る知識は `SKILL.md` と `references/` だけにすると決めた（2026-11-06）。
+  - ChatGPT にもスキルの ZIP を配り、「Work に切り替える」段を足す案。一度この形で作った。ふだんの Chat で使われず、利用者が切り替えを忘れると知識が使われない。プラグインなら切り替えが要らない。
+  - ChatGPT にスキルとプラグインの両方を入れてもらう案。Work の「@」に yomimasu が2つ並び、紛らわしい。手順はプラグインだけにした。この経緯は画面には書かない。
+  - 3社に同じ ZIP を1つ配る案。ChatGPT はプラグインの形でないと Chat で使われず、Claude はスキルの形（一番上が `yomimasu/`）を求める。
   - URL のあるファイルを ZIP から外す案。`mouth-shapes.md` は口の形と「ん」の知識の本体で、URL は末尾の出典の行にしかない。
   - リポジトリの `mouth-shapes.md` から URL を消す案。`NOTICE.md` の「そのほかの資料」は、URL と参照した日を `mouth-shapes.md` の「出典」に置くとしている。Web とコーディングエージェントでは URL が使える。
   - `NOTICE.md` から ZIP に入るものの行だけを抜き出す案。`NOTICE.md` の行の書き方を変えたときに、条件が黙って抜け落ちる。抜き出せなければ組み立てを止める形にしても、`NOTICE.md` を直すたびに組み立ての側も直すことになる。
@@ -30,15 +39,14 @@
   - `LICENSE` を別のファイルで入れる案。拡張子のない名前は、Gemini の対応する形式に当たらない見込みである。
   - ZIP のライブラリを依存に足す案。書くのは決まった20個ほどの項目で、`zlib` だけで100行ほどで書ける。依存を足すと、理由の記録と `go:merge` の制限（`REVIEW.md`）がかかる。
   - 保存とクリップボードへの書き込みを、打ち込み終えてから始める案（ガイド8節「押したらターミナルに出す」のふだんの順）。押してから時間を空けると、ブラウザーが利用者の操作として扱わず、保存や書き込みを断るおそれがある。iOS の Safari の音と同じ理由である（`site/client/ui/shell.ts`）。
+  - スキルの答えを Web の画面の Markdown から組み立てる案。スキルは `content/` を持たずに配られる。答えは `commands.ts` に書き、画面との食い違いをテストで止める。
 - 限界：
-  - 2026-11-06 に、ユーザーが URL を外した ZIP（`yomimasu/SKILL.md` と `yomimasu/references/*.md`）を3社に入れて試した。Claude と Gemini は、問いに対してスキルを読み込んで答えた。ChatGPT はアップロードできたが、スキルを使わずに答えた。
-  - 同じ日に、別のセッションがユーザーのアカウントで ChatGPT を調べた。ウェブの ChatGPT では、自分で上げたスキルは画面の上の「Work」でだけ使われ、ふだんの「Chat」では使われなかった。Chat で「スキル yomimasu を使って」と頼んでも、利用できるスキルの一覧に yomimasu がないと答えた。説明（`description`）は関係しなかった。Work では、問いをそのまま聞いても、入力欄で「@」を打ってスキルの「yomimasu」を選んでも使われた。出典（確認日 2026-11-06）：https://learn.chatgpt.com/docs/build-skills 、https://learn.chatgpt.com/docs/skills-and-plugins
-  - そのため ChatGPT の手順に「Work に切り替える」段と略図を足し、「ふだんの Chat ではスキルが使われません。Work に切り替えてから聞いてください。」と書いた。「聞いてみる」には「@」で選ぶ聞き方も添えた。ChatGPT の画面にはスキルを読み込んだ印が出ないので、答えがスキルに基づくと言い切る文は書かない。
+  - ChatGPT のプラグインの道は、手で作った同じ形の ZIP で確かめた。このアプリが組み立てた `yomimasu-chatgpt.zip` を入れて答えるところは、確かめていない。ChatGPT の画面にはスキルを読み込んだ印が出ないので、答えがスキルに基づくと言い切る文は書かない。
   - ZIP には `assets/cards.json` が入らない。`references/` の文には札ごとの値を表に任せている所（伸ばす箇所、発音など）があり、札ごとの問いには答えられない見込みである（確かめていない）。
   - ZIP の中の出典は URL をたどれない。資料の名前と参照日から探すか、リポジトリの同じファイルを見ることになる。リポジトリは公開する前である。
   - URL を外す正規表現は、空白、かっこ、かぎかっこ、句読点で URL が終わるとみなす。それ以外で終わる URL の後ろが残っても、`http://` と `https://` が残らないことだけはテストで確かめている。
-  - スキルの答え（`scripts/commands.ts` の `インストール Claude` などの `note`）と README の「入れて答えることを確かめてから、こことアプリに足します」は、Web の手順の画面とそろっていない。Web のボタンとスキルは同じ内容を返す決まり（ガイド8節）なので、確かめた結果に合わせて直す。
-  - `npx skills add ko1ynnky/yomimasu` は、リポジトリを公開するまで動かない。
+  - `npx skills add ko1ynnky/yomimasu` は、リポジトリを公開するまで動かない。公開は 11/7 の予定で、画面には断りを出さない。出すと公開のあとに消し忘れる。
+  - iOS の Safari での保存とコピーは確かめていない。
   - deflate の出力は Node の `zlib` の版で変わりうる。同じ版の中で同じバイト列になることだけを確かめた。
 
 ## 2026-11-06 公開を main だけにし、yomimasu.karutalog.com で出す

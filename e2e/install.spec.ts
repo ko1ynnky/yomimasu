@@ -19,7 +19,7 @@ const PROCEDURES: Record<string, { heading: string; where: string; steps: string
   '/install/chatgpt/': {
     heading: 'ChatGPT に入れる',
     where: 'パソコンのブラウザーで、chatgpt.com を開いて進めます。',
-    steps: ['ファイルを保存する', 'ファイルをアップロードする', 'Work に切り替える', '聞いてみる'],
+    steps: ['ファイルを保存する', 'ファイルをアップロードする', 'プラグインをインストールする', '聞いてみる'],
     figures: 2,
   },
   '/install/gemini/': {
@@ -164,7 +164,7 @@ for (const path of OFFERED) {
     const figures = page.locator('.sketch svg[role="img"]');
     await expect(figures).toHaveCount(expected.figures);
     for (const label of await figures.evaluateAll((svgs) => svgs.map((svg) => svg.getAttribute('aria-label') ?? ''))) {
-      expect(label).toMatch(/の略図。.+(の順に押す|をオンにする|を押して切り替える)$/);
+      expect(label).toMatch(/の略図。.+(押す|オンにする)$/);
     }
     await expect(page.locator('main img, main image, main picture')).toHaveCount(0);
 
@@ -173,15 +173,18 @@ for (const path of OFFERED) {
       await expect(page.getByRole('link', { name: 'yomimasu.zip を保存' })).toHaveCount(0);
       await expect(page.locator('main .fine')).toContainText('npx skills update');
     } else {
-      const save = page.getByRole('link', { name: 'yomimasu.zip を保存' });
-      await expect(save).toHaveAttribute('href', '/yomimasu.zip');
+      // ChatGPT にはプラグインのアーカイブを、Claude と Gemini にはスキルの ZIP を配る（docs/ui-guide.md の8節「保存するファイル」）。
+      const file = path === '/install/chatgpt/' ? 'yomimasu-chatgpt.zip' : 'yomimasu.zip';
+      const save = page.getByRole('link', { name: `${file} を保存` });
+      await expect(save).toHaveAttribute('href', `/${file}`);
       await expect(save).toHaveAttribute('download', '');
       await expect(page.locator('.cmd code')).toHaveText([ASK_EXAMPLE]);
-      await expect(page.locator('main .fine')).toHaveText(/^プランによっては使えません。画面の名前は、2026年11月4日.*にパソコンのブラウザーで確かめたものです。$/);
+      await expect(page.locator('main .fine')).toHaveText(/^プランによっては使えません。画面の名前は、2026年11月\d+日にパソコンのブラウザーで確かめたものです。$/);
     }
     if (path === '/install/chatgpt/') {
-      await expect(page.locator('.list')).toContainText('ふだんの Chat ではスキルが使われません。Work に切り替えてから聞いてください。');
-      await expect(page.locator('.list')).toContainText('入力欄で「@」を打ち、スキルの「yomimasu」を選んでから聞きます。');
+      await expect(page.locator('.list')).toContainText('「プラグインアーカイブをアップロード」');
+      await expect(page.locator('.list')).toContainText('ふだんのチャットで、読みのことを聞きます。');
+      await expect(page.locator('main')).not.toContainText('Work');
     }
     await expect(page.locator('.cmd').getByRole('button', { name: 'コピー' })).toHaveCount(path === '/install/agent/' ? 2 : 1);
     await expect(page.locator('.next').getByRole('link', { name: 'ほかの AI に入れる' })).toHaveAttribute('href', '/install/');
@@ -189,11 +192,13 @@ for (const path of OFFERED) {
   });
 }
 
-test('/yomimasu.zip は ZIP で配られ、保存を押すと保存が始まり、ボタンの文字を打ち込んでから入力の行を空に戻す', async ({ page, request }) => {
-  const response = await request.get('/yomimasu.zip');
-  expect(response.status()).toBe(200);
-  expect(response.headers()['content-type']).toContain('zip');
-  expect((await response.body()).subarray(0, 4)).toEqual(Buffer.from([0x50, 0x4b, 0x03, 0x04]));
+test('/yomimasu.zip と /yomimasu-chatgpt.zip は ZIP で配られ、保存を押すと保存が始まり、ボタンの文字を打ち込んでから入力の行を空に戻す', async ({ page, request }) => {
+  for (const file of ['/yomimasu.zip', '/yomimasu-chatgpt.zip']) {
+    const response = await request.get(file);
+    expect(response.status(), file).toBe(200);
+    expect(response.headers()['content-type'], file).toContain('zip');
+    expect((await response.body()).subarray(0, 4), file).toEqual(Buffer.from([0x50, 0x4b, 0x03, 0x04]));
+  }
 
   const general = OFFERED.find((path) => path !== '/install/agent/');
   test.skip(!general, '保存のボタンは汎用の AI の手順にしかない');
