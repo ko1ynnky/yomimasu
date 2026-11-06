@@ -7,6 +7,10 @@
 // - 「を」の読み分け。「を」に掛かる読み方一覧の注（62番）と、「を」で始まる札を母音で始まる札として扱うこと（26番）は出さない。
 // - 44番と93番の二句の伸ばし方。改訂の前の二句の読みも書かない。
 // - 母音の無声化の「作者の見解」。候補の一覧にない作者個人の考えなので、1首のページには出さない。
+//
+// 全部かほとんどの札に当たる規則（余韻で伸ばす音、四句の途中の伸ばし、鼻濁音、句切れと掛詞、字余り、2020年の改訂）は、
+// card-rules.md にはあるが、1首のページには出さない（docs/decisions.md の 2026-11-06 の項目）。同じ文が101ページに並び、札ごとの点が埋もれるからである。
+// 全部の札に共通の点は「ポイントを知る」にあり、1首のページはそこへ案内する。余韻で伸ばす音は、口の形の図の見出しに出す。
 import { soundOffset, type Card, type Phrase } from '../../.claude/skills/yomimasu/scripts/cards.ts';
 
 export type Priority = '高' | '中' | '低';
@@ -15,9 +19,7 @@ export type Priority = '高' | '中' | '低';
 export type Point = { id: string; priority: Priority; title: string; body: string; source: string; count?: number };
 
 const GRAND = new Set([11, 15, 31, 50, 64, 76]);
-const PHRASE_LENGTHS = [5, 7, 5, 7, 7];
 const HA_ROW = new Set('はひふへほ');
-const NASAL = new Set('がぎぐげご');
 const VOICELESS_VOWEL = new Set('きしちひくすつふ');
 const VOICELESS_NEXT = new Set('かきくけこさしすせそたちつてとはひふへほぱぴぷぺぽ');
 
@@ -79,22 +81,6 @@ function shoku6(card: Card): Point[] {
   ];
 }
 
-// 初句の6字は上の shoku6 で扱うので、ここでは二句から後の字余りだけを出す。
-function jiamari(card: Card): Point[] {
-  if (card.no === 0) return [];
-  const long = card.phrases.flatMap((p, i) => (i > 0 && p.kana.length > PHRASE_LENGTHS[i] ? [`${quote(p.kana)}（${p.kana.length}字）`] : []));
-  if (long.length === 0) return [];
-  return [
-    {
-      id: 'jiamari',
-      priority: '低',
-      title: '字余りの句がある',
-      body: `${join(long)}は、決まった字数より多い字余りの句です。`,
-      source: '協会の資料（講習資料 s.18）',
-    },
-  ];
-}
-
 // 冊子 p.27 の例。読んだ札 → 聞こえる札。決まり字が変わっていく途中の例は transitional にした。
 const CONSONANT_DROPS: readonly { from: number[]; to: number[]; transitional?: true }[] = [
   { from: [55], to: [1] },
@@ -147,22 +133,15 @@ function shiin(card: Card): Point[] {
 // 「を」で始まる札は、「を」の読み分けを確かめるまで比べない。
 const heardKimariji = (card: Card) => card.kimariji!.sound.replaceAll('おう', 'おお');
 
-function tomofuda(card: Card, cards: readonly Card[]): Point[] {
-  if (!card.kimariji || card.kimariji.kana.length < 2 || card.kimariji.kana.startsWith('を')) return [];
+// 項目の形にせず、札の名前だけの1行にする（2026-11-06 のユーザーの判断）。読み比べる練習の文は92首で同じになるからである。
+export function sameStartLine(card: Card, cards: readonly Card[]): string | null {
+  if (!card.kimariji || card.kimariji.kana.length < 2 || card.kimariji.kana.startsWith('を')) return null;
   const prefix = heardKimariji(card).slice(0, -1);
   const friends = cards
     .filter((c) => c.no !== card.no && c.kimariji && !c.kimariji.kana.startsWith('を') && heardKimariji(c).startsWith(prefix))
     .sort((a, b) => (a.kimariji!.kana < b.kimariji!.kana ? -1 : 1));
-  if (friends.length === 0) return [];
-  return [
-    {
-      id: 'tomofuda',
-      priority: '中',
-      title: '出だしが同じ札と読み比べる',
-      body: `${refs(friends.map((c) => c.no))}と、決まり字の1字手前まで同じ音です。続けて読み比べ、決まり字までの速さと読み方がそろっているかを確かめます。`,
-      source: '協会の資料（講習資料 s.15-16、s.18）',
-    },
-  ];
+  if (friends.length === 0) return null;
+  return `出だしが同じ札：${refs(friends.map((c) => c.no))}`;
 }
 
 // 発音
@@ -190,31 +169,7 @@ const soundText = (sound: string) => (sound === 'ー' ? '前の音を伸ばす�
 
 const spotText = (phrase: Phrase, at: number, length: number) => `${quote(wordAt(phrase, at))}の${quote(phrase.kana.slice(at, at + length))}`;
 
-// 字数の変わる読み替え（てふ、けふ）の途中の字は、1字の音に分けられないので null を返す。
-function soundCharAt(phrase: Phrase, at: number): string | null {
-  const changing = phrase.diffs.find((d) => d.sound.length !== d.kana.length && d.at <= at && at < d.at + d.kana.length);
-  if (changing) return at === changing.at ? changing.sound[0] : null;
-  return phrase.sound[soundOffset(phrase, at)] ?? null;
-}
-
 const soundAt = (phrase: Phrase, at: number, length: number) => phrase.sound.slice(soundOffset(phrase, at), soundOffset(phrase, at + length));
-
-function bidakuon(card: Card): Point[] {
-  const spots = card.phrases.flatMap((p) =>
-    [...p.kana].flatMap((_, at) => (at > 0 && NASAL.has(soundCharAt(p, at) ?? '') ? [spotText(p, at, 1)] : [])),
-  );
-  if (spots.length === 0) return [];
-  return [
-    {
-      id: 'bidakuon',
-      priority: '低',
-      title: '語の途中のガ行は鼻濁音',
-      body: `語の途中か終わりにあるガ行の音は、原則として鼻濁音で読みます。この札では${join(spots)}です。`,
-      source: '協会の資料（冊子 p.27、p.29、p.33-34）',
-      count: spots.length,
-    },
-  ];
-}
 
 function museika(card: Card): Point[] {
   if (!card.kimariji) return [];
@@ -228,9 +183,8 @@ function museika(card: Card): Point[] {
       id: 'museika',
       priority: '低',
       title: '決まり字の中に、母音が無声になりやすい音がある',
-      body:
-        `${join(spots)}は、母音の i か u が無声の子音にはさまれ、喉を震わせない音になりやすい所です。` +
-        '冊子は、無声化を意識して避けると読みがかえって不自然になると注意します。講習資料は、読みは会話よりはっきり発音するので有声になることもあり、読手によって違うとしたうえで、差を大げさに出さず、無理にそろえもしない自然な読みを勧めます。',
+      // 無声化の仕組みと資料ごとの言い方は「ポイントを知る」にあるので、ここでは箇所と読み方だけを書く（2026-11-06 のユーザーの判断）。
+      body: `${join(spots)}は、母音が無声になりやすい所です。無理に避けず、自然に読みます。`,
       source: '協会の資料（冊子 p.29-30、講習資料 s.19）',
     },
   ];
@@ -335,21 +289,6 @@ export function finalSound(card: Card): FinalSound {
   return { kana, vowel };
 }
 
-// 弱め方の練習は作者の経験なので、ここでは協会の資料の余韻の決まりと、その札の音だけを書き、練習は「ポイントを知る」に分ける。
-function yoinOto(card: Card): Point[] {
-  const { kana, vowel } = finalSound(card);
-  const which = vowel === 'ん' || vowel === kana ? quote(kana) : `${quote(kana)}（母音は${quote(vowel)}）`;
-  return [
-    {
-      id: 'yoin-oto',
-      priority: '中',
-      title: `余韻で伸ばす音は${quote(kana)}`,
-      body: `余韻は、下の句の最後の音を伸ばしていく部分です。この札では最後の${which}を伸ばし、消えていく間に${vowel === 'ん' ? '音' : '母音の音'}を変えません。最後の音ごとに弱め方を練習する方法は「ポイントを知る」にあります（作者の経験）。`,
-      source: '協会の資料（冊子 p.3、講習資料 s.8、s.24）',
-    },
-  ];
-}
-
 // 伸ばす位置
 
 const stretchesIn = (card: Card, phrase: number) => card.stretches.filter((s) => s.phrase === phrase).map((s) => s.after);
@@ -405,24 +344,6 @@ function shimoTail(card: Card): Point[] {
   ];
 }
 
-const SHIKU_EXAMPLES = new Set([3, 14, 16, 22, 27, 33, 50, 57, 58, 68, 74, 79, 86, 87]);
-
-function shiku(card: Card): Point[] {
-  const fourth = kanaOf(card, 3);
-  const inside = stretchesIn(card, 3).filter((after) => after < fourth.length);
-  if (inside.length !== 1) return [];
-  const example = SHIKU_EXAMPLES.has(card.no) ? '句の途中には伸ばしてよい所と悪い所があり、冊子はこの札を例に挙げて区切りを示しています。' : '';
-  return [
-    {
-      id: 'shiku',
-      priority: '中',
-      title: '四句の途中で1回伸ばす',
-      body: `四句は${splitAt(fourth, inside[0])}。どの札も四句の途中で1回伸ばします。${example}`,
-      source: `協会の資料（冊子 p.26${example ? '、p.27' : ''}、講習資料 s.30）`,
-    },
-  ];
-}
-
 function alt(card: Card): Point[] {
   return card.alternatives.map((a) => {
     const grand = a.phrases[0] < 3;
@@ -452,66 +373,6 @@ function notes(card: Card): Point[] {
       body: `読み方一覧は、${join(spots)}のように、ふりがなに括弧に入れた小さな仮名を添えています。括弧の意味を説明する文は資料にありません。`,
       source: `協会の資料（冊子 p.${card.origin.notation.page}）`,
     },
-  ];
-}
-
-// 講習資料 s.28-31 が挙げた札。44番と93番の二句の項目は入れない（このファイルの冒頭）。
-const REVISION: readonly { cards: number[]; text: (card: Card) => string; source: string }[] = [
-  {
-    cards: [10, 19, 23, 33, 37, 38, 53, 57, 75, 87, 99, 100],
-    text: () => '上の句の終わりは、前は最後の1字の前でも2字の前でも伸ばせましたが、最後の1字の前にそろえました。',
-    source: '講習資料 s.28',
-  },
-  {
-    cards: [8, 83, 93],
-    text: () => '上の句の終わりを最後の2字の前で伸ばす決まりは、改訂の後も残りました。',
-    source: '講習資料 s.29',
-  },
-  {
-    cards: [...EITHER_TAIL],
-    text: () => '上の句の終わりは、前は最後の2字の前で伸ばす決まりでしたが、最後の1字の前でもよくなりました。',
-    source: '講習資料 s.29',
-  },
-  {
-    cards: [17, 42],
-    text: (card) => `四句の途中に伸ばしがありませんでしたが、${quote(kanaOf(card, 3).slice(0, stretchesIn(card, 3)[0]))}の後で伸ばすようになりました。`,
-    source: '講習資料 s.30',
-  },
-  {
-    cards: [7, 14, 29, 37, 58, 69, 86],
-    text: () => '四句の途中の伸ばし方を1通りにそろえました。',
-    source: '講習資料 s.31',
-  },
-  { cards: [99], text: () => '四句の途中の伸ばし方が2通りになりました。', source: '講習資料 s.31' },
-  { cards: [95], text: () => '三句「おほふかな」の注が変わりました。', source: '講習資料 s.31' },
-];
-
-function kaitei(card: Card): Point[] {
-  const changes = REVISION.filter((r) => r.cards.includes(card.no));
-  if (changes.length === 0) return [];
-  return [
-    {
-      id: 'kaitei',
-      priority: '低',
-      title: '2020年の改訂で読み方が変わった',
-      body: `改訂の前の読み方を覚えている人向けです。${changes.map((r) => r.text(card)).join('')}新しい読みは2021年4月1日からです。`,
-      source: `協会の資料（${[...new Set(changes.map((r) => r.source))].join('、')}、冊子 p.1）`,
-    },
-  ];
-}
-
-// 品詞分解の印。表に列がないので、card-rules.md が冊子を目で見て数えた札をそのまま使う。
-const KUGIRE = new Set([2, 8, 9, 11, 12, 13, 17, 20, 23, 24, 28, 29, 34, 35, 38, 40, 41, 42, 51, 59, 60, 66, 72, 73, 74, 78, 83, 84, 86, 89, 90, 91, 93, 95, 99]);
-const KAKEKOTOBA = new Set([1, 8, 9, 10, 14, 16, 19, 20, 22, 24, 25, 27, 28, 30, 48, 51, 60, 61, 62, 64, 67, 71, 72, 77, 83, 88, 91, 94, 95, 96, 97, 98, 100]);
-
-function hinshi(card: Card): Point[] {
-  return [
-    ...(KUGIRE.has(card.no)
-      ? [{ id: 'kugire', priority: '低' as const, title: '歌の途中に句切れがある', body: '歌の途中で意味や内容が切れる所（句切れ）があります。冊子の品詞分解に印があります。語のまとまりを分かったうえで読むための資料です。', source: '協会の資料（冊子 p.16-22）' }]
-      : []),
-    ...(KAKEKOTOBA.has(card.no)
-      ? [{ id: 'kakekotoba', priority: '低' as const, title: '掛詞がある', body: '1つの言葉に2つ以上の意味を持たせた語（掛詞）があります。冊子の品詞分解で枠に囲まれています。', source: '協会の資料（冊子 p.16-22）' }]
-      : []),
   ];
 }
 
@@ -568,29 +429,22 @@ export const sourceLines = (card: Card, text: string): string[] => [
 
 const ORDER: Record<Priority, number> = { 高: 0, 中: 1, 低: 2 };
 
-export function rulePoints(card: Card, cards: readonly Card[]): Point[] {
+export function rulePoints(card: Card): Point[] {
   const points = [
     ...joka(card),
     ...oyama(card),
     ...shoku6(card),
     ...shiin(card),
     ...ichiji(card),
-    ...tomofuda(card, cards),
-    ...yoinOto(card),
     ...kamiTail(card),
-    ...shiku(card),
     ...shimoTail(card),
     ...alt(card),
     ...hagyo(card),
     ...choon(card),
     ...mu(card),
     ...kana(card),
-    ...bidakuon(card),
     ...museika(card),
     ...notes(card),
-    ...jiamari(card),
-    ...kaitei(card),
-    ...hinshi(card),
   ];
   return points.sort((a, b) => ORDER[a.priority] - ORDER[b.priority]);
 }
