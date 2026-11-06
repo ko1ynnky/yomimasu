@@ -26,24 +26,35 @@ const launchWithFakeMic = (pcm: Float32Array, rate: number) =>
     args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', `--use-file-for-fake-audio-capture=${writeFakeMicFile(pcm, rate)}%noloop`],
   });
 
+// 本番では、配信の Cloudflare がどのページにもアクセス解析とボット対策のスクリプトを差し込み、同じオリジンのこのパスへ本文つきで送る。
+// アプリのコードではなく、ユーザーが残すと決めた（docs/decisions.md の 2026-11-07）。wrangler dev は差し込まないので、手元と CI ではここで外れる送信はない。
+const EDGE_INJECTED_PATHS = ['/cdn-cgi/rum', '/cdn-cgi/challenge-platform/'];
+const isEdgeInjected = (url: string, origin: string) => {
+  const { origin: to, pathname } = new URL(url);
+  return to === origin && EDGE_INJECTED_PATHS.some((path) => pathname.startsWith(path));
+};
+
 // 本文つきの送信を、通信と sendBeacon の両方で記録する。
 async function openPage(browser: Browser, baseURL: string | undefined, path: string) {
   const page = await (await browser.newContext({ baseURL })).newPage();
+  const origin = new URL(path, baseURL).origin;
   const sent: string[] = [];
   page.on('request', (request) => {
-    if (!['GET', 'HEAD'].includes(request.method())) sent.push(`${request.method()} ${request.url()}`);
+    if (['GET', 'HEAD'].includes(request.method()) || isEdgeInjected(request.url(), origin)) return;
+    sent.push(`${request.method()} ${request.url()}`);
   });
   await page.addInitScript(() => {
     localStorage.setItem('yomimasu.recHelpDone', '1');
     const beacons: string[] = [];
     navigator.sendBeacon = (url) => {
-      beacons.push(String(url));
+      beacons.push(new URL(url, location.href).href);
       return true;
     };
     Object.assign(window, { beacons });
   });
   await page.goto(path);
-  const beacons = () => page.evaluate(() => (window as unknown as { beacons: string[] }).beacons);
+  const beacons = async () =>
+    (await page.evaluate(() => (window as unknown as { beacons: string[] }).beacons)).filter((url) => !isEdgeInjected(url, origin));
   return { page, sent, beacons };
 }
 
@@ -178,7 +189,7 @@ function builtPages(dir = 'dist', route = '/'): string[] {
   });
 }
 
-test('どの画面を開いても、本文つきの送信をしない', async ({ browser, baseURL }) => {
+test('どの画面を開いても、配信の Cloudflare が差し込むスクリプトのほかは、本文つきの送信をしない', async ({ browser, baseURL }) => {
   test.setTimeout(240_000);
   const pages = builtPages();
   expect(pages).toContain('/result/');
