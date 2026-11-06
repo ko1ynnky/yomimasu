@@ -54,12 +54,21 @@ test('読み札には、本文の出典と、再利用を認めないことが�
   assert.match(output, /Unlicense/);
   assert.match(output, /MIT License の範囲外/);
   assert.match(output, /再利用を認めません/);
-  assert.match(output, /公認を受けていません/);
+  assert.match(output, /全日本かるた協会の公認を受けていません/);
+  assert.match(output, /Anthropic の製品ではありません/);
   assert.doesNotMatch(output, /序歌の本文/);
 });
 
-test('序歌を選ぶと、序歌の本文の出典も付く', () => {
-  assert.match(readingCards(deck, ['0']), /序歌の本文/);
+test('序歌を選ぶと、序歌の本文の出典が、資料の名前と版とページで付く', () => {
+  const output = readingCards(deck, ['0']);
+  assert.match(output, /序歌の本文/);
+  assert.ok(output.includes(`${deck.sources.list.title}、${deck.sources.list.edition}、p.${deck.sources.joka.pages}`));
+});
+
+test('読み方一覧の形に合わせた札を選ぶと、そのことを資料の名前と版で付ける', () => {
+  const output = readingCards(deck, ['33', '4']);
+  assert.ok(output.includes(`33番の本文は、${deck.sources.list.title}、${deck.sources.list.edition}の形に合わせました`));
+  assert.doesNotMatch(readingCards(deck, ['4']), /形に合わせました/);
 });
 
 test('コマンドで実行すると、指定した札の読み札を出す', () => {

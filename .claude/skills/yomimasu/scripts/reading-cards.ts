@@ -2,15 +2,18 @@
 // 使い方：node scripts/reading-cards.ts た 1 0
 //   数字は札の番号（0 は序歌）、それ以外は決まり字の頭の仮名として選ぶ。
 //
-// 読み札に出すのは、公開の本文データから来た本文と仮名の列だけである。
+// 読み札に出すのは、本文と仮名の列だけである。どちらも公開の本文データを直したもので、序歌と一部の札は読手テキストの読み方一覧の形に合わせてある。
 // 伸ばす印、ふりがな、注は読手テキストから来た値で、印刷して渡す形に広げるとアプリの再利用の範囲を超えやすいので出さない。
 // 出典と権利の文は「このアプリについて」と NOTICE.md の書き方に合わせる。どちらかを直したら、ここも直す。
+// 読み札は単独で渡ることがあるので、資料は呼び名ではなく、表の sources の名前と版で書く。
 
 import { fileURLToPath } from 'node:url';
 import { JOKA, type Card } from './cards.ts';
 
 type Sources = {
   csv: { title: string; url: string; commit: string; license: string };
+  joka: { pages: string };
+  list: { title: string; edition: string };
 };
 
 export type Deck = { sources: Sources; cards: readonly unknown[] };
@@ -44,7 +47,8 @@ function cardBlock(card: Card): string {
 }
 
 function sourceLines(sources: Sources, cards: readonly Card[]): string[] {
-  const { csv } = sources;
+  const { csv, joka, list } = sources;
+  const listName = `${list.title}、${list.edition}`;
   const lines: string[] = [];
   if (cards.some((card) => card.no !== JOKA)) {
     lines.push(
@@ -53,16 +57,16 @@ function sourceLines(sources: Sources, cards: readonly Card[]): string[] {
   }
   if (cards.some((card) => card.no === JOKA)) {
     lines.push(
-      '- 序歌の本文：公開の本文データにないので、手で入れました。読手テキストの読み方一覧（p.5）にある、競技かるたで読む形です。一般の形とは四句の頭が違います。元の歌は古今和歌集の仮名序に引かれる古典です。',
+      `- 序歌の本文：公開の本文データにないので、手で入れました。全日本かるた協会 競技かるた部（読唱）『${listName}、p.${joka.pages}』にある、競技かるたで読む形です。一般の形とは四句の頭が違います。元の歌は古今和歌集の仮名序に引かれる古典です。`,
     );
   }
   const aligned = cards.filter((card) => card.origin.text.fixes.some((fix) => fix.why.includes('読み方一覧')));
   if (aligned.length > 0) {
-    lines.push(`- ${aligned.map((card) => `${card.no}番`).join('、')}の本文は、読手テキストの読み方一覧の形に合わせました。`);
+    lines.push(`- ${aligned.map((card) => `${card.no}番`).join('、')}の本文は、${listName}の形に合わせました。`);
   }
   lines.push(
     '- この読み札の文字は、/yomimasu が直した札の文字のデータです。MIT License の範囲外で、再利用を認めません。範囲は /yomimasu のリポジトリの NOTICE.md にあります。',
-    '- /yomimasu は全日本かるた協会の公認を受けていません。',
+    '- /yomimasu は独立したプロジェクトです。全日本かるた協会の公認を受けていません。Anthropic の製品ではありません。',
   );
   return lines;
 }
