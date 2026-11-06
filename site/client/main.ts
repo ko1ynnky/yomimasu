@@ -13,6 +13,7 @@ const ELEMENTS: Record<string, () => Promise<Mount>> = {
   'yomimasu-result': () => import('./result.tsx').then((m) => m.mountResult),
   'yomimasu-records': () => import('./records.tsx').then((m) => m.mountRecords),
   'yomimasu-karuta-list': () => import('./karuta-list.ts').then((m) => m.mountKarutaList),
+  'yomimasu-karuta-play': () => import('./karuta-play.ts').then((m) => m.mountKarutaPlay),
   'yomimasu-band': () => import('./band-figure.tsx').then((m) => m.mountBandFigure),
   'yomimasu-kv': () => import('./kv.ts').then((m) => m.mountKv),
 };

@@ -4,7 +4,9 @@ import './shell.css';
 // 押したものをターミナルに打ち込み、ひと呼吸置いてから本文を入れ替える殻（docs/ui-guide.md の8節）。
 // ページを読み直さずに main の中だけを入れ替えるので、録音のように端末のメモリーにしかないものを次の画面へ渡せる。
 // 横取りするのはリンク、「戻る」、AI に入れる手順のコピーと保存だけで、画面の中のボタン（並べ方、再生、録音など）は各画面の部品のまま、すぐ動く。
-// 音を鳴らすボタンを遅らせて押し直すと、iOS の Safari は利用者の操作として扱わず、音が出ないおそれがある。打ち込む形をボタンにつなぐのは別の作業（Y-18）である。
+// 画面の中のボタンのうち data-echo を付けたもの（1首のページのお手本を再生）は、部品がすぐ動き、殻は同じ押下でボタンの文字を打ち込むだけにする（echo）。
+// 打ち込んでから音を鳴らすボタンを押し直す形は採らない。遅らせて鳴らすと、iOS の Safari は利用者の操作として扱わず、音が出ないおそれがある。
+// ほかの画面の中のボタンを打ち込む形につなぐのは別の作業（Y-18）である。
 
 const PROMPT = '/yomimasu ';
 const TYPE_MS = 280;
@@ -171,10 +173,20 @@ function swap(doc: Document, url: URL) {
   prefetchNames();
 }
 
+// hash の先が閉じた <details>（「ポイントを知る」のたたんだ行と、その中の「ん」の説明）の中にあると、見えないまま移ることになる。
+// 先を含む <details> をすべて開き、先が <details> ならそれも開いてから移る。殻が画面を入れ替えたとき、URL を直接開いたとき、hashchange の3つで使う。
+// ブラウザーには任せない。hash の先を含む <details> を開くかはブラウザーによる。Chromium は開くが、先が <details> のときそれ自身は開かない（2026-11-06 に Playwright で確かめた）。殻の入れ替えは pushState なので、ブラウザーは先へ移りもしない。
+// 「ポイントを知る」の部品（main.ts のカスタム要素）にもしない。殻が入れ替えたあとに hash の先へ移す所（scrollAfter）はここにあり、開く所と移る所が2か所に分かれる。
+function showTarget(hash: string): boolean {
+  const target = hash && document.getElementById(decodeURIComponent(hash.slice(1)));
+  if (!target) return false;
+  for (let details = target.closest('details'); details; details = details.parentElement?.closest('details') ?? null) details.open = true;
+  target.scrollIntoView();
+  return true;
+}
+
 function scrollAfter(url: URL, y: number) {
-  const target = url.hash && document.getElementById(decodeURIComponent(url.hash.slice(1)));
-  if (target) target.scrollIntoView();
-  else scrollTo(0, y);
+  if (!showTarget(url.hash)) scrollTo(0, y);
 }
 
 // 画面の部品が実行の行に足すと、部品は差し込んだあとで読み込んで描くので、reveal() が読んだ行を集めたあとになり、110ms 隠す順から漏れる。
@@ -345,26 +357,44 @@ document.addEventListener('click', (event) => {
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   const link = (event.target as Element).closest?.('a[href]');
   if (!(link instanceof HTMLAnchorElement) || link.target) return;
-  if (link.hasAttribute('download')) return void reflect(link);
+  if (link.hasAttribute('download')) return void (link.closest('main') && echo(link.textContent?.trim() ?? ''));
   const url = new URL(link.href);
-  // 画面は / で終わる URL にある。ファイルや外のページ、同じ画面の中の見出しへのリンクはブラウザーに任せる。
-  if (url.origin !== location.origin || !url.pathname.endsWith('/') || (pathOf(url) === shown && url.hash)) return;
+  // 画面は / で終わる URL にある。ファイルや外のページへのリンクはブラウザーに任せる。
+  if (url.origin !== location.origin || !url.pathname.endsWith('/')) return;
   event.preventDefault();
+  // 同じ画面の中の見出しへのリンク（「ポイントを知る」の目次）は、打ち込まず、履歴を積まずに移る。
+  // ブラウザーに任せると state のない履歴が積まれ、「戻る」が前の画面（history.state.prev）を見失う。積んだ項目へ history.back() で戻っても、パスが同じなので popstate は画面を入れ替えない。
+  if (pathOf(url) === shown && url.hash) {
+    history.replaceState(history.state, '', url.href);
+    showTarget(url.hash);
+    return;
+  }
   if (busy) return;
   if (link.matches('[data-back]')) void back(link);
   else if (link.closest('[data-pick]')) void pick(link, url);
   else void follow(link, url);
 });
 
-// 保存（yomimasu.zip）は、ボタンの文字を打ち込んで入力の行を空に戻すだけで、保存そのものはブラウザーに任せてすぐ始める。
-// 打ち込んでから保存を始める形は採らない。利用者の操作から時間を空けてファイルを落とすと、ブラウザーが利用者の操作として扱わないおそれがある（iOS の Safari の音と同じ理由）。
-async function reflect(link: HTMLAnchorElement) {
-  if (busy || !link.closest('main')) return;
+// 保存（yomimasu.zip）とお手本の再生は、ボタンの文字を打ち込んで入力の行を空に戻すだけで、保存と再生そのものは押した時点ですぐ始める。
+// 打ち込んでから始める形は採らない。利用者の操作から時間を空けてファイルを落としたり音を鳴らしたりすると、ブラウザーが利用者の操作として扱わないおそれがある。
+// 打ち込んでいるあいだにまた押されたら、打ち込まずに部品の動きだけに任せる。
+async function echo(label: string) {
+  if (busy) return;
   busy = true;
-  const term = await typeIn(sayOfButton(link.textContent?.trim() ?? ''));
+  const term = await typeIn(sayOfButton(label));
   busy = false;
   settle(term);
 }
+
+// 部品は同じ押下でボタンを「やめる」に替えて data-echo を外すので、部品より先に文字を読むよう、キャプチャの段で受ける。
+document.addEventListener(
+  'click',
+  (event) => {
+    const button = (event.target as Element).closest?.<HTMLButtonElement>('main button[data-echo]');
+    if (button) void echo(button.textContent?.trim() ?? '');
+  },
+  { capture: true },
+);
 
 // コピーは押した操作の中でクリップボードに書き始め、打ち込み終えてから結果を出す。書けなければ文字を選んだ状態にして「選びました」と出す。
 // 打ち込んだあとに書き始める形は、保存と同じ理由で採らない。
@@ -408,4 +438,8 @@ addEventListener('popstate', () => {
   void arrive(url, load(url), mine, { push: false, motion, scrollY: history.state?.scrollY });
 });
 
+// アドレスバーで hash だけを替えたときと、戻る・進むで hash だけが変わったときは、ブラウザーが移したあとで、閉じた <details> の中の先を開いて移り直す。目次のリンクは click の処理で開いて移るので、ここを通らない。
+addEventListener('hashchange', () => showTarget(location.hash));
+
 prefetchNames();
+showTarget(location.hash);

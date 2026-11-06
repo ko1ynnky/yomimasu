@@ -57,3 +57,37 @@ test('録音と結果がこのブラウザーに残ることと、消せる場�
   assert.match(recording, /このブラウザーに残り/);
   assert.match(recording, /前回と比べる/);
 });
+
+const SOURCE_IDS = ['sources', 'src-uta', 'src-text', 'src-lecture', 'src-memo', 'src-author', 'src-phonetics', 'src-research', 'src-audio'];
+
+test('出典は、資料ごとの見出しにアンカーを付けて並べる', () => {
+  const { markdown } = source();
+  assert.match(markdown, /<h2 id="sources">出典<\/h2>/);
+  for (const id of SOURCE_IDS.slice(1)) assert.equal(markdown.match(new RegExp(`<h3 id="${id}">`, 'g'))?.length, 1, id);
+});
+
+test('資料の名前と版は1か所にだけ書き、前の節の見出しを残さない', () => {
+  const { markdown } = source();
+  assert.equal(markdown.match(/『小倉百人一首 競技かるた読手テキスト』冊子、令和2年4月1日初版/g)?.length, 1);
+  assert.equal(markdown.match(/『読手講習ビデオ（PDF版）』2020年10月/g)?.length, 1);
+  for (const old of ['伸ばす箇所、ふりがな、注、別の読み、余韻の印', '札ごとの表記の作り方', '知識の文章の資料']) assert.ok(!markdown.includes(old), old);
+});
+
+test('口の形の図の資料は、Wikipedia の5つの記事の URL と CC BY-SA 4.0 を書く', () => {
+  const phonetics = source().markdown.split('<h3 id="src-phonetics">')[1].split('<h3 ')[0];
+  for (const url of [
+    'https://en.wikipedia.org/wiki/Japanese_phonology',
+    'https://ja.wikipedia.org/wiki/日本語の音韻',
+    'https://en.wikipedia.org/wiki/Vowel',
+    'https://en.wikipedia.org/wiki/Nasal_consonant',
+    'https://en.wikipedia.org/wiki/Uvular_nasal',
+  ]) {
+    assert.ok(phonetics.includes(`<a href="${url}">`), url);
+  }
+  assert.equal(phonetics.match(/CC BY-SA 4\.0/g)?.length, 6);
+});
+
+test('読手のメモは、協会の基準ではなく読手個人のやり方として書く', () => {
+  const memo = source().markdown.split('<h3 id="src-memo">')[1].split('<h3 ')[0];
+  assert.match(memo, /協会の基準ではなく、読手個人のやり方です。/);
+});

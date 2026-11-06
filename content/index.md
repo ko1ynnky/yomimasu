@@ -18,7 +18,7 @@ title: /yomimasu
 <a href="/point/"><span>/ポイントを知る</span></a>
 <a href="/karuta/"><span>/1首ずつ学ぶ</span><small>100首と序歌</small></a>
 <a href="/saitei/"><span>/最低限これだけ</span><small>急に頼まれたら</small></a>
-<a href="/practice/"><span>/練習モード</span><small>読んで、秒数を測る</small></a>
+<a class="emph" href="/practice/"><span>/練習モード</span><small>読んで、秒数を測る</small></a>
 <a href="/install/"><span>/インストール</span><small>/yomimasuの知識をあなたのAIに</small></a>
 </nav>
 
