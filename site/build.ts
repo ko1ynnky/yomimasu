@@ -9,6 +9,7 @@ import { mouthFiguresHtml, nasalEndingsText, nasalFigureHtml } from '../content/
 import { INSTALL_MARKS, isOffered } from './install.ts';
 import { cardName, cardPage, cardUrl, expandCardRefs, finalSoundCounts, listHtml, parseAdvice } from './karuta.ts';
 import { kimarijiStream } from './kimariji-stream.ts';
+import { themeTocHtml } from './point.ts';
 import { outputPathOf, parseSource, renderDocument, runFor } from './render.ts';
 import { chatgptPluginZip, skillZip } from './skill-zip.ts';
 
@@ -20,6 +21,8 @@ const ADVICE_PATH = '.claude/skills/yomimasu/references/card-advice-candidates.m
 // 100首の一覧は札の読みの表から組むので、一覧.md には置き場の印だけを書く。
 const LIST_MARK = '<!-- 100首の一覧 -->';
 const FINAL_SOUND_MARK = '<!-- 最後の音の数 -->';
+// 「ポイントを知る」のテーマの目次は、組み立てたページの見出しと行から作る（site/point.ts）。
+const THEME_TOC_MARK = '<!-- テーマの目次 -->';
 // 口の形の図と「ん」の数も、文に書き写さず、組み立てのたびに作る。
 const MARKS: Record<string, () => string> = {
   '<!-- 最後の音の口の形 -->': mouthFiguresHtml,
@@ -62,7 +65,11 @@ for (const entry of readdirSync(CONTENT_DIR, { recursive: true, withFileTypes: t
   const outputPath = outputPathOf(contentPath, slug);
   if (!isOffered(urlOf(outputPath))) continue;
   const run = runFor(contentPath, { command, readName }, commandAt(urlOf(outputPath), (token) => cardNames.get(token)));
-  const parsed = (await marked.parse(markdown)).replace(LIST_MARK, () => listHtml(cards)).replace(FINAL_SOUND_MARK, () => finalSoundCounts(cards));
+  const rendered = await marked.parse(markdown);
+  const parsed = rendered
+    .replace(LIST_MARK, () => listHtml(cards))
+    .replace(FINAL_SOUND_MARK, () => finalSoundCounts(cards))
+    .replace(THEME_TOC_MARK, () => themeTocHtml(rendered));
   const bodyHtml = expandCardRefs(Object.entries(MARKS).reduce((html, [mark, make]) => html.replace(mark, make), parsed), cards);
   writePage(outputPath, renderDocument({ title, bodyHtml, scriptPath, stylePaths, ...run, tool }));
 }

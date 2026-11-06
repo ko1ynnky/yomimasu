@@ -7,6 +7,7 @@
 yomimasu-karuta-list, yomimasu-band { display: grid; gap: 8px; }
 
 .screen > h3, .karuta-page > h3 { font-size: 17px; line-height: 1.5; }
+.screen > h3 { scroll-margin-top: 8px; }
 .screen > ul, .screen > ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; }
 .src { font-size: 13px; line-height: 1.6; color: var(--ink-3); }
 .card p.src { font-size: 13px; line-height: 1.6; color: var(--ink-3); }
@@ -20,9 +21,8 @@ yomimasu-band .seg > span { font-size: 13.5px; }
 .list b { display: block; line-height: 1.5; }
 .list p { font-size: 15px; line-height: 1.7; color: var(--ink-2); }
 
-/* 注意点のカード（ポイント、1首のページ） */
-.card.point { padding: 12px 14px; display: grid; gap: 4px; }
-.card.point b, .points b { display: block; line-height: 1.55; text-wrap: balance; }
+/* 注意点のカード（1首のページ） */
+.points b { display: block; line-height: 1.55; text-wrap: balance; }
 .points > div { padding: 12px 14px; display: grid; gap: 4px; }
 .sources { padding: 12px 14px; display: grid; gap: 6px; }
 .card.sources p { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
@@ -90,7 +90,24 @@ yomimasu-band .seg > span { font-size: 13.5px; }
 /* 断面の図は 320px の画面で幅 258px ほどに縮むので、viewBox の 360 に対して 19 にし、13px より小さくしない（docs/ui-guide.md の3節） */
 .m-label, .m-legend { font-family: var(--f-sans); font-size: 19px; fill: var(--ink); }
 
-/* 「ポイントを知る」の中の折りたたみ。押せる所は高さ 44px 以上にする（docs/ui-guide.md の5節） */
+/* 「ポイントを知る」のたたんだ行とテーマの目次（docs/ui-guide.md の6節）。開け閉めは <details> に任せ、JS がなくても開ける */
+.pts { display: grid; }
+.pt + .pt { border-top: 1px solid var(--rule-2); }
+.pt b { display: block; line-height: 1.55; text-wrap: balance; }
+.pt > summary { min-height: 48px; padding: 10px 36px 10px 14px; display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 10px; align-items: center; cursor: pointer; list-style: none; position: relative; }
+.pt > summary::-webkit-details-marker { display: none; }
+/* 優先の札は見出しと同じ行の右に置き、行を低くする。読み上げの順は札、見出しのまま */
+.pt > summary .prio { grid-column: 2; grid-row: 1; white-space: nowrap; }
+.pt > summary b { grid-column: 1; grid-row: 1; }
+/* 開閉の印は文字の記号にせず、線で描く（端末で形が変わらないように） */
+.pt > summary::after { content: ""; position: absolute; right: 16px; top: 50%; width: 8px; height: 8px; margin-top: -6px; border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3); transform: rotate(45deg); }
+.pt[open] > summary::after { margin-top: -2px; transform: rotate(-135deg); }
+.pt-body { padding: 0 14px 12px; display: grid; gap: 4px; }
+.toc { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 4px; }
+.toc a { min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 4px 10px; color: var(--ink); text-decoration: none; border-radius: 8px; }
+.toc a small { font-family: var(--f-mono); color: var(--ink-3); }
+
+/* 「ポイントを知る」の行の中の折りたたみ（「ん」の説明）。押せる所は高さ 44px 以上にする（docs/ui-guide.md の5節） */
 .more { display: grid; gap: 8px; border-top: 1px solid var(--rule-2); padding-top: 4px; }
 .more > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; line-height: 1.5; }
 .more > p { font-size: 15px; line-height: 1.7; color: var(--ink-2); }
