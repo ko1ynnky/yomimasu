@@ -60,9 +60,13 @@ function sourceLines(sources: Sources, cards: readonly Card[]): string[] {
       `- 序歌の本文：公開の本文データにないので、手で入れました。全日本かるた協会 競技かるた部（読唱）『${listName}、p.${joka.pages}』にある、競技かるたで読む形です。一般の形とは四句の頭が違います。元の歌は古今和歌集の仮名序に引かれる古典です。`,
     );
   }
-  const aligned = cards.filter((card) => card.origin.text.fixes.some((fix) => fix.why.includes('読み方一覧')));
+  const aligned = cards.flatMap((card) => {
+    const fields = new Set(card.origin.text.fixes.filter((fix) => fix.why.includes('読み方一覧')).map((fix) => fix.field));
+    const named = (['本文', '仮名'] as const).filter((field) => fields.has(field));
+    return named.length > 0 ? [`${card.no}番の${named.join('と')}`] : [];
+  });
   if (aligned.length > 0) {
-    lines.push(`- ${aligned.map((card) => `${card.no}番`).join('、')}の本文は、${listName}の形に合わせました。`);
+    lines.push(`- ${aligned.join('、')}は、${listName}の形に合わせました。`);
   }
   lines.push(
     '- この読み札の文字は、/yomimasu が直した札の文字のデータです。MIT License の範囲外で、再利用を認めません。範囲は /yomimasu のリポジトリの NOTICE.md にあります。',

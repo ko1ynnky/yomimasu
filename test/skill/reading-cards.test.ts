@@ -46,7 +46,6 @@ test('当たる札のない指定は、どの指定かを示して止める', ()
   assert.throws(() => selectCards(cards, ['ゑ']), /ゑ/);
   assert.throws(() => selectCards(cards, []), /札/);
 });
-
 test('読み札には、本文の出典と、再利用を認めないことが付く', () => {
   const output = readingCards(deck, ['た']);
   assert.ok(output.includes(deck.sources.csv.url));
@@ -65,9 +64,11 @@ test('序歌を選ぶと、序歌の本文の出典が、資料の名前と版�
   assert.ok(output.includes(`${deck.sources.list.title}、${deck.sources.list.edition}、p.${deck.sources.joka.pages}`));
 });
 
-test('読み方一覧の形に合わせた札を選ぶと、そのことを資料の名前と版で付ける', () => {
-  const output = readingCards(deck, ['33', '4']);
-  assert.ok(output.includes(`33番の本文は、${deck.sources.list.title}、${deck.sources.list.edition}の形に合わせました`));
+test('読み方一覧の形に合わせた札を選ぶと、直した列を札ごとに、資料の名前と版で付ける', () => {
+  const list = `${deck.sources.list.title}、${deck.sources.list.edition}`;
+  assert.ok(readingCards(deck, ['33', '4']).includes(`33番の仮名は、${list}の形に合わせました`));
+  assert.ok(readingCards(deck, ['44']).includes(`44番の本文と仮名は、${list}の形に合わせました`));
+  assert.ok(readingCards(deck, ['33', '74']).includes(`33番の仮名、74番の本文と仮名は、${list}の形に合わせました`));
   assert.doesNotMatch(readingCards(deck, ['4']), /形に合わせました/);
 });
 
