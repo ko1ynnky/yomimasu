@@ -71,15 +71,25 @@ for (const entry of readdirSync(CONTENT_DIR, { recursive: true, withFileTypes: t
     .replace(FINAL_SOUND_MARK, () => finalSoundCounts(cards))
     .replace(THEME_TOC_MARK, () => themeTocHtml(rendered));
   const bodyHtml = expandCardRefs(Object.entries(MARKS).reduce((html, [mark, make]) => html.replace(mark, make), parsed), cards);
-  writePage(outputPath, renderDocument({ title, bodyHtml, scriptPath, stylePaths, ...run, tool }));
+  writePage(outputPath, renderDocument({ title, path: urlOf(outputPath), bodyHtml, scriptPath, stylePaths, ...run, tool }));
 }
 
 // 1首のページは手で書かず、札の読みの表、規則、助言の候補から組む。表が変わってもページが追いつくようにするためである。
 const advice = parseAdvice(readFileSync(ADVICE_PATH, 'utf8'));
 for (const card of cards) {
   const { path, title, command, readName, bodyHtml } = cardPage(card, cards, advice);
-  writePage(path, renderDocument({ title, bodyHtml, scriptPath, stylePaths, command, readName }));
+  writePage(path, renderDocument({ title, path: urlOf(path), bodyHtml, scriptPath, stylePaths, command, readName }));
 }
+
+// ないパスには、配信（wrangler.jsonc の not_found_handling）がこのページを 404 で返す。文と次の操作は docs/ui-guide.md の11節「ページがない」である。
+// content/ の Markdown にしないのは、そこから組むと /404/ という開けるページになり、404 で返らないからである。
+const NOT_FOUND_BODY = [
+  '<p>このページはありません。</p>',
+  '<!-- ask -->',
+  '<p class="ask-q">次は？</p>',
+  '<div class="next"><a class="btn btn--line" href="/karuta/">100首の一覧へ</a><a class="btn btn--fill" href="/">入口へ戻る</a></div>',
+].join('\n');
+writePage('404.html', renderDocument({ title: 'ページが見つかりません', bodyHtml: NOT_FOUND_BODY, scriptPath, stylePaths }));
 
 // AI に入れる手順の画面が配るスキルのファイル。保存のボタンは <a href="/yomimasu.zip" download> である（docs/ui-guide.md の8節）。
 // ChatGPT にだけは、同じ知識をプラグインのアーカイブの形で配る（site/skill-zip.ts）。
