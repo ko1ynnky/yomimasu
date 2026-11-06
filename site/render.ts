@@ -1,6 +1,8 @@
 export type SourcePage = { title: string; command?: string; readName?: string; tool?: boolean; slug?: string; markdown: string };
 export type DocumentParts = {
   title: string;
+  // ページの URL のパス。ないページ（404.html）は、どの URL にも出るので持たない。
+  path?: string;
   bodyHtml: string;
   scriptPath: string;
   stylePaths: readonly string[];
@@ -84,16 +86,51 @@ function screenHtml(bodyHtml: string, tool: boolean | undefined, back: boolean):
   return `${main}<section class="ask">${ASK_LINE}${back ? withBack(next) : next}</section>${foot}`;
 }
 
+// 共有したときの URL と画像は、プレビューの URL で開いても本番を指すよう、本番のオリジンで書く。
+const ORIGIN = 'https://yomimasu.karutalog.com';
+const SITE_NAME = '/yomimasu';
+// 題と説明の文は 2026-11-07 にユーザーが決めた（docs/decisions.md）。入口の題は、アプリの名前のあとに入口の標語と題を続ける。
+const HOME_TITLE = `${SITE_NAME} - 競技かるたにかかわるすべての人に、読みを身近に。「読みます」と言うために。`;
+// 説明は今はサイトで1つにする。ページごとに替えるときは DocumentParts に足す。
+const DESCRIPTION = '競技かるたの読みを、家で録音して測り、次に直す1点を受け取る Web アプリ。総論、ポイント、100首の読み方も学べます。';
+// 画像は scripts/brand/make.ts が作る。
+const OG_IMAGE = { url: `${ORIGIN}/og.png`, width: 1200, height: 630, alt: '「読みます」と言うために。かなで描いた読手の絵' };
+
+const documentTitle = (title: string, path?: string) => (path === '/' ? HOME_TITLE : `${title} - ${SITE_NAME}`);
+
+const meta = (key: 'name' | 'property', name: string, content: string | number) => `<meta ${key}="${name}" content="${escapeHtml(String(content))}">`;
+
+// SNS は JS を動かさずに head を読むので、題、説明、アイコン、共有したときの絵は組み立てのときに書く。殻（client/ui/shell.ts）が入れ替えるのは題だけである。
+function headTags(title: string, path: string | undefined): string {
+  return [
+    `<title>${escapeHtml(title)}</title>`,
+    meta('name', 'description', DESCRIPTION),
+    '<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">',
+    '<link rel="apple-touch-icon" href="/apple-touch-icon.png">',
+    meta('property', 'og:type', 'website'),
+    meta('property', 'og:site_name', SITE_NAME),
+    meta('property', 'og:locale', 'ja_JP'),
+    meta('property', 'og:title', title),
+    meta('property', 'og:description', DESCRIPTION),
+    ...(path === undefined ? [] : [meta('property', 'og:url', `${ORIGIN}${path}`)]),
+    meta('property', 'og:image', OG_IMAGE.url),
+    meta('property', 'og:image:width', OG_IMAGE.width),
+    meta('property', 'og:image:height', OG_IMAGE.height),
+    meta('property', 'og:image:alt', OG_IMAGE.alt),
+    meta('name', 'twitter:card', 'summary_large_image'),
+  ].join('\n');
+}
+
 // 「戻る」は入口のほかのどの画面にも置く決まりだが、読む流れ（聞く、読む、練習モード、結果）に置くのは別の作業（Y-18）である。
 // 今は教科書のページ、つまり読んだ行のある画面にだけ置く。
-export function renderDocument({ title, bodyHtml, scriptPath, stylePaths, command, readName, tool }: DocumentParts): string {
+export function renderDocument({ title, path, bodyHtml, scriptPath, stylePaths, command, readName, tool }: DocumentParts): string {
   return `<!doctype html>
 <html lang="ja">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>${escapeHtml(title)}</title>
+${headTags(documentTitle(title, path), path)}
 ${stylePaths.map((path) => `<link rel="stylesheet" href="${path}">`).join('\n')}
 </head>
 <body>

@@ -4,7 +4,7 @@
 
 | 機能 | ファイル | E2E |
 | --- | --- | --- |
-| 静的なページと共通の枠 | [static-page.md](static-page.md) | `e2e/shell.spec.ts` |
+| 静的なページと共通の枠 | [static-page.md](static-page.md) | `e2e/shell.spec.ts`、`e2e/head.spec.ts` |
 | 録音と測定 | [record.md](record.md) | `e2e/record.spec.ts` |
 | 歌の枠 | [stage.md](stage.md) | `e2e/stage.spec.ts` |
 | 教科書 | [textbook.md](textbook.md) | `e2e/textbook.spec.ts` |
