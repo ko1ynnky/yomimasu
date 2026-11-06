@@ -4,9 +4,9 @@ import { join } from 'node:path';
 
 const ARTIFACTS_DIR = 'e2e-artifacts';
 
-// テーマの名前と順、51枚は、2026-11-06 にユーザーが決めた案 B（docs/decisions.md）。
+// テーマの名前と順、52枚は、2026-11-06 にユーザーが決めた案 B（docs/decisions.md）。
 const THEMES = ['1組と、余韻と間', '決まり字まで', '読み間違いと札の扱い', '伸ばす所', '声と発音', '仮名の読み方', '試合の進め方', '練習のしかた'];
-const ROW_COUNT = 51;
+const ROW_COUNT = 52;
 const RANK: Record<string, number> = { '優先 高': 0, '優先 中': 1, '優先 低': 2 };
 
 test.use({ viewport: { width: 393, height: 659 } });
