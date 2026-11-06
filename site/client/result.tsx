@@ -6,7 +6,7 @@ import { loadExample } from './example.ts';
 import { againUrl, NextPoint } from './next-point.tsx';
 import { latestKept, listRecords } from './records.ts';
 import { lastTake, measurementOf, type Take } from './take.ts';
-import { levelSentence, noticeOf, resultRows } from './verdict.ts';
+import { levelSentence, NOT_MEASURED, noticeOf, resultRows, UNMEASURED_ROW } from './verdict.ts';
 import './result.css';
 
 const COMPARE = { label: '前回と比べる', url: '/result/compare/' };
@@ -56,7 +56,7 @@ function Result({ take, measurement, example }: { take: Take; measurement: Measu
             </div>
             <div class="v">
               {row.value && <b>{row.value}</b>}
-              {row.unmeasured ? '測れませんでした' : row.verdict}
+              {row.unmeasured ? UNMEASURED_ROW : row.verdict}
             </div>
           </div>
         ))}
@@ -64,7 +64,7 @@ function Result({ take, measurement, example }: { take: Take; measurement: Measu
       <p class="fine">
         {notice ?? level}
         {(notice ?? level) && <br />}
-        明瞭さは測っていません。お手本と聴き比べてください。
+        {NOT_MEASURED}
       </p>
       <NextPoint
         answer={nextPoint(measurement, take.pair)}
