@@ -42,7 +42,7 @@ npx skills add ko1ynnky/yomimasu
 
 Web アプリのボタンが打ち込むコマンド（`総論を学ぶ`、`1首 なげき`、`読む ほ あはれ` など）も、スキルで同じ表から答えます。表は `.claude/skills/yomimasu/scripts/commands.ts` にあります。測るのとコマンドに答えるのには、スキルの中のスクリプトを動かせるエージェントが要ります。
 
-Claude、ChatGPT、Gemini に入れる手順は、入れて答えることを確かめてから、こことアプリに足します。
+Claude、ChatGPT、Gemini には、Web アプリの https://yomimasu.karutalog.com/install/ から入れます。Claude と Gemini には `yomimasu.zip`、ChatGPT にはプラグインの形の `yomimasu-chatgpt.zip` を保存して上げます。どちらも `SKILL.md` と `references/` の知識だけで、スクリプトは入れていないので、測ることはできません。2026-11-06 に3社に入れて試し、Claude と Gemini は問いに対してスキルを読み込んで答えました。ChatGPT は、プラグインとして入れると、ふだんのチャットで使いました。
 
 ## 開発の記録
 

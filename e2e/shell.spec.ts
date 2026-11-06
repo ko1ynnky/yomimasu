@@ -18,7 +18,7 @@ test('JS なしでも、入口の題と一覧を読め、一覧から移れる',
   await expect(page.locator('main')).toContainText('読みの1組は、この配分で15秒です。');
   await expect(page.getByRole('link', { name: '戻る' })).toHaveAttribute('href', '/');
   await page.goto('/install/');
-  await expect(page.locator('main')).toContainText('準備中');
+  await expect(page.getByRole('group', { name: 'どこに入れますか？' })).toBeVisible();
   await context.close();
 });
 
@@ -335,7 +335,6 @@ test('主の操作のない100首の一覧では、「戻る」だけを右に�
 test('読んだ行は content/ のファイルの名前で、ファイルのない画面には出ない', async ({ page }) => {
   await page.goto('/install/');
   await expect(page.locator('.run .read')).toHaveText('● Read インストール.md');
-  await expect(page.locator('main')).toContainText('準備中');
   for (const path of ['/read/', '/practice/', '/result/']) {
     await page.goto(path);
     await expect(page.locator('.run'), path).toBeVisible();
@@ -364,7 +363,6 @@ test('読み終えた録音を、ページを読み直さずに結果の画面�
   await expect(page.locator('.blk[data-phase="kami"]')).toHaveClass(/is-now/, { timeout: 15_000 });
   await page.waitForTimeout(3000);
   await page.getByRole('button', { name: '読み終えた' }).click();
-  await page.getByRole('link', { name: '結果を見る' }).click();
   await expect(page).toHaveURL(/\/result\/$/);
   await expect(page.locator('yomimasu-result .res')).toBeVisible();
   await expect(page.locator('main')).not.toContainText('まだ録音がありません');

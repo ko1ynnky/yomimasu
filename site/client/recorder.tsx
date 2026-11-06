@@ -5,15 +5,17 @@ import { pairLines } from './lyrics.ts';
 import { segmentsOf } from './pair.ts';
 import { keepTake } from './records.ts';
 import type { Take } from './take.ts';
+import { go } from './ui/shell.ts';
 import { cards, pairOf, Stage } from './ui/stage.tsx';
 
 type Failure = 'denied' | 'unavailable';
+// 読み終えたら、聴き返す画面を挟まずに結果の画面（/result/）へ移る（docs/ui-guide.md の10節）。殻（ui/shell.ts）が本文を入れ替えるので、端末のメモリーの録音はそのまま渡る。
+// 結果をこの部品の中で描く案は採らなかった。読む画面には入力の欄がないので「次は？」（もう1回読む、前回と比べる）を置けず、URL が /read/rec/ のままなので、開き直すと結果が消えるからである。
 type View =
   | { kind: 'idle' }
   | { kind: 'starting' }
   | { kind: 'count'; beat: number; elapsed: number }
   | { kind: 'reading'; t: number; elapsed: number }
-  | { kind: 'heard'; take: Take }
   | { kind: 'failed'; failure: Failure };
 
 type Session = { capture: Capture; countStart: number; assisted: boolean; frame: number; releaseWake: () => void };
@@ -28,6 +30,15 @@ const RESTART_GUARD_MS = 500;
 const HELP_KEY = 'yomimasu.recHelpDone';
 // 声を出せない人とマイクを許可しない人が、録音しないで結果の画面まで進む入口（C9）。
 const EXAMPLE_RESULT = '/result/example/';
+const RESULT = '/result/';
+// 録音のあとに結果の画面の実行の行の下へ出す行（docs/ui-guide.md の8節）。
+const RECORDED = '● 録音しました';
+// 押したら実行の行に打ち込み、ひと呼吸置いてから移る（docs/ui-guide.md の8節「押したあとの動き」）。
+const TYPE_MS = 280;
+const SEND_HOLD_MS = 90;
+const READING_PROGRESS = '2 / 3 読む';
+
+const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 const FAILURES: Record<Failure, [string, string]> = {
   denied: ['マイクを使えませんでした。', 'ブラウザーの設定でマイクを許可すると、読んで測れます。教科書とお手本はこのまま使えます。'],
@@ -86,15 +97,16 @@ const Icon = ({ path }: { path: string }) => (
 );
 const REC_ICON = 'M6 1a5 5 0 1 0 0 10A5 5 0 0 0 6 1z';
 const STOP_ICON = 'M2 2h8v8H2z';
-const PLAY_ICON = 'M2 1l9 5-9 5z';
 
-// 録音中の表示は上の帯の右に出す。帯は画面の組み立て（render.ts）が置き、この部品の外にある。
+// 進み具合と録音中の表示は上の帯の右に出す。帯は画面の組み立て（render.ts）が置き、この部品の外にある。
 function RecState({ elapsed }: { elapsed: number | null }) {
   useEffect(() => {
     const step = document.querySelector<HTMLElement>('.bar .step');
     if (!step) return;
     render(
-      elapsed === null ? null : (
+      elapsed === null ? (
+        <>{READING_PROGRESS}</>
+      ) : (
         <span class="rec-state">
           録音中 <span class="rec-state-time">{clock(elapsed)}</span>
         </span>
@@ -122,9 +134,13 @@ function Recorder({ fix }: { fix?: string }) {
   const [view, setView] = useState<View>({ kind: 'idle' });
   const [assisted, setAssisted] = useState(true);
   const [help, setHelp] = useState(() => !helpDone());
+  // 実行の行に打ち込んでいる途中の文字。打ち込んでいないあいだは null である。
+  const [typed, setTyped] = useState<string | null>(null);
+  // マイクを閉じてから結果の画面へ入れ替わるまで。打ち込まない場合（動きを減らす設定、25 秒）も、録音中の表示を消し、ボタンを押せなくする。
+  const [closing, setClosing] = useState(false);
   const session = useRef<Session | null>(null);
   const opening = useRef(false);
-  // 止めた時刻までの録音の塊を待っている録音。待つ間に「やめる」を押すか画面を離れたら、確かめる画面へ進めない。
+  // 止めた時刻までの録音の塊を待っている録音。待つ間に「やめる」を押すか画面を離れたら、結果へ進めない。
   const stopping = useRef<Capture | null>(null);
   const startedAt = useRef(Number.NEGATIVE_INFINITY);
   const stoppedAt = useRef(Number.NEGATIVE_INFINITY);
@@ -147,14 +163,19 @@ function Recorder({ fix }: { fix?: string }) {
     end()?.capture.cancel();
   }
 
-  async function finish() {
+  // マイクを閉じ、録音を端末に残す。結果へ移すのは呼ぶ側で、打ち込むかどうかが違う。
+  async function finish(): Promise<Take | null> {
     const current = end();
-    if (!current) return;
+    if (!current) return null;
+    setClosing(true);
     const { capture } = current;
     stopping.current = capture;
     const readingStartSec = capture.positionSec(current.countStart + COUNT_SEC);
     const { pcm, sampleRate, voiceProcessing } = await capture.stop(capture.now());
-    if (stopping.current !== capture) return;
+    if (stopping.current !== capture) {
+      setClosing(false);
+      return null;
+    }
     stopping.current = null;
     const take: Take = {
       pcm,
@@ -165,7 +186,26 @@ function Recorder({ fix }: { fix?: string }) {
       voiceProcessing,
     };
     await keepTake(take);
-    setView({ kind: 'heard', take });
+    return take;
+  }
+
+  async function typeRun(text: string) {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const chars = [...text];
+    for (let count = 1; count <= chars.length; count += 1) {
+      setTyped(chars.slice(0, count).join(''));
+      await wait(TYPE_MS / chars.length);
+    }
+    await wait(SEND_HOLD_MS);
+  }
+
+  // 録音の終わりは押した時刻にする。打ち込むあいだもマイクを開いたままにしない。
+  // 結果の画面の取得は押した時点で始め、録音を残して打ち込み終えてから入れ替える。打ち込んだ「読み終えた」は入れ替えるまで実行の行に残す。
+  async function finishByUser() {
+    if (!session.current) return;
+    const kept = Promise.all([finish(), typeRun('読み終えた')]).then(([take]) => take !== null);
+    void go(RESULT, kept, RECORDED);
+    if (!(await kept)) setTyped(null);
   }
 
   function tick() {
@@ -175,7 +215,8 @@ function Recorder({ fix }: { fix?: string }) {
     if (elapsed < COUNT_SEC) {
       setView({ kind: 'count', beat: COUNT_FROM - Math.floor(elapsed / COUNT_BEAT_SEC), elapsed });
     } else if (elapsed - COUNT_SEC >= LIMIT_SEC) {
-      void finish();
+      // 利用者が押していない動きなので、打ち込まずに移る（docs/ui-guide.md の8節）。
+      void go(RESULT, finish().then((take) => take !== null), RECORDED);
       return;
     } else {
       setView({ kind: 'reading', t: elapsed - COUNT_SEC, elapsed });
@@ -241,69 +282,22 @@ function Recorder({ fix }: { fix?: string }) {
   const guide = view.kind === 'reading' ? Math.min(view.t, total) : 0;
   const kimariji = [pair.shimo, pair.kami].map((no) => cards.find((card) => card.no === no)?.kimariji?.kana ?? `${no}番`).join(' ');
 
-  const heard = view.kind === 'heard';
-  const run = (
-    <>
-      {fix && <div class="fix-chip">直す1点：{fix}</div>}
-      {(!fix || heard) && (
-        <div class="run">
-          {!fix && (
-            <div>
-              <span class="gt">&gt;</span> /yomimasu 読む {kimariji}
-            </div>
-          )}
-          {heard && <div class="read">● 録音しました</div>}
-        </div>
-      )}
-    </>
+  const sending = closing || typed !== null;
+  // 読み直しの1行は実行の行の代わりに出す。打ち込むときは、実行の行に戻す。
+  const run = fix && typed === null ? (
+    <div class="fix-chip">直す1点：{fix}</div>
+  ) : (
+    <div class="run">
+      <div>
+        <span class="gt">&gt;</span> /yomimasu {typed ?? `読む ${kimariji}`}
+      </div>
+    </div>
   );
-
-  if (view.kind === 'heard') {
-    const { take } = view;
-    return (
-      <>
-        {run}
-        <RecState elapsed={null} />
-        <section class="heard">
-          <h2>読めました。まず聴いてみましょう。</h2>
-          <p>数値を見る前に、自分の耳で確かめます。どこが気になるか、お手本と比べてください。</p>
-        </section>
-        <div class="pair">
-          <button class="btn" type="button" disabled>
-            <Icon path={PLAY_ICON} />
-            自分の読み
-          </button>
-          <button class="btn" type="button" disabled>
-            <Icon path={PLAY_ICON} />
-            お手本
-          </button>
-        </div>
-        <p class="fine">再生はまだ使えません。</p>
-        <div class="heard-next">
-          <button class="btn btn--line" type="button" onClick={() => setView({ kind: 'idle' })}>
-            読み直す
-          </button>
-          <a class="btn btn--fill" href="/result/">
-            結果を見る
-          </a>
-        </div>
-        <div
-          hidden
-          data-testid="take"
-          data-length-sec={(take.pcm.length / take.sampleRate).toFixed(3)}
-          data-reading-start-sec={take.readingStartSec.toFixed(3)}
-          data-assisted={String(take.assisted)}
-          data-pair={`${take.pair.shimo}-${take.pair.kami}`}
-          data-voice-processing={JSON.stringify(take.voiceProcessing)}
-        />
-      </>
-    );
-  }
 
   return (
     <>
       {run}
-      <RecState elapsed={recording ? view.elapsed : null} />
+      <RecState elapsed={recording && !sending ? view.elapsed : null} />
       <Stage
         segments={segments}
         lines={lines}
@@ -356,12 +350,12 @@ function Recorder({ fix }: { fix?: string }) {
         )}
         {(view.kind === 'starting' || recording) && (
           <div class="pair">
-            <button class="btn btn--line" type="button" onClick={stopByUser}>
+            <button class="btn btn--line" type="button" disabled={sending} onClick={stopByUser}>
               <Icon path={STOP_ICON} />
               やめる
             </button>
             {/* 早く押して短い録音になるのを防ぐため、上の句の区間に入るまで押せない */}
-            <button class="btn" type="button" disabled={!(view.kind === 'reading' && guide >= kamiStart)} onClick={finish}>
+            <button class="btn" type="button" disabled={sending || !(view.kind === 'reading' && guide >= kamiStart)} onClick={finishByUser}>
               読み終えた
             </button>
           </div>
