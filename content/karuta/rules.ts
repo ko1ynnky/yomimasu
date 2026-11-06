@@ -411,6 +411,17 @@ export function adviceSourceText(kind: string, source: string): string {
   return [`${memo.join('、')}（読手個人のやり方${tournament}）`, ...others].join('、');
 }
 
+// 歌の伸ばす箇所、ふりがな、注、余韻の印の出典の印。札ごとに由来の版とページを記録する決まり（REVIEW.md）なので、歌のそばに短く出す。
+// 呼び方は「このアプリについて」と NOTICE.md（伸ばす箇所）に合わせ、版の名前は「このアプリについて」の読手テキストの節に任せる。
+// ページが記録されていない部分は出さない。
+export function poemSourceText(card: Card): string | null {
+  const parts = [
+    card.origin.stretches.page ? `伸ばす箇所 抜粋版 p.${card.origin.stretches.page}` : null,
+    card.origin.notation.page ? `ふりがな・注・余韻の印 冊子 p.${card.origin.notation.page}` : null,
+  ].filter((part) => part !== null);
+  return parts.length > 0 ? parts.join('、') : null;
+}
+
 const ORDER: Record<Priority, number> = { 高: 0, 中: 1, 低: 2 };
 
 export function rulePoints(card: Card): Point[] {

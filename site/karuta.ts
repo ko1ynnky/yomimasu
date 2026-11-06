@@ -5,6 +5,7 @@ import {
   isGrand,
   isOneChar,
   isSixInitial,
+  poemSourceText,
   PRIORITY_NOTE,
   rulePoints,
   sameStartLine,
@@ -260,11 +261,13 @@ function pointsSectionHtml(card: Card, cards: readonly Card[]): string[] {
 
 export function cardPage(card: Card, cards: readonly Card[], advice: readonly Advice[]): CardPage {
   const name = cardName(card);
+  const poemSource = poemSourceText(card);
   const words = adviceFor(card, advice).filter(shownOn(card));
   const wordsHtml = words.map((a) => `<div><p>${escapeHtml(a.text)}。</p><p class="src">${escapeHtml(adviceSourceText(a.kind, a.source))}</p></div>`).join('');
   const article = [
     '<article class="karuta-page">',
     `<div class="card poem"><div class="tate">${poemHtml(card, cards)}</div><aside><div><small>${card.kimariji ? '決まり字' : '1枚目の前に読む歌'}</small><div class="kim">${escapeHtml(name)}</div></div></aside></div>`,
+    ...(poemSource ? [`<p class="src">${escapeHtml(poemSource)}</p>`] : []),
     playHtml(card),
     ...pointsSectionHtml(card, cards),
     `<h3>余韻で伸ばす音「${escapeHtml(finalSound(card).kana)}」の口の形</h3>`,

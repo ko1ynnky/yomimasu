@@ -56,6 +56,8 @@ yomimasu-band .seg > span { font-size: 13.5px; }
 .karuta-page .yoin { display: inline-block; width: 1em; height: 1.5em; margin-top: 0.2em; line-height: 1; color: transparent; background: var(--shu); clip-path: polygon(25% 0, 75% 0, 50% 100%); }
 .karuta-page .poem aside { display: flex; flex-direction: column; justify-content: space-between; text-align: right; }
 .karuta-page .poem .kim { font-family: var(--f-uta); font-size: 19px; font-weight: 400; font-synthesis: none; color: var(--shu-deep); }
+/* 歌の印は歌の枠に寄せる。ほかの部品のあいだの 16px のままだと、歌の印に見えない */
+.karuta-page > .poem + .src { margin-top: -10px; }
 .karuta-page yomimasu-karuta-play { display: grid; gap: 8px; }
 /* 読み込めないときの文の余白は、結果の画面（result.css）の .play-alert と同じにする。result.css は結果の画面でしか読み込まない */
 .karuta-page .play-alert { padding: 12px 14px; }

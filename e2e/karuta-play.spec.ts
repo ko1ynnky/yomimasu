@@ -74,14 +74,14 @@ test('JS なしでは、お手本を再生のボタンを出さない', async ({
   await context.close();
 });
 
-test('お手本を再生は歌の枠のすぐ下に置き、押すと上の句、1秒あけて下の句を鳴らし、鳴り終えたら戻る', async ({ page }) => {
+test('お手本を再生は歌の枠と歌の印のすぐ下に置き、押すと上の句、1秒あけて下の句を鳴らし、鳴り終えたら戻る', async ({ page }) => {
   const served = await serveAudio(page);
   await watch(page);
   await page.goto('/karuta/53/');
-  const poem = await page.locator('.karuta-page > .poem').boundingBox();
+  const mark = await page.locator('.karuta-page > .poem + .src').boundingBox();
   const button = await playButton(page).boundingBox();
-  expect(button!.y).toBeGreaterThan(poem!.y + poem!.height);
-  expect(button!.y - (poem!.y + poem!.height)).toBeLessThanOrEqual(20);
+  expect(button!.y).toBeGreaterThan(mark!.y + mark!.height);
+  expect(button!.y - (mark!.y + mark!.height)).toBeLessThanOrEqual(20);
 
   await playButton(page).click();
   await expect(stopButton(page)).toBeVisible();

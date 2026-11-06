@@ -14,6 +14,15 @@ for (const path of ['/karuta/53/', '/karuta/3/', '/soron/', '/saitei/']) {
   });
 }
 
+test('1首のページの歌のすぐ下に、伸ばす箇所とふりがな・注・余韻の印の版とページを出す', async ({ page }) => {
+  await page.goto('/karuta/53/');
+  const mark = page.locator('.karuta-page > .poem + .src');
+  await expect(mark).toHaveText('伸ばす箇所 抜粋版 p.7、ふりがな・注・余韻の印 冊子 p.7');
+  const poem = await page.locator('.karuta-page > .poem').boundingBox();
+  const box = await mark.boundingBox();
+  expect(box!.y - (poem!.y + poem!.height)).toBeLessThanOrEqual(10);
+});
+
 test('1首のページの図の下から、口の形の資料の見出しへ移れる', async ({ page }) => {
   await page.goto('/karuta/53/');
   const link = page.locator('figure.mouths a[href="/about/#src-phonetics"]');

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import deck from '../../.claude/skills/yomimasu/assets/cards.json' with { type: 'json' };
 import type { Card } from '../../.claude/skills/yomimasu/scripts/cards.ts';
-import { finalSound, rulePoints, sameStartLine } from '../../content/karuta/rules.ts';
+import { finalSound, poemSourceText, rulePoints, sameStartLine } from '../../content/karuta/rules.ts';
 import { adviceFor, cardPage, expandCardRefs, finalSoundCounts, kimarijiGroups, listHtml, parseAdvice } from '../../site/karuta.ts';
 
 const cards = deck.cards as unknown as Card[];
@@ -282,10 +282,10 @@ test('出さないと決めた助言の行が表から消えたり変わった�
   assert.throws(() => parseAdvice(table.replace('| 大山札の6首 | 決まり字までが長いので読み急がない', '| 大山札の6首 | 決まり字まで長いので読み急がない')), /読み急がない/);
 });
 
-test('お手本を再生のボタンは歌の枠のすぐ下に置き、JS が動くまで隠し、打ち込む印を付ける', () => {
+test('お手本を再生のボタンは歌の枠と歌の印のすぐ下に置き、JS が動くまで隠し、打ち込む印を付ける', () => {
   assert.match(
     pageOf(53),
-    /<\/aside><\/div>\n<yomimasu-karuta-play data-no="53"><button class="btn" type="button" data-echo hidden><svg class="ico" viewBox="0 0 12 12" aria-hidden="true"><path d="[^"]+"\/><\/svg><span>お手本を再生<\/span><\/button><\/yomimasu-karuta-play>\n<h3>気をつける点<\/h3>/,
+    /<\/aside><\/div>\n<p class="src">[^<]+<\/p>\n<yomimasu-karuta-play data-no="53"><button class="btn" type="button" data-echo hidden><svg class="ico" viewBox="0 0 12 12" aria-hidden="true"><path d="[^"]+"\/><\/svg><span>お手本を再生<\/span><\/button><\/yomimasu-karuta-play>\n<h3>気をつける点<\/h3>/,
   );
   assert.match(pageOf(0), /<yomimasu-karuta-play data-no="0">/);
 });
@@ -316,4 +316,26 @@ test('歴史的かなづかいの4項目は、一般論を書かず、その歌�
     const html = cardPage(c, cards, advice).bodyHtml;
     for (const text of general) assert.ok(!html.includes(text), `${c.no}番に「${text}」`);
   }
+});
+
+test('歌のすぐ下に、伸ばす箇所とふりがな・注・余韻の印の版とページを短い印で出す', () => {
+  assert.match(pageOf(53), /<\/aside><\/div>\n<p class="src">伸ばす箇所 抜粋版 p\.7、ふりがな・注・余韻の印 冊子 p\.7<\/p>\n/);
+  assert.match(pageOf(0), /<p class="src">伸ばす箇所 抜粋版 p\.5、ふりがな・注・余韻の印 冊子 p\.5<\/p>/);
+  for (const c of cards) {
+    assert.ok(
+      pageOf(c.no).includes(`<p class="src">伸ばす箇所 抜粋版 p.${c.origin.stretches.page}、ふりがな・注・余韻の印 冊子 p.${c.origin.notation.page}</p>`),
+      `${c.no}番`,
+    );
+  }
+});
+
+test('ページが記録されていない部分の印は出さない', () => {
+  const without = (stretches: number, notation: number) => ({
+    ...card(53),
+    origin: { ...card(53).origin, stretches: { ...card(53).origin.stretches, page: stretches }, notation: { ...card(53).origin.notation, page: notation } },
+  });
+  assert.equal(poemSourceText(without(0, 7)), 'ふりがな・注・余韻の印 冊子 p.7');
+  assert.equal(poemSourceText(without(7, 0)), '伸ばす箇所 抜粋版 p.7');
+  assert.equal(poemSourceText(without(0, 0)), null);
+  assert.doesNotMatch(cardPage(without(0, 0), cards, advice).bodyHtml, /抜粋版 p\.|冊子 p\.7<\/p>\n<yomimasu/);
 });
