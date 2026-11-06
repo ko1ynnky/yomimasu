@@ -62,6 +62,7 @@ test('入口に、題、標語、入力の行、7つの項目、下端の行を�
   const items = page.getByRole('navigation', { name: 'やれること' }).getByRole('link');
   await expect(items.locator('span')).toHaveText(MENU);
   await expect(items.first().locator('small')).toHaveText('はじめての人はここから');
+  await expect(items.nth(2).locator('small')).toHaveText('8つのテーマ、52項目');
   await expect(items.nth(5).locator('small')).toHaveText('読んで、秒数を測る');
   await expect(page.locator('.footnote [lang="en"]')).toHaveText('Built with Claude Code.');
   await expect(page.locator('.footnote').getByRole('link')).toHaveText('/このアプリについて');
@@ -119,6 +120,30 @@ for (const [width, height] of [
     if (width !== 320) await page.locator('.ask').screenshot({ path: join(ARTIFACTS_DIR, `soron-ask-${width}x${height}.png`) });
   });
 }
+
+// 320px は確かめない。空きは 132px で添え書きは 129px なので、書体が変われば折れる。折れても行が 57px になるだけで、「/インストール」の添え書きも 360px で折れている（docs/ui-guide.md の12節）。
+test('幅 360px でも、「/ポイントを知る」の行は添え書きまで1行に収まり、高さ 48px のままである', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.goto('/');
+  const item = page.getByRole('navigation', { name: 'やれること' }).getByRole('link', { name: /\/ポイントを知る/ });
+  const note = item.locator('small');
+  await expect(note).toHaveText('8つのテーマ、52項目');
+  expect(await item.evaluate((a) => a.getBoundingClientRect().height)).toBe(48);
+  expect(await note.evaluate((el) => el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight))).toBeLessThan(1.5);
+
+  await page.locator('.menu').evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  mkdirSync(ARTIFACTS_DIR, { recursive: true });
+  await page.screenshot({ path: join(ARTIFACTS_DIR, 'home-menu-360x640.png') });
+});
+
+// 添え書きの数は content/index.md に手で書いている。目次の数のように組み立てで数えて入れる案（site/point.ts）は、入口の組み立てに置き換えの印を足すことになるので採らず、食い違いをここで見つける。
+test('入口の「/ポイントを知る」の添え書きの数は、ポイントを知るのテーマと行の数に合う', async ({ page }) => {
+  await page.goto('/point/');
+  const themes = await page.locator('main h3[id^="t-"]').count();
+  const rows = await page.locator('main details.pt').count();
+  await page.goto('/');
+  await expect(page.getByRole('navigation', { name: 'やれること' }).getByRole('link', { name: /\/ポイントを知る/ }).locator('small')).toHaveText(`${themes}つのテーマ、${rows}項目`);
+});
 
 type Times = { pressed: number; typed?: number; run?: number; lead?: number; rest?: number };
 
