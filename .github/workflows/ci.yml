@@ -59,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -113,15 +113,16 @@ jobs:
           # 1行に「組の番号 e2e/ からのファイル名」を書く。番号は1から数え、最後の組の番号は書かない。
           # 最後の組は、ここで前の組に入れなかったファイルを、新しいファイルも含めてすべて流す。
           # Playwright の --shard は件数で前から切るので、遅いテストが集まる record から result までが1つの組に入る。
-          # 2026-11-07 の実測の時間で、どの組も約200秒になるように分けた（docs/decisions.md）。
+          # kv-lens と kv は、runner によって2倍ほど長くなる。遅い runner でも、どの組も約200秒になるように分けた（docs/decisions.md）。
           SHARD_FILES: |
-            1 result.spec.ts
-            1 listen-back.spec.ts
-            2 record.spec.ts
-            2 next-point.spec.ts
-            3 kv-lens.spec.ts
-            3 kv.spec.ts
-            3 records.spec.ts
+            1 kv-lens.spec.ts
+            2 result.spec.ts
+            2 listen-back.spec.ts
+            3 record.spec.ts
+            3 next-point.spec.ts
+            4 records.spec.ts
+            4 kv.spec.ts
+            4 flow.spec.ts
         # 組の番号は matrix の値ではなく job-index から数える。matrix を書き換えても、どの組にも入らないファイルが出ない。
         # 前の組と最後の組は同じ files_of でファイルを選ぶ。式が分かれると、どちらにも入らない番号が出る。
         # 公開すると runner が4 vCPU になり、workers の既定が2に増える。録音の E2E の時間の条件を変えないよう、1に固定する。
