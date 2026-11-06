@@ -29,7 +29,7 @@
   - ゾーン全体で Bot Fight Mode を止める案。同じゾーンの別のアプリの守りも弱まる。
 - 限界：
   - Bot Fight Mode が送る中身は読めないので、何を送るかは Cloudflare の説明に頼る。
-  - Cloudflare の Cookie の文書は、Bot Fight Mode で守るサイトには、ボットの点数を計る `__cf_bm`（使わないまま30分で切れる）も置くとしている。2026-11-07 に本番の HTML を curl で取ったときは `Set-Cookie` がなかった。ブラウザーで本番を開いて、付く Cookie は確かめていない。「このアプリについて」と NOTICE.md は `cf_clearance` だけを挙げている。
+  - Cloudflare の Cookie の文書は、Bot Fight Mode で守るサイトには、ボットの点数を計る `__cf_bm` も置くとしている。2026-11-07 に、Cookie のない新しい Playwright の Chromium で本番の `/` と `/read/` を開くと、付いた Cookie は `cf_clearance` の1つだけだった（ドメインは `.karutalog.com`、HttpOnly、Partitioned、期限は約1年後）。`__cf_bm` は付かなかった。「このアプリについて」と NOTICE.md は、この観察に合わせて `cf_clearance` だけを挙げている。Cloudflare の動きが変わって `__cf_bm` が付くようになっても、E2E では気づかない。
   - Cloudflare が差し込むものや送り先を変えても、E2E は気づかない。本番の送信は、ブラウザーの開発者ツールで本番を開いて確かめる。
   - E2E で外す条件はパスで決めるので、アプリのコードが `/cdn-cgi/rum` か `/cdn-cgi/challenge-platform/` へ送るようになっても、この検査は落ちない。
 
