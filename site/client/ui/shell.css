@@ -1,0 +1,45 @@
+/* 入口と、殻（shell.ts）が出し入れする部品の見た目。値と意味は docs/ui-guide.md の4、5、8節と、見本の docs/ui-sample.html にある。 */
+
+/* 入口 */
+.hero { display: grid; gap: 8px; padding-block: 20px 16px; }
+.hero h1 { font-family: var(--f-serif); font-weight: 700; font-size: 30px; line-height: 1.4; }
+.hero p { color: var(--ink-2); }
+.menu { display: grid; overflow: hidden; background: var(--card); border: 1px solid var(--rule); border-radius: 14px; font-family: var(--f-mono); }
+.menu a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 6px 14px; text-decoration: none; font-size: 15px; }
+.menu a + a { border-top: 1px solid var(--rule-2); }
+.menu small { font-family: var(--f-sans); text-align: right; min-width: 0; }
+/* コマンド名は折り返さない。狭い画面では添え書きの側を折り返す（幅 375px で「/つまずきどころ」が2行に折れた） */
+.menu span { white-space: nowrap; }
+.menu .first { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; min-height: 64px; background: var(--shu); color: var(--on-shu); font-size: 17px; font-weight: 600; }
+.menu .first small { color: inherit; text-align: left; }
+/* 一覧の最後の項目と取り違えて押さないよう、一覧から 28px 離す */
+.footnote { padding-top: 28px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.foot-link { display: inline-flex; align-items: center; min-height: 44px; padding-inline: 4px; font-family: var(--f-mono); color: var(--ink-2); }
+
+/* 戻る：主の操作の右に細く置く。主の操作を押すつもりで触れないよう、間を 12px 取る */
+.main-row { display: flex; gap: 12px; }
+.next > .main-row { flex-basis: 100%; }
+.main-row > .btn--fill { flex: 1 1 auto; min-width: 0; }
+.btn.back { flex: none; width: 76px; }
+.back-row { display: flex; flex-wrap: wrap; justify-content: flex-end; }
+
+/* 「戻る」の質問（Claude Code の AskUserQuestion の形）。主のボタン群と入れ替えて出す */
+.auq { display: grid; gap: 6px; width: 100%; }
+.auq-q { font-family: var(--f-mono); font-size: 14px; font-weight: 600; line-height: 1.7; }
+.auq-q::before { content: "? "; color: var(--shu); }
+.auq-a { font-family: var(--f-mono); font-size: 14px; line-height: 1.7; color: var(--ink-3); }
+.auq-opts { display: grid; gap: 6px; }
+.auq-opts .btn { justify-content: flex-start; text-align: left; }
+
+/* 入れ替えたあとの焦点の置き場。main 全体に枠を出さない */
+main:focus { outline: none; }
+
+/* 押して開いたときの出し方。順番の来ていない冒頭の文は場所も取らず、残りは場所を取ったまま隠す */
+.is-pending { display: none !important; }
+.is-held { visibility: hidden !important; }
+.fade-in { animation: fade-in 0.15s ease-out both; }
+@keyframes fade-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in { animation: none; }
+}

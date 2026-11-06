@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { audioSourceOf, clipUrl, GAP_SEC, pairLoader, play, scheduleOf, type PlaybackEnv } from '../../site/client/playback.ts';
+import { audioSourceOf, clipUrl, GAP_SEC, pairLoader, play, scheduleOf, takeLoader, type PlaybackEnv } from '../../site/client/playback.ts';
+import type { Take } from '../../site/client/take.ts';
 
 // テストリスト：
 // - 本番の音声は同じオリジンの /audio/v1/<札番号3桁>_<1か2>.m4a から取る。1 は上の句、2 は下の句である。
@@ -15,6 +16,10 @@ import { audioSourceOf, clipUrl, GAP_SEC, pairLoader, play, scheduleOf, type Pla
 // - 途中で止められる。
 // - 鳴らす間だけ Wake Lock を取る。取れなくても止めない。
 // - 鳴らす間に画面がまた見えたら、Wake Lock を取り直す。端末は画面が隠れると Wake Lock を離すからである。
+// - 自分の読みも同じ処理で鳴らす。録音の PCM から1本の AudioBuffer を作り、読み始めの位置から最後の標本までを、録音の標本化周波数のまま鳴らす。
+// - 自分の読みも、文脈を作って resume() を呼んでから録音を読む。
+// - 読み始めより後に音がない録音でも、投げずに鳴らし終える。
+// - 端末に残した録音がもうないときは、読み込めない扱いにする。
 
 type FakeSource = { buffer: FakeBuffer | null; startedAt: number | null; stopped: boolean; onended: (() => void) | null };
 type FakeBuffer = { duration: number; length: number; sampleRate: number; data: Float32Array };
@@ -58,6 +63,8 @@ function fakeEnv({ state = 'running', wake = 'ok' }: { state?: string; wake?: 'o
       return source;
     },
     createBuffer(_channels: number, length: number, sampleRate: number) {
+      // ブラウザーは長さ 0 の AudioBuffer を作らずに投げる。
+      if (length < 1) throw new DOMException('長さが 0', 'NotSupportedError');
       const data = new Float32Array(length);
       return { duration: length / sampleRate, length, sampleRate, data, getChannelData: () => data };
     },
@@ -318,4 +325,55 @@ test('合成音の組は、下の句と余韻の 8 秒と、上の句の 6 秒�
     [8, 6],
   );
   assert.ok(loaded.every((buffer) => buffer.getChannelData(0).some((sample) => Math.abs(sample) > 0.05)));
+});
+
+const RATE = 48000;
+const takeOf = (pcm: Float32Array, readingStartSec: number): Take => ({
+  pcm,
+  sampleRate: RATE,
+  readingStartSec,
+  assisted: true,
+  pair: { shimo: 81, kami: 45 },
+  voiceProcessing: { supported: {}, settings: {} },
+});
+
+test('自分の読みは、読み始めの位置の標本から録音の最後の標本までを、録音の標本化周波数のまま1本で鳴らす', async () => {
+  const { env, sources } = fakeEnv();
+  const pcm = Float32Array.from({ length: 3 * RATE }, (_, i) => Math.sin(i / 7));
+  const playback = play(takeLoader(() => Promise.resolve(takeOf(pcm, 0.5))), env);
+  await settle();
+  assert.equal(sources.length, 1);
+  const buffer = sources[0].buffer!;
+  assert.equal(buffer.sampleRate, RATE);
+  assert.deepEqual(buffer.data, pcm.subarray(RATE / 2));
+  sources[0].onended?.();
+  assert.equal(await playback.finished, 'ended');
+});
+
+test('自分の読みも、押した処理の中で文脈を作って resume() を呼んでから、録音を読む', () => {
+  const { env, log } = fakeEnv();
+  play(
+    takeLoader(() => {
+      log.push('load');
+      return new Promise(() => {});
+    }),
+    env,
+  );
+  assert.deepEqual(log, ['create', 'resume', 'load']);
+});
+
+test('読み始めより後に音がない録音でも、投げずに鳴らし終える', async () => {
+  const { env, sources } = fakeEnv();
+  const playback = play(takeLoader(() => Promise.resolve(takeOf(new Float32Array(RATE), 2))), env);
+  await settle();
+  assert.equal(sources.length, 1);
+  sources[0].onended?.();
+  assert.equal(await playback.finished, 'ended');
+});
+
+test('端末に残した録音がもうないときは、鳴らさずに failed で終わる', async () => {
+  const { env, sources } = fakeEnv();
+  const playback = play(takeLoader(() => Promise.resolve(null)), env);
+  assert.equal(await playback.finished, 'failed');
+  assert.equal(sources.length, 0);
 });
