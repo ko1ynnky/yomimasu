@@ -61,12 +61,6 @@
 .alert b { line-height: 1.6; }
 .link-inline { min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink-2); font-size: inherit; text-decoration: underline; cursor: pointer; }
 .rec-state-time { font-variant-numeric: tabular-nums; }
-.heard { display: grid; gap: 8px; padding-block: 20px 8px; }
-.heard h2 { font-family: var(--f-serif); font-weight: 700; font-size: 24px; line-height: 1.45; }
-.heard p { color: var(--ink-2); }
-.heard-next { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
-.heard-next > * { flex: 1 1 40%; min-width: 0; }
-.heard-next > .btn--fill { flex-basis: 100%; }
 yomimasu-recorder { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; }
 
 /* 枠を差し込む要素は箱を作らず、枠を画面の縦の flex に直接並べる */

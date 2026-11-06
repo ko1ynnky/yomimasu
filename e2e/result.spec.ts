@@ -56,12 +56,14 @@ async function record(page: Page, plan: ReadingPlan) {
   await expect(page.getByTestId('take')).toBeAttached();
 }
 
-// 画面どうしをつなぐ処理はまだないので、結果のページの本文を取ってきて差し替える。録音は差し替えても端末のメモリーに残る。
+// 読み終えると、殻が開き直さずに /result/ へ移す。ほかの結果の画面（例の録音）へは、結果のページの本文を取ってきて差し替える。録音は差し替えても端末のメモリーに残る。
 async function showResult(page: Page, path = '/result/') {
-  await page.evaluate(async (path) => {
-    const next = new DOMParser().parseFromString(await (await fetch(path)).text(), 'text/html');
-    document.querySelector('main')!.replaceWith(document.adoptNode(next.querySelector('main')!));
-  }, path);
+  if (new URL(page.url()).pathname !== path) {
+    await page.evaluate(async (path) => {
+      const next = new DOMParser().parseFromString(await (await fetch(path)).text(), 'text/html');
+      document.querySelector('main')!.replaceWith(document.adoptNode(next.querySelector('main')!));
+    }, path);
+  }
   await expect(page.locator('yomimasu-result .res')).toBeVisible();
 }
 
@@ -105,7 +107,8 @@ test('間の長い読みを録ると、下の句＋余韻、間、上の句の3�
   // 「次に直す1点」はカードの見出しで、点数ではない（docs/ui-guide.md の10節）。
   await expect(result).not.toContainText(/総合|点数|(?<!直す)\d+\s*点/);
   await expect(result).not.toContainText('例の録音です');
-  await expect(page.locator('.bar .step')).toHaveText('補助あり');
+  // 読み終えると殻が開き直さずに結果の画面へ移るので、読む流れの進み具合に続けて補助の有無を出す。
+  await expect(page.locator('.bar .step')).toHaveText('3 / 3 結果・補助あり');
 
   expect(sent).toEqual([]);
   expect(await beacons()).toEqual([]);
