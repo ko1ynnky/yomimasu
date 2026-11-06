@@ -71,14 +71,14 @@ for (const entry of readdirSync(CONTENT_DIR, { recursive: true, withFileTypes: t
     .replace(FINAL_SOUND_MARK, () => finalSoundCounts(cards))
     .replace(THEME_TOC_MARK, () => themeTocHtml(rendered));
   const bodyHtml = expandCardRefs(Object.entries(MARKS).reduce((html, [mark, make]) => html.replace(mark, make), parsed), cards);
-  writePage(outputPath, renderDocument({ title, bodyHtml, scriptPath, stylePaths, ...run, tool }));
+  writePage(outputPath, renderDocument({ title, path: urlOf(outputPath), bodyHtml, scriptPath, stylePaths, ...run, tool }));
 }
 
 // 1首のページは手で書かず、札の読みの表、規則、助言の候補から組む。表が変わってもページが追いつくようにするためである。
 const advice = parseAdvice(readFileSync(ADVICE_PATH, 'utf8'));
 for (const card of cards) {
   const { path, title, command, readName, bodyHtml } = cardPage(card, cards, advice);
-  writePage(path, renderDocument({ title, bodyHtml, scriptPath, stylePaths, command, readName }));
+  writePage(path, renderDocument({ title, path: urlOf(path), bodyHtml, scriptPath, stylePaths, command, readName }));
 }
 
 // AI に入れる手順の画面が配るスキルのファイル。保存のボタンは <a href="/yomimasu.zip" download> である（docs/ui-guide.md の8節）。
