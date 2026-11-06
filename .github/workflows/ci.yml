@@ -12,6 +12,11 @@ on:
       scan_base:
         description: コミットメッセージを見始めるコミット
         required: true
+      # 公開の前に、足してから消した名前を履歴から探すための入力である。PR と push の検査は変えない。
+      scan_history:
+        description: deny-names が、scan_base から先の各コミットで足した行とファイル名も見る
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -106,6 +111,7 @@ jobs:
         env:
           DENY_NAMES: ${{ secrets.DENY_NAMES }}
           SCAN_BASE: ${{ github.event.pull_request.base.sha || github.event.before || inputs.scan_base }}
+          SCAN_HISTORY: ${{ inputs.scan_history && '1' || '' }}
           SCRIPT_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           script="$RUNNER_TEMP/deny-names.sh"
