@@ -1,7 +1,7 @@
 import type { CardNo, Pair } from './pair.ts';
 import type { Take } from './take.ts';
 
-// お手本と自分の読みの再生。聞く画面（C1）、結果の画面の聴き比べ（C6）、前回と比べる画面（C8）が使う。
+// お手本と自分の読みの再生。聞く画面（C1）、結果の画面の聴き比べ（C6）、前回と比べる画面（C8）、1首のページのお手本が使う。
 // 2本を AudioBuffer にしてから、両方を start(when) で予約する。ended でつなぐと端末ごとに遅れが乗り、
 // <audio> は再生の開始の時刻を予約できないので、どちらも使わない。
 
@@ -75,21 +75,43 @@ function synthBuffer(context: BaseAudioContext, sec: number, pitchHz: number): A
   return buffer;
 }
 
-export function pairLoader(pair: Pair, source: AudioSource, fetcher: Fetcher = (url) => fetch(url)): Loader {
-  const halves: [CardNo, Half][] = [
-    [pair.shimo, 'shimo'],
-    [pair.kami, 'kami'],
-  ];
-  if (source.kind === 'synth') return async (context) => halves.map(([, half]) => synthBuffer(context, SYNTH_SEC[half], half === 'shimo' ? 220 : 262));
+// 鳴らす (札, 句) の並び。play() はこの順に、あいだを GAP_SEC あけて鳴らす。
+export type Clip = readonly [no: CardNo, half: Half];
+
+export function clipsLoader(clips: readonly Clip[], source: AudioSource, fetcher: Fetcher = (url) => fetch(url)): Loader {
+  if (source.kind === 'synth') return async (context) => clips.map(([, half]) => synthBuffer(context, SYNTH_SEC[half], half === 'shimo' ? 220 : 262));
   return (context) =>
     Promise.all(
-      halves.map(async ([no, half]) => {
+      clips.map(async ([no, half]) => {
         const response = await fetcher(clipUrl(source.base, no, half));
         if (!response.ok) throw new Error(`お手本の音声がない：${response.status}`);
         return context.decodeAudioData(await response.arrayBuffer());
       }),
     );
 }
+
+// 1組は、前の札の下の句から次の札の上の句へ鳴らす。
+export const pairLoader = (pair: Pair, source: AudioSource, fetcher?: Fetcher): Loader =>
+  clipsLoader(
+    [
+      [pair.shimo, 'shimo'],
+      [pair.kami, 'kami'],
+    ],
+    source,
+    fetcher,
+  );
+
+// 1首のページのお手本は、同じ札の上の句から下の句へ鳴らす。
+// 序歌の録音は、上の句と1回目の下の句（000_1）と、2回目の下の句（000_2）に分かれているので、同じ並びで序歌の読み方どおりに鳴る。
+export const cardLoader = (no: CardNo, source: AudioSource, fetcher?: Fetcher): Loader =>
+  clipsLoader(
+    [
+      [no, 'kami'],
+      [no, 'shimo'],
+    ],
+    source,
+    fetcher,
+  );
 
 // 自分の読みは、合図の間の音を鳴らさず、読み始めの位置から最後までを鳴らす（docs/ui-guide.md の9節）。
 function takeBuffer(context: BaseAudioContext, take: Take): AudioBuffer {
