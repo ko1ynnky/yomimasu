@@ -69,6 +69,27 @@ test('入口に、題、標語、入力の行、7つの項目、下端の行を�
   await expect(page.locator('body')).not.toContainText(/考え中|考えました/);
 });
 
+test('入口の一覧は、並びを変えずに、朱を「/まず1回読む」だけに塗り、「/練習モード」はほかの行と同じ地のまま太字にする', async ({ page }) => {
+  const SHU = 'rgb(178, 58, 28)';
+  const ON_SHU = 'rgb(255, 253, 249)';
+  const PLAIN = ['rgba(0, 0, 0, 0)', 'rgb(32, 29, 25)'];
+  await page.setViewportSize({ width: 393, height: 659 });
+  await page.goto('/');
+  const items = page.getByRole('navigation', { name: 'やれること' }).getByRole('link');
+  const looks = await items.evaluateAll((links) =>
+    links.map((a) => {
+      const name = a.querySelector('span')!;
+      return [name.textContent, getComputedStyle(a).backgroundColor, getComputedStyle(a).color, Number(getComputedStyle(name).fontWeight) >= 600];
+    }),
+  );
+  expect(looks).toEqual(MENU.map((name) => (name === '/まず1回読む' ? [name, SHU, ON_SHU, true] : [name, ...PLAIN, name === '/練習モード'])));
+  await expect(items.nth(5).locator('small')).toHaveCSS('font-weight', '600');
+
+  await page.locator('.menu').evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  mkdirSync(ARTIFACTS_DIR, { recursive: true });
+  await page.screenshot({ path: join(ARTIFACTS_DIR, 'home-menu-393x659.png') });
+});
+
 for (const [width, height] of [
   [393, 659],
   [360, 640],
