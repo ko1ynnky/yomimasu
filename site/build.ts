@@ -6,9 +6,11 @@ import deck from '../.claude/skills/yomimasu/assets/cards.json' with { type: 'js
 import type { Card } from '../.claude/skills/yomimasu/scripts/cards.ts';
 import { commandAt } from '../.claude/skills/yomimasu/scripts/commands.ts';
 import { mouthFiguresHtml, nasalEndingsText, nasalFigureHtml } from '../content/karuta/mouth.ts';
+import { INSTALL_MARKS, isOffered } from './install.ts';
 import { cardName, cardPage, cardUrl, expandCardRefs, finalSoundCounts, listHtml, parseAdvice } from './karuta.ts';
 import { kimarijiStream } from './kimariji-stream.ts';
 import { outputPathOf, parseSource, renderDocument, runFor } from './render.ts';
+import { chatgptPluginZip, skillZip } from './skill-zip.ts';
 
 const CONTENT_DIR = 'content';
 const OUT_DIR = 'dist';
@@ -23,6 +25,7 @@ const MARKS: Record<string, () => string> = {
   '<!-- 最後の音の口の形 -->': mouthFiguresHtml,
   '<!-- 「ん」の位置の図 -->': nasalFigureHtml,
   '<!-- 「ん」で終わる札の数 -->': () => nasalEndingsText(cards),
+  ...INSTALL_MARKS,
 };
 
 const cards = deck.cards as unknown as Card[];
@@ -57,6 +60,7 @@ for (const entry of readdirSync(CONTENT_DIR, { recursive: true, withFileTypes: t
   const contentPath = relative(CONTENT_DIR, sourcePath);
   const { title, command, readName, tool, slug, markdown } = parseSource(readFileSync(sourcePath, 'utf8'));
   const outputPath = outputPathOf(contentPath, slug);
+  if (!isOffered(urlOf(outputPath))) continue;
   const run = runFor(contentPath, { command, readName }, commandAt(urlOf(outputPath), (token) => cardNames.get(token)));
   const parsed = (await marked.parse(markdown)).replace(LIST_MARK, () => listHtml(cards)).replace(FINAL_SOUND_MARK, () => finalSoundCounts(cards));
   const bodyHtml = expandCardRefs(Object.entries(MARKS).reduce((html, [mark, make]) => html.replace(mark, make), parsed), cards);
@@ -69,3 +73,8 @@ for (const card of cards) {
   const { path, title, command, readName, bodyHtml } = cardPage(card, cards, advice);
   writePage(path, renderDocument({ title, bodyHtml, scriptPath, stylePaths, command, readName }));
 }
+
+// AI に入れる手順の画面が配るスキルのファイル。保存のボタンは <a href="/yomimasu.zip" download> である（docs/ui-guide.md の8節）。
+// ChatGPT にだけは、同じ知識をプラグインのアーカイブの形で配る（site/skill-zip.ts）。
+writeFileSync(join(OUT_DIR, 'yomimasu.zip'), skillZip());
+writeFileSync(join(OUT_DIR, 'yomimasu-chatgpt.zip'), chatgptPluginZip());
