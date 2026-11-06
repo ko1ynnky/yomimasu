@@ -1,5 +1,5 @@
 // 余韻の最後の音の口の形と、発話の終わりの「ん」の口の中の位置。教科書の「ポイントを知る」と1首のページで使う。
-// 図と文は、一般の音声学の公開の資料と、「ん」を実測した研究から、このアプリが自分で描き、書いた。出典はスキルの references/mouth-shapes.md にある。
+// 図と文は、一般の音声学の公開の資料と、「ん」を実測した研究から、このアプリが自分で描き、書いた。出典はスキルの references/mouth-shapes.md にあり、画面では「このアプリについて」の出典（#src-phonetics、#src-research）に出す。
 // 読手テキストの調音点・調音法の一覧と口腔断面図（完全版 p.31-32）は、開かず、もとにもしていない（REVIEW.md の「資料の範囲」）。
 // 何を図にするかも、その一覧の作りではなく、余韻の練習で要る2つ（最後の音ごとの口の形と、「ん」の位置の幅）から決めた。
 // 断面は形を伝えるためのスケッチで、寸法は測っていない。研究の論文の図も写していない。
@@ -117,10 +117,11 @@ export function mouthSvg(sound: FinalVowel): string {
 }
 
 // 6つを並べる「ポイントを知る」では、狭い画面で2列に収めるため、舌と唇の文を省いて保つ所だけを書く。1首のページは1つなので文も書く。
+// 1首のページは図の下の説明を1行に縮めたので、保つ所がこのアプリの解釈であることを、説明の代わりに保つ所の頭に書く。
 export function mouthPanelHtml(sound: FinalVowel, { detail }: { detail: boolean }): string {
   const { tongue, lips, keep } = SHAPES[sound];
   const description = detail ? `<p>${tongue}。${lips}。</p>` : '';
-  return `<div class="mouth"><span class="mouth-name">${sound}</span>${mouthSvg(sound)}${description}<p class="mouth-keep">保つ：${keep}</p></div>`;
+  return `<div class="mouth"><span class="mouth-name">${sound}</span>${mouthSvg(sound)}${description}<p class="mouth-keep">${detail ? '保つ（このアプリの解釈）' : '保つ'}：${keep}</p></div>`;
 }
 
 // 「ん」の断面。舌が上あごに付く所は、研究で歯茎から口蓋垂まで幅があった。幅は朱の帯で示し、1点に決めて描かない。
@@ -182,11 +183,20 @@ export function nasalFigureHtml(): string {
   return `<figure class="nasal">${nasalSvg()}<figcaption>${NASAL_CAPTION}</figcaption></figure>`;
 }
 
+// 1首のページの図の下の説明。資料の名前は「このアプリについて」の出典にまとめ、ここでは1行にする（2026-11-06 のユーザーの判断）。
+const CARD_MARKS_NOTE: Record<'vowel' | 'nasal', string> = {
+  vowel: '朱の点は舌の最も高い所の目安です。',
+  nasal: '「ん」の朱の帯は、<a href="/about/#src-research">研究</a>で舌が上あごに付いていた所の幅です。',
+};
+
+const cardMouthCaption = (mark: 'vowel' | 'nasal') =>
+  `図は、一般の音声学の資料（<a href="/about/#src-phonetics">Wikipedia ほか</a>）をもとにこのアプリが描いたスケッチで、寸法は測っていません。${CARD_MARKS_NOTE[mark]}`;
+
 // 1首のページの、その札の最後の音の図。「ん」の位置の説明は長いので、「ポイントを知る」の作者の経験のカードの中の折りたたみ（id="yoin-n"）へ案内する。
 export function cardMouthHtml(card: Card): string {
   const { vowel } = finalSound(card);
   const nasal = vowel === 'ん' ? '<p>話し言葉の研究では、発話の終わりの「ん」をどこで閉じるかは、人によって違いました。研究でわかっていることと、このアプリの考えは、<a href="/point/#yoin-n">ポイントを知る</a>にあります。</p>' : '';
-  return `<figure class="mouths mouths--one">${mouthPanelHtml(vowel, { detail: true })}<figcaption>${nasal}<p>${mouthsCaption([vowel === 'ん' ? 'nasal' : 'vowel'])}</p></figcaption></figure>`;
+  return `<figure class="mouths mouths--one">${mouthPanelHtml(vowel, { detail: true })}<figcaption>${nasal}<p>${cardMouthCaption(vowel === 'ん' ? 'nasal' : 'vowel')}</p></figcaption></figure>`;
 }
 
 // 「ん」で終わる札
