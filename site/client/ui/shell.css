@@ -11,6 +11,18 @@ yomimasu-kv {
   height: clamp(160px, calc(100svh - var(--kv-rest, 344px)), 520px);
 }
 yomimasu-kv canvas { margin-inline: auto; }
+/* 試作：長押しで虫眼鏡を開くので、iOS の長押しのメニューと文字の選択を切る（client/kv-lens.ts） */
+yomimasu-kv { position: relative; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+/* 試作：誘いの文。絵の枠の左下に重ね、行の高さを変えない。一度虫眼鏡を開いたら出さない */
+.kv-invite {
+  position: absolute; left: 0; bottom: 0; max-width: 100%; padding: 2px 6px; border-radius: 4px; pointer-events: none;
+  font-size: 13px; line-height: 1.5; color: var(--ink-2); background: color-mix(in srgb, var(--paper) 88%, transparent);
+}
+/* 試作：虫眼鏡。指の上に固定の位置で出す（docs/ui-guide.md の4節の例外） */
+.kv-lens {
+  position: fixed; z-index: 1; width: 176px; height: 176px; border-radius: 50%; pointer-events: none;
+  background: var(--card); border: 1px solid var(--rule); box-shadow: 0 2px 10px rgb(32 29 25 / 0.18);
+}
 .hero h1 { font-family: var(--f-serif); font-weight: 700; font-size: 30px; line-height: 1.4; }
 .hero p { color: var(--ink-2); }
 .menu { display: grid; overflow: hidden; background: var(--card); border: 1px solid var(--rule); border-radius: 14px; font-family: var(--f-mono); }
