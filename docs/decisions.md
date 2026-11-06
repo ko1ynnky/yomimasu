@@ -2,6 +2,17 @@
 
 あとの作業に影響する技術と設計の判断を、新しいものを上にして書く。理由と、採らなかった案も残す。結論を改めるときは、元の項目を消さずに、改めた日付と理由を足す。
 
+## 2026-11-07 PR にラベルを付けたときと、本文とタイトルを直したときは ci.yml を動かさない
+
+- 決めたこと（ユーザーが認めた）：
+  - `ci.yml` の `pull_request` の types を `[opened, synchronize, reopened]` にする。`labeled` と `edited` を外す。
+  - `risk-gate` の job を、中身を変えずに `.github/workflows/risk-gate.yml` へ移す。types は `[opened, synchronize, reopened, labeled]` で、concurrency は PR の番号ごとにする。必須の検査は job の名前で結ぶので、設定を変えずに必須のまま残る。
+- 理由：
+  - PR の実行は同じ PR の前の実行を取り消すので、ラベルを付けたとき（`go:merge` など）と本文やタイトルを直したときに、動いている E2E が初めからやり直しになっていた。2026-11-05 から、12のコミットで CI が2回動き、5回は動き始めて 95〜400 秒で取り消された。
+  - `labeled` は、`go:merge` を付けたときに `risk-gate` を動かすためだけにあった。`edited` は、PR の base を変えたときに検査を動かすために足した（25fe57f の「fix: 検査の抜け道を閉じる」）。本文とタイトルを直したときも `edited` が起きる。
+- 引き換え：`edited` を外したので、base を `main` に変えた PR では、`ci.yml` も `risk-gate.yml` も動かない。必須の検査は待ちのまま残り、マージできない（止まる側に倒れる）。push するか、PR を閉じて開き直すと動く。`production` のブランチは作っていないので、`production` を base にした古い検査で通ることもない。
+- 採らなかった案：`ci.yml` の job を、`github.event.action` を見る `if` で飛ばす案。飛ばした job は「skipped」の検査を同じコミットに出し、前の失敗を上書きして通った扱いになる。抜け道になる。
+
 ## 2026-11-07 CI の E2E をファイルの組に分けて4台で並べて流し、apt を使わない
 
 - 決めたこと：
@@ -873,6 +884,7 @@
 - 決めたこと：
   - `.github/workflows/ci.yml` に `check`、`e2e`、`no-audio`、`no-secrets`、`deny-names`、`risk-gate` を置く。型検査、テスト、シェルの検査、ビルドは `check` の中で順に動かす。
     - 改めた点（2026-11-07）：E2E は、ファイルの組ごとに流す `e2e-shard` と、その結果をまとめる `e2e` に分けた。「CI の E2E をファイルの組に分けて4台で並べて流し、apt を使わない」を見る。
+    - 改めた点（2026-11-07）：`risk-gate` は `.github/workflows/risk-gate.yml` に移した。`ci.yml` をラベルで動かさないためである。「PR にラベルを付けたときと、本文とタイトルを直したときは ci.yml を動かさない」を見る。
   - 音声の拡張子と鍵の形は `.claude/hooks/patterns.sh` の1か所に置き、hook と CI が読み込む。`.gitignore` は読み込めないので、食い違いをテストで止める。
   - `deny-names` の一覧は GitHub の secret `DENY_NAMES` に1行1件で置く。空なら失敗する。
   - `deny-names` と `risk-gate` は、変更の中のものではなく base のスクリプトを実行する。`pull_request` の対象は `main` と `production` に絞り、スクリプトのない古いブランチを base にできないようにする。
@@ -893,6 +905,7 @@
 - 採らなかった案：`pull_request_target` で base の Workflow を動かす案。secret を持つ Workflow が PR の内容を扱う形は、外部の入力を閉じる考え方と合わない。`deny-names` は PR の本文を読むので、PR のコードを実行しない形なら作れるが、下の限界の前提が崩れるまでは使わない。
 - 限界：
   - `pull_request` の実行は PR 側の `ci.yml` を使う。同じリポジトリへ push でき、Workflow も書き換えられる人は、secret に届き、`risk-gate` も外せる。fork の PR には secret は渡らない。自動の実行のトークンに `workflows` の権限を渡さないことを前提にし、`auto.yml` を書くときに確かめる。
+    - 改めた点（2026-11-07）：`risk-gate` は `risk-gate.yml` に移した。PR 側の Workflow を使う点は同じである。
     - 改めた点（2026-11-03）：`auto.yml` は Claude のトークンに contents、pull_requests、issues だけを求め、`checks.test.sh` がそれを確かめる。交換のサーバーが求めたとおりに発行するかは、実物で確かめる。
   - 導入の PR がマージされるまでは、取り出した版の `deny-names.sh` が secret を読む。導入の PR は人が読むので、そこで止める。
   - `no-audio`、`no-secrets`、`deny-names` の本文の検査は、今の版のファイルだけを見る。PR の途中のコミットで足して消したものは見つけない。
