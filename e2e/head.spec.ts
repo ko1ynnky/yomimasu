@@ -104,3 +104,36 @@ for (const [path, size] of [
     expect(pngSize(await response.body())).toEqual(size);
   });
 }
+
+test('ないページを開くと、404 でページがないことを伝え、入口と100首の一覧へ戻れる', async ({ page }) => {
+  const response = await page.goto('/nonexistent/');
+  expect(response?.status()).toBe(404);
+  await expect(page).toHaveTitle('ページが見つかりません - /yomimasu');
+  await expect(page.locator('main')).toContainText('このページはありません。');
+  await expect(page.locator('header.bar a')).toHaveAttribute('href', '/');
+  await expect(page.locator('main').getByRole('link', { name: '入口へ戻る' })).toHaveAttribute('href', '/');
+  await expect(page.locator('main').getByRole('link', { name: '100首の一覧へ' })).toHaveAttribute('href', '/karuta/');
+  await page.locator('main').getByRole('link', { name: '入口へ戻る' }).click();
+  await expect(page.locator('main h1')).toHaveText('「読みます」と言うために。');
+});
+
+test('ないページの head にもアイコン、説明、共有したときの題と画像を書き、どの URL にも出るので og:url は書かない', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+  const page = await context.newPage();
+  await page.goto('/nonexistent/');
+  const head = await headOf(page);
+  expect(head.links).toMatchObject({ icon: '/favicon.ico', 'apple-touch-icon': '/apple-touch-icon.png' });
+  expect(head.metas.description).toBeTruthy();
+  expect(head.metas).toMatchObject({ 'og:title': head.title, 'og:image': `${ORIGIN}/og.png`, 'twitter:card': 'summary_large_image' });
+  expect(head.metas).not.toHaveProperty(['og:url']);
+  await context.close();
+});
+
+test('ページの読み込みでない要求にも、ないパスは 404 のページで答え、/audio/ のないファイルは今までどおり本文なしの 404 にする', async ({ request }) => {
+  const missing = await request.get('/nonexistent/deeper');
+  expect(missing.status()).toBe(404);
+  expect(await missing.text()).toContain('このページはありません。');
+  const clip = await request.get('/audio/v1/nonexistent.m4a');
+  expect(clip.status()).toBe(404);
+  expect(await clip.text()).toBe('');
+});

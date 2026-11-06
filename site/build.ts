@@ -81,6 +81,16 @@ for (const card of cards) {
   writePage(path, renderDocument({ title, path: urlOf(path), bodyHtml, scriptPath, stylePaths, command, readName }));
 }
 
+// ないパスには、配信（wrangler.jsonc の not_found_handling）がこのページを 404 で返す。文と次の操作は docs/ui-guide.md の11節「ページがない」である。
+// content/ の Markdown にしないのは、そこから組むと /404/ という開けるページになり、404 で返らないからである。
+const NOT_FOUND_BODY = [
+  '<p>このページはありません。</p>',
+  '<!-- ask -->',
+  '<p class="ask-q">次は？</p>',
+  '<div class="next"><a class="btn btn--line" href="/karuta/">100首の一覧へ</a><a class="btn btn--fill" href="/">入口へ戻る</a></div>',
+].join('\n');
+writePage('404.html', renderDocument({ title: 'ページが見つかりません', bodyHtml: NOT_FOUND_BODY, scriptPath, stylePaths }));
+
 // AI に入れる手順の画面が配るスキルのファイル。保存のボタンは <a href="/yomimasu.zip" download> である（docs/ui-guide.md の8節）。
 // ChatGPT にだけは、同じ知識をプラグインのアーカイブの形で配る（site/skill-zip.ts）。
 writeFileSync(join(OUT_DIR, 'yomimasu.zip'), skillZip());
