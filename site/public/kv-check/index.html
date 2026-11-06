@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>キービジュアルの実機確認</title>
+<style>
+  /* アプリの CSS は読み込まず、site/client/ui/base.css の値を写す。アプリの画面に左右されずに絵だけを試すため */
+  :root {
+    --paper: #F6F2E9; --card: #FFFDF9; --ink: #201D19; --ink-3: #655D50; --rule: #D9D0BF;
+    --f-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", "Noto Sans JP", "Yu Gothic", system-ui, sans-serif;
+    --f-mono: ui-monospace, "SF Mono", Menlo, "Roboto Mono", monospace;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.7 var(--f-sans); }
+  main { max-width: 34rem; margin: 0 auto; padding: 12px 16px 32px; display: grid; gap: 12px; }
+  h1 { margin: 0; font-size: 16px; }
+  p { margin: 0; }
+  .kv {
+    height: 68vh; height: 68svh; max-height: 640px;
+    display: grid; place-items: center; overflow: hidden;
+    color: var(--ink); --kv-card: var(--ink); font-family: var(--f-sans);
+    background: var(--card); border: 1px solid var(--rule); border-radius: 12px;
+  }
+  .row { display: flex; gap: 8px; }
+  button { flex: 1; min-height: 44px; font: inherit; color: var(--ink); background: var(--card); border: 1px solid var(--ink); border-radius: 10px; cursor: pointer; }
+  .status { margin: 0; font: 12px/1.6 var(--f-mono); color: var(--ink-3); white-space: pre-wrap; overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<main>
+  <h1>キービジュアルの実機確認</h1>
+  <p>マージしない確認用のページです。横になぞると回り、端末を傾けても回ります。iPhone では「傾きを使う」か、絵を1回たたくと傾きの許可を求めます。</p>
+  <div class="kv" id="kv"></div>
+  <div class="row">
+    <button id="gyro" type="button">傾きを使う</button>
+    <button id="front" type="button">正面に戻す</button>
+  </div>
+  <pre class="status" id="status"></pre>
+</main>
+<script src="/kv-check/kv-live.js"></script>
+<script>
+  const el = document.getElementById('kv');
+  const statusView = document.getElementById('status');
+  const needsAsk = typeof window.DeviceOrientationEvent?.requestPermission === 'function';
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const GYRO = {
+    waiting: '許可済み、値を待っている',
+    on: '値を受けて回している',
+    denied: '許可されなかった',
+    blocked: '許可を求める呼び出しが失敗した',
+    none: 'この端末にない',
+  };
+
+  let kv = null;
+  let streamState = '読み込み中';
+  let lastError = '';
+  const asks = [];
+  let askSeen = false;
+  const orient = { count: 0, empty: 0, last: null };
+
+  const countOrient = (e) => {
+    orient.count++;
+    if (e.alpha == null) orient.empty++;
+    orient.last = e;
+  };
+  window.addEventListener('deviceorientation', countOrient);
+  window.addEventListener('error', (e) => { lastError = e.message; });
+  window.addEventListener('unhandledrejection', (e) => { lastError = String(e.reason?.message || e.reason); });
+
+  fetch('/kv-check/kimariji-stream.json')
+    .then((res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    })
+    .then(({ stream }) => {
+      streamState = `${stream.length} 字`;
+      kv = YomimasuKv.mount(el, { stream });
+    })
+    .catch((err) => { streamState = `読めない（${err.message}）`; });
+
+  // 許可を求めるのは kv-live.js の enableGyro だけにして、このページからは別に求めない。
+  // DeviceMotionEvent は kv-live.js が使わないので求めない。
+  document.getElementById('gyro').addEventListener('click', async () => {
+    if (!kv) return;
+    // kv-live.js は1回目の結果によらず2回目を求めない。絵をたたいた経路が失敗したときだけ、ボタンから求め直せるようにする
+    if (el.dataset.kvGyro === 'blocked') kv.state.gyroAsked = false;
+    if (!kv.state.gyroAsked) { asks.push('ボタン'); askSeen = true; }
+    await kv.enableGyro();
+    window.addEventListener('deviceorientation', countOrient);
+  });
+  document.getElementById('front').addEventListener('click', () => kv?.front());
+
+  const deg = (v) => (v == null ? '空' : `${v.toFixed(0)}°`);
+  setInterval(() => {
+    if (kv?.state.gyroAsked && !askSeen) { asks.push(needsAsk ? '絵をたたく' : '自動'); askSeen = true; }
+    const s = kv?.state;
+    const code = el.dataset.kvGyro;
+    const e = orient.last;
+    statusView.textContent = [
+      `WebGL2：${kv ? '使える' : el.dataset.kvError ? `使えない（${el.dataset.kvError}）` : '確かめ中'}`,
+      `決まり字の列：${streamState}`,
+      s ? `描画：${s.fps.toFixed(0)} fps、1コマ ${s.cost.toFixed(1)} ms、升目 ${s.cols}×${s.rows}` : '',
+      `動きを減らす設定：${reduced ? 'オン（絵は止まる）' : 'オフ'}`,
+      `傾きの許可：${needsAsk ? '要る端末' : '要らない端末'}、${code ? `${code}（${GYRO[code] || '不明'}）` : 'まだ求めていない'}${asks.length ? `、求めた経路 ${asks.join('→')}` : ''}`,
+      `傾きのイベント：${orient.count} 回（α が空 ${orient.empty} 回）${e ? `、直近 α ${deg(e.alpha)} β ${deg(e.beta)} γ ${deg(e.gamma)}` : ''}`,
+      s ? `向き：${s.yaw.toFixed(0)}°、上下 ${s.pitch.toFixed(0)}°（うち傾き ${s.gyroYaw.toFixed(0)}°、${s.gyroPitch.toFixed(0)}°）` : '',
+      lastError ? `直近のエラー：${lastError}` : '',
+    ].filter(Boolean).join('\n');
+  }, 300);
+</script>
+</body>
+</html>
