@@ -1,6 +1,6 @@
 import { soundOffset, type Card } from '../.claude/skills/yomimasu/scripts/cards.ts';
 import {
-  adviceSourceText,
+  adviceSourceMark,
   finalSound,
   isGrand,
   isOneChar,
@@ -11,6 +11,7 @@ import {
   sameStartLine,
   startsWithVowel,
   type Point,
+  type SourceMark,
 } from '../content/karuta/rules.ts';
 import { cardMouthHtml } from '../content/karuta/mouth.ts';
 import { pairLines, type Line } from './client/lyrics.ts';
@@ -235,12 +236,16 @@ const playHtml = (card: Card) =>
   `<yomimasu-karuta-play data-no="${card.no}"><button class="btn" type="button" data-echo hidden><svg class="ico" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg><span>お手本を再生</span></button></yomimasu-karuta-play>`;
 
 // 資料の名前と版は、ページごとに並べず「このアプリについて」の出典にまとめる。項目のそばには短い印だけを付ける（2026-11-06 のユーザーの判断）。
-const SOURCES_NOTE = '<p class="fine">出典は<a href="/about/#sources">このアプリについて</a>にまとめています。</p>';
+// 読手のメモの断り（読手個人のやり方、大会向けは参考程度）も項目ごとに書かず、「このアプリについて」に1か所で書く（2026-11-07 のユーザーの判断）。
+const SOURCES_NOTE = '<p class="fine">出典と、読手メモの扱いは<a href="/about/#sources">このアプリについて</a>にまとめています。</p>';
+
+// 印は段落の終わりに小さく付け、別の行にしない（docs/ui-guide.md の13節「教科書の出典」）。
+const markHtml = ({ label, ref }: SourceMark) => `<span class="src"${ref ? ` data-ref="${escapeHtml(ref)}"` : ''}>— ${escapeHtml(label)}</span>`;
 
 // 全部かほとんどの札に当たる点は、1首のページに並べず「ポイントを知る」へ案内する（content/karuta/rules.ts の冒頭）。
 const COMMON_NOTE = '<p class="fine">全部の札に共通の点（余韻、四句の伸ばし、鼻濁音、仮名の読み方の決まりなど）は<a href="/point/">ポイントを知る</a>にあります。</p>';
 
-// 出だしが同じ札の1行は、優先の印も出典の行も付けず、カードの最初の行に置く。
+// 出だしが同じ札の1行は、優先の印も出典の印も付けず、カードの最初の行に置く。
 // 優先の断りは優先の印のある項目があるときだけ、カードは項目か出だしが同じ札があるときだけ出す。
 function pointsSectionHtml(card: Card, cards: readonly Card[]): string[] {
   const points = rulePoints(card);
@@ -248,7 +253,7 @@ function pointsSectionHtml(card: Card, cards: readonly Card[]): string[] {
   const rows = [
     ...(sameStart ? [`<div><p>${escapeHtml(sameStart)}</p></div>`] : []),
     ...points.map(
-      (p) => `<div><span class="${prioClass(p)}">優先 ${p.priority}</span><b>${escapeHtml(p.title)}</b><p>${escapeHtml(p.body)}</p><p class="src">${escapeHtml(p.source)}</p></div>`,
+      (p) => `<div><span class="${prioClass(p)}">優先 ${p.priority}</span><b>${escapeHtml(p.title)}</b><p>${escapeHtml(p.body)} ${markHtml({ label: p.source })}</p></div>`,
     ),
   ];
   return [
@@ -263,7 +268,7 @@ export function cardPage(card: Card, cards: readonly Card[], advice: readonly Ad
   const name = cardName(card);
   const poemSource = poemSourceText(card);
   const words = adviceFor(card, advice).filter(shownOn(card));
-  const wordsHtml = words.map((a) => `<div><p>${escapeHtml(a.text)}。</p><p class="src">${escapeHtml(adviceSourceText(a.kind, a.source))}</p></div>`).join('');
+  const wordsHtml = words.map((a) => `<div><p>${escapeHtml(a.text)}。 ${markHtml(adviceSourceMark(a.kind, a.source))}</p></div>`).join('');
   const article = [
     '<article class="karuta-page">',
     `<div class="card poem"><div class="tate">${poemHtml(card, cards)}</div><aside><div><small>${card.kimariji ? '決まり字' : '1枚目の前に読む歌'}</small><div class="kim">${escapeHtml(name)}</div></div></aside></div>`,

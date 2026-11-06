@@ -23,6 +23,32 @@ test('1首のページの歌のすぐ下に、伸ばす箇所とふりがな・�
   expect(box!.y - (poem!.y + poem!.height)).toBeLessThanOrEqual(10);
 });
 
+// 2026-11-07 のユーザーの判断：教科書のページの出典の印は、段落の終わりに小さく付け、印の途中で折り返さない。
+// 15番は協会の資料の項目、17番は読手メモと協会の資料の助言、1番は大会向けの読手メモ、77番は協会の資料と読手メモが並ぶ助言がある。
+for (const path of ['/karuta/15/', '/karuta/17/', '/karuta/1/', '/karuta/77/', '/soron/', '/saitei/']) {
+  test(`${path} の出典の印は段落の終わりにあり、印の途中で折り返さない`, async ({ page }) => {
+    await page.goto(path);
+    const marks = await page.locator('main p > span.src').evaluateAll((all) =>
+      all.map((mark) => ({
+        text: mark.textContent ?? '',
+        last: mark.parentElement!.lastChild === mark,
+        oneLine: mark.getBoundingClientRect().height < parseFloat(getComputedStyle(mark).lineHeight) * 1.5,
+      })),
+    );
+    expect(marks.length, path).toBeGreaterThan(0);
+    for (const { text, last, oneLine } of marks) {
+      expect(text, path).toMatch(/^— /);
+      expect(last, text).toBe(true);
+      expect(oneLine, text).toBe(true);
+    }
+  });
+}
+
+test('1首のページの助言の印は、協会の資料を先に、読手メモを後に並べる', async ({ page }) => {
+  await page.goto('/karuta/77/');
+  await expect(page.locator('main p > span.src[data-ref="読手のメモ1 長音の一覧"]')).toHaveText('— 読み方一覧（冊子 p.15）、読手メモより');
+});
+
 test('1首のページの図の下から、口の形の資料の見出しへ移れる', async ({ page }) => {
   await page.goto('/karuta/53/');
   const link = page.locator('figure.mouths a[href="/about/#src-phonetics"]');
