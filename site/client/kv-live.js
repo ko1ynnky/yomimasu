@@ -747,7 +747,7 @@ void main(){
 
     // 傾き：端末を回した分だけ人物を回す（360度動画と同じく、最初に受けた向きを正面とする）
     function onOrient(e) {
-      if (e.alpha == null) return;
+      if (e.alpha == null || s.held) return;
       s.gyro = heading(e);
       if (!s.gyroRef) s.gyroRef = s.gyro;
       if (Math.abs(s.gyro.pitch) < 75) s.gyroYaw = -wrap(s.gyro.yaw - s.gyroRef.yaw) * opt.gyroGain;
@@ -784,8 +784,9 @@ void main(){
       // 升目の大きさを変えたら、列と段の数から測り直す
       set(next) { Object.assign(opt, next); if (next.time != null) s.t = next.time; if (next.cell != null) resize(); else draw(); },
       front,
-      // 長押しの虫眼鏡（client/kv-lens.ts）に指を渡す。なぞって回す動きと、離したあとの惰性を止める
-      hold() { s.drag = null; s.vel = 0; view.style.cursor = 'grab'; },
+      // 長押しの虫眼鏡（client/kv-lens.ts）に指を渡す。release まで、なぞって回す動き、離したあとの惰性、傾きで回さない
+      hold() { s.held = true; s.drag = null; s.vel = 0; view.style.cursor = 'grab'; },
+      release() { s.held = false; },
       orient: onOrient,
       enableGyro,
       destroy() { cancelAnimationFrame(s.raf); ro.disconnect(); io.disconnect(); window.removeEventListener('deviceorientation', onOrient); view.remove(); },

@@ -113,6 +113,41 @@ test('虫眼鏡を開いているあいだは絵が止まり、閉じると動�
   await expect.poll(() => draws(page)).toBeGreaterThan(opened + 3);
 });
 
+test('止めた絵でも、虫眼鏡を開いたまま絵の外へ動かして離すと閉じる', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await openHome(page, 'still');
+  const at = await figurePoint(page);
+  await page.mouse.move(at.x, at.y);
+  await page.mouse.down();
+  await expect(lens(page)).toBeVisible();
+  await page.mouse.move(at.x, 60, { steps: 5 });
+  await page.mouse.up();
+  await expect(lens(page)).toHaveCount(0);
+  // 離したあとに、押していないマウスが絵の上を通っても開かない
+  await page.mouse.move(at.x, at.y, { steps: 3 });
+  await page.waitForTimeout(500);
+  await expect(lens(page)).toHaveCount(0);
+});
+
+test('虫眼鏡を開いているあいだは、傾けても絵を描き直さない', async ({ page }) => {
+  await page.addInitScript(() => Object.defineProperty(DeviceOrientationEvent, 'requestPermission', { value: undefined }));
+  await countDraws(page);
+  await openHome(page);
+  const tilt = (beta: number, gamma: number) =>
+    page.evaluate(([beta, gamma]) => dispatchEvent(new DeviceOrientationEvent('deviceorientation', { alpha: 10, beta, gamma })), [beta, gamma]);
+  await tilt(60, 0);
+  const at = await figurePoint(page);
+  await page.mouse.move(at.x, at.y);
+  await page.mouse.down();
+  await expect(lens(page)).toBeVisible();
+  await page.waitForTimeout(150);
+  const opened = await draws(page);
+  await tilt(60, 25);
+  await page.waitForTimeout(500);
+  expect(await draws(page)).toBe(opened);
+  await page.mouse.up();
+});
+
 test('誘いの文を絵の左下に重ねて出し、虫眼鏡を一度開いたら、その端末では出さない', async ({ page }) => {
   await openHome(page);
   const invite = page.locator('.kv-invite');
@@ -205,5 +240,24 @@ test.describe('指で触る端末', () => {
     await touch(page, 'touchEnd');
     await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(0);
     await expect(lens(page)).toHaveCount(0);
+  });
+
+  test('開いているあいだに2本目の指が触れても、絵は動き出さず、回らない', async ({ page }) => {
+    await countDraws(page);
+    await openHome(page);
+    const cdp = await page.context().newCDPSession(page);
+    const at = await figurePoint(page);
+    const second = { x: at.x + 60, y: at.y + 20 };
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: at.x, y: at.y, id: 1 }] });
+    await expect(lens(page)).toBeVisible();
+    await page.waitForTimeout(150);
+    const opened = await draws(page);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: at.x, y: at.y, id: 1 }, { ...second, id: 2 }] });
+    for (let dx = 10; dx <= 60; dx += 10) {
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: at.x, y: at.y, id: 1 }, { x: second.x + dx, y: second.y, id: 2 }] });
+    }
+    await page.waitForTimeout(500);
+    expect(await draws(page)).toBe(opened);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   });
 });

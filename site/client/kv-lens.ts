@@ -74,8 +74,15 @@ export function attachLens(element: HTMLElement, hooks: LensHooks): () => void {
   };
 
   // 絵の Canvas には、なぞって回す処理（kv-live.js）がある。開いているあいだは、指の動きを虫眼鏡だけに渡す。
+  // 開いているあいだに触れた2本目の指は、絵に渡さない（なぞって回す動きと、触って動かし直すことを止める）。
+  // 押した指は要素に捕まえる。止めた絵には捕まえる処理がなく、マウスを絵の外で離すと閉じなかった（reviewer の指摘）
   const down = (event: PointerEvent) => {
-    if (press || event.button !== 0) return;
+    if (press) {
+      if (lens) event.stopImmediatePropagation();
+      return;
+    }
+    if (event.button !== 0) return;
+    element.setPointerCapture(event.pointerId);
     press = { id: event.pointerId, x: event.clientX, y: event.clientY, timer: window.setTimeout(open, HOLD_MS) };
   };
   const move = (event: PointerEvent) => {

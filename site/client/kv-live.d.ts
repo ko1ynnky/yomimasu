@@ -18,6 +18,7 @@ export type Painted = { list: Glyph[]; cell: number; ink: { color: string; card:
 export type KvLive = {
   set(next: Partial<KvOptions>): void;
   hold(): void;
+  release(): void;
   destroy(): void;
 };
 

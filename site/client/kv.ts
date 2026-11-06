@@ -123,6 +123,7 @@ export function mountKv(element: HTMLElement): () => void {
       rememberLens();
     },
     close() {
+      figure?.release();
       if (playingBeforeLens) resume();
     },
   });
