@@ -55,6 +55,13 @@ export const SKETCHES: Record<string, Sketch> = {
     rows: [{ title: 'スキル', action: { t: '追加 ▾', n: 3 } }],
     menu: [{ t: 'チャットで作成' }, { t: 'エディターで作成' }, { t: 'コンピューターからアップロード', n: 4 }],
   },
+  // ウェブの ChatGPT では、自分で上げたスキルは画面の上の「Work」でだけ使われ、ふだんの「Chat」では使われない（2026-11-06 に確かめた）。
+  'chatgpt-work': {
+    host: 'chatgpt.com',
+    alt: 'ChatGPT の略図。画面の上の「Chat」と「Work」のうち、「Work」を押して切り替える',
+    side: [{ t: 'プラグイン' }],
+    rows: [{ tabs: [{ t: 'Chat' }, { t: 'Work', n: 1 }] }],
+  },
   'gemini-upload': {
     host: 'gemini.google.com',
     alt: 'Gemini の略図。左の「カスタマイズ」、「スキル」、「作成」、「アップロード」の順に押す',

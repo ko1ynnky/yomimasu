@@ -19,8 +19,8 @@ const PROCEDURES: Record<string, { heading: string; where: string; steps: string
   '/install/chatgpt/': {
     heading: 'ChatGPT に入れる',
     where: 'パソコンのブラウザーで、chatgpt.com を開いて進めます。',
-    steps: ['ファイルを保存する', 'ファイルをアップロードする', '聞いてみる'],
-    figures: 1,
+    steps: ['ファイルを保存する', 'ファイルをアップロードする', 'Work に切り替える', '聞いてみる'],
+    figures: 2,
   },
   '/install/gemini/': {
     heading: 'Gemini に入れる',
@@ -164,7 +164,7 @@ for (const path of OFFERED) {
     const figures = page.locator('.sketch svg[role="img"]');
     await expect(figures).toHaveCount(expected.figures);
     for (const label of await figures.evaluateAll((svgs) => svgs.map((svg) => svg.getAttribute('aria-label') ?? ''))) {
-      expect(label).toMatch(/の略図。.+(の順に押す|をオンにする)$/);
+      expect(label).toMatch(/の略図。.+(の順に押す|をオンにする|を押して切り替える)$/);
     }
     await expect(page.locator('main img, main image, main picture')).toHaveCount(0);
 
@@ -177,7 +177,11 @@ for (const path of OFFERED) {
       await expect(save).toHaveAttribute('href', '/yomimasu.zip');
       await expect(save).toHaveAttribute('download', '');
       await expect(page.locator('.cmd code')).toHaveText([ASK_EXAMPLE]);
-      await expect(page.locator('main .fine')).toHaveText('プランによっては使えません。画面の名前は、2026年11月4日にパソコンのブラウザーで確かめたものです。');
+      await expect(page.locator('main .fine')).toHaveText(/^プランによっては使えません。画面の名前は、2026年11月4日.*にパソコンのブラウザーで確かめたものです。$/);
+    }
+    if (path === '/install/chatgpt/') {
+      await expect(page.locator('.list')).toContainText('ふだんの Chat ではスキルが使われません。Work に切り替えてから聞いてください。');
+      await expect(page.locator('.list')).toContainText('入力欄で「@」を打ち、スキルの「yomimasu」を選んでから聞きます。');
     }
     await expect(page.locator('.cmd').getByRole('button', { name: 'コピー' })).toHaveCount(path === '/install/agent/' ? 2 : 1);
     await expect(page.locator('.next').getByRole('link', { name: 'ほかの AI に入れる' })).toHaveAttribute('href', '/install/');
@@ -285,7 +289,7 @@ for (const [width, height] of [
       const words = await page.locator('.cmd code > span').evaluateAll((spans) => spans.map((span) => span.getClientRects().length));
       expect(words.every((n) => n === 1), `${path} ${words.join(',')}`).toBe(true);
       const name = path.split('/')[2];
-      if (width === 393 && (name === 'claude' || name === 'agent')) {
+      if (width === 393 && (name === 'claude' || name === 'chatgpt' || name === 'agent')) {
         await page.screenshot({ path: join(ARTIFACTS_DIR, `install-${name}-${width}x${height}.png`) });
         await page.screenshot({ path: join(ARTIFACTS_DIR, `install-${name}-${width}x${height}-full.png`), fullPage: true });
       }
