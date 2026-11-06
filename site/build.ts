@@ -8,6 +8,7 @@ import { commandAt } from '../.claude/skills/yomimasu/scripts/commands.ts';
 import { mouthFiguresHtml, nasalEndingsText, nasalFigureHtml } from '../content/karuta/mouth.ts';
 import { cardName, cardPage, cardUrl, expandCardRefs, finalSoundCounts, listHtml, parseAdvice } from './karuta.ts';
 import { outputPathOf, parseSource, renderDocument, runFor } from './render.ts';
+import { skillZip } from './skill-zip.ts';
 
 const CONTENT_DIR = 'content';
 const OUT_DIR = 'dist';
@@ -65,3 +66,6 @@ for (const card of cards) {
   const { path, title, command, readName, bodyHtml } = cardPage(card, cards, advice);
   writePage(path, renderDocument({ title, bodyHtml, scriptPath, stylePaths, command, readName }));
 }
+
+// AI に入れる手順の画面が配るスキルのファイル。保存のボタンは <a href="/yomimasu.zip" download> である（docs/ui-guide.md の8節）。
+writeFileSync(join(OUT_DIR, 'yomimasu.zip'), skillZip());
