@@ -7,13 +7,28 @@ import { crc32, deflateRawSync } from 'node:zlib';
 
 const SKILL_DIR = '.claude/skills/yomimasu';
 const TOP = 'yomimasu/';
-const WEB_APP = 'https://yomimasu.karutalog.com/';
 
 // ZIP に入れるファイル（スキルのフォルダーからの相対パス）。中身の選び方はここだけで変える。
-// Gemini の「スキルをアップロード」は commands.ts の入った ZIP を「unsupported file type」で拒み、受け付けるのは PDF、CSV、PY、TXT、MD だけだった（2026-11-06 にユーザーが確かめた）。
-// 汎用の AI ではスクリプトが動かない見込みでもあるので、SKILL.md と references/ の Markdown だけを入れる知識の版にする。
-// Claude と ChatGPT が .ts と .json を受け付けるかは、まだ確かめていない。
-export const inZip = (path: string): boolean => path === 'SKILL.md' || /^references\/[^/]+\.md$/.test(path);
+// Claude、ChatGPT、Gemini に同じ ZIP を1つ配り、SKILL.md と references/ の Markdown だけを入れる。2026-11-06 にユーザーが Gemini で確かめた結果による。
+// - Gemini の「スキルをアップロード」は commands.ts の入った ZIP を「unsupported file type」で拒んだ。ヘルプ（https://support.google.com/gemini/answer/17094296、同日に確認）も .ts を対応に挙げていない。
+// - URL のあるファイル（references/mouth-shapes.md）を入れると「このスキルを保存できませんでした（1124）」になった。assets/cards.json にも URL がある。
+// 汎用の AI ではスクリプトが動かない見込みなので、scripts/ が入らなくても知識の答えは変わらない。Claude と ChatGPT ではまだ試していない。
+// 名前が . で始まるファイル（.DS_Store など）は入れない。Gemini のヘルプが、アップロードの失敗の元になると書いている。
+export const inZip = (path: string): boolean => path === 'SKILL.md' || /^references\/[^./][^/]*\.md$/.test(path);
+
+const isHidden = (path: string) => path.split('/').some((part) => part.startsWith('.'));
+
+// ZIP に入れる文からは、http:// と https:// の URL を外し、代わりにこの文を入れる。URL があると Gemini がスキルを保存できない（上の 1124）。
+// 資料の名前、節、参照日、ライセンスの文は残す。リポジトリのファイルは変えない。
+export const URL_NOTE = '（URL はリポジトリの同じファイルにあります）';
+
+// Markdown のリンクは文字を残し、<URL> の形と、そのまま書いた URL は文に置き換える。そのまま書いた URL は、空白、かっこ、かぎかっこ、句読点の手前で終わるものとする。
+export function withoutUrls(text: string): string {
+  return text
+    .replace(/\[([^\]]*)\]\(https?:\/\/[^)\s]*\)/g, `$1${URL_NOTE}`)
+    .replace(/<https?:\/\/[^>\s]*>/g, URL_NOTE)
+    .replace(/https?:\/\/[^\s<>()（）「」、。]+/g, URL_NOTE);
+}
 
 export type ZipFile = { path: string; data: Buffer };
 
@@ -23,14 +38,25 @@ function skillFiles(): string[] {
     .map((entry) => relative(SKILL_DIR, join(entry.parentPath, entry.name)).split('\\').join('/'));
 }
 
-// 入れなかったフォルダーを SKILL.md の冒頭の節で知らせる。手順がそこのファイルを指しても、AI が中身を推測で埋めないようにするためである。
+// 入れなかったもの。フォルダーごと入れなかったときはフォルダーの名前（scripts/）で、一部だけのときはファイルのパスで返す。隠しファイルは数えない。
+export function omittedOf(all: readonly string[], chosen: readonly string[]): string[] {
+  const left = all.filter((path) => !isHidden(path) && !chosen.includes(path));
+  const folders = [...new Set(left.filter((path) => path.includes('/')).map((path) => path.split('/')[0]))].filter(
+    (folder) => !chosen.some((path) => path.startsWith(`${folder}/`)),
+  );
+  return [...folders.map((folder) => `${folder}/`), ...left.filter((path) => !folders.some((folder) => path.startsWith(`${folder}/`)))].sort();
+}
+
+// 入れなかったものを、SKILL.md の最初の ## の見出しの前に足す節で知らせる。この版のファイル（SKILL.md、references/ の一覧など）がそこを指しても、AI が中身を推測で埋めないようにするためである。
 // リポジトリの SKILL.md は書き換えず、ZIP の中の写しにだけ足す。リポジトリの SKILL.md はコーディングエージェント（npx skills add）がそのまま使う。
-export function editionSkill(skill: string, missing: readonly string[]): string {
-  if (missing.length === 0) return skill;
-  const folders = missing.map((folder) => `\`${folder}/\``).join(' と ');
+// 説明（description）は変えない。AI がスキルを読み込むかを決める文で、置き場を2つにすると食い違う。測れないことは、この節で伝える。
+export function editionSkill(skill: string, omitted: readonly string[]): string {
+  if (omitted.length === 0) return skill;
+  const names = omitted.map((name) => `\`${name}\``).join('、');
+  const measure = omitted.includes('scripts/') ? '音声を測ることを頼まれたら、この版では測れないと伝え、Web アプリの /yomimasu を案内する。' : '';
   const section = `## この ZIP の版
 
-この ZIP は、汎用の AI に入れるための版で、${folders} を入れていない。下の手順がそこのファイルを指すときは、この版にないと伝え、中身を推測で答えない。音声を測ることを頼まれたら、この版では測れないと伝え、Web アプリ（${WEB_APP}）を案内する。ファイルごとの扱いは \`NOTICE.md\` にある。
+この ZIP は汎用の AI に入れるための版で、${names} を入れていない。この版のファイルがそこを指すときは、この版にないと伝え、中身を推測で答えない。${measure}ファイルごとの扱いは \`NOTICE.md\` にある。
 
 `;
   const at = skill.search(/^## /m);
@@ -39,7 +65,7 @@ export function editionSkill(skill: string, missing: readonly string[]): string 
 
 // 利用の条件は、リポジトリの NOTICE.md と LICENSE を、そのまま写して添える。行を選んで抜き出すと、NOTICE.md の書き方を変えたときに条件が黙って抜け落ちる。
 export function editionNotice(notice: string, license: string): string {
-  return `この ZIP は、公開リポジトリ ko1ynnky/yomimasu の \`${SKILL_DIR}/\` から、汎用の AI に入れるファイルを抜き出したものです。ファイルごとの扱いは、下に写したリポジトリの NOTICE.md のとおりです。表の場所はリポジトリの中のパスで、この ZIP の \`SKILL.md\` は表の「スキルの \`SKILL.md\`」に、\`references/\` は「知識の文章」に当たります。LICENSE の本文は末尾に写しました。
+  return `この ZIP は、リポジトリ ko1ynnky/yomimasu のスキルのフォルダー \`${SKILL_DIR}/\` から、汎用の AI に入れるファイルを抜き出したものです。ファイルごとの扱いは、下に写したリポジトリの NOTICE.md のとおりです。表の場所はリポジトリの中のパスで、この ZIP の \`yomimasu/\` は \`${SKILL_DIR}/\` に当たります。たとえば \`SKILL.md\` は表の「スキルの \`SKILL.md\`」の行に、\`references/\` は「知識の文章」の行に当たります。LICENSE の本文は末尾に写しました。URL は外し、「${URL_NOTE}」と書きました。
 
 ${notice.trimEnd()}
 
@@ -56,15 +82,13 @@ ${license.trimEnd()}
 export function skillZipFiles(): ZipFile[] {
   const all = skillFiles();
   const chosen = all.filter(inZip);
-  const missing = [...new Set(all.filter((path) => !inZip(path) && path.includes('/')).map((path) => path.split('/')[0]))]
-    .filter((folder) => !chosen.some((path) => path.startsWith(`${folder}/`)))
-    .sort();
-  const files = chosen.map((path) => {
-    const data = readFileSync(join(SKILL_DIR, path));
-    return { path, data: path === 'SKILL.md' ? Buffer.from(editionSkill(data.toString('utf8'), missing)) : data };
+  const omitted = omittedOf(all, chosen);
+  const texts = chosen.map((path) => {
+    const text = readFileSync(join(SKILL_DIR, path), 'utf8');
+    return { path, text: path === 'SKILL.md' ? editionSkill(text, omitted) : text };
   });
-  files.push({ path: 'NOTICE.md', data: Buffer.from(editionNotice(readFileSync('NOTICE.md', 'utf8'), readFileSync('LICENSE', 'utf8'))) });
-  return files;
+  texts.push({ path: 'NOTICE.md', text: editionNotice(readFileSync('NOTICE.md', 'utf8'), readFileSync('LICENSE', 'utf8')) });
+  return texts.map(({ path, text }) => ({ path, data: Buffer.from(withoutUrls(text)) }));
 }
 
 // 依存を足さずに、Node の zlib で ZIP を書く。同じ中身からは同じバイト列にするため、時刻は固定し、項目は名前の順に並べる。
