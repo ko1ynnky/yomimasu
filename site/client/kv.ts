@@ -18,21 +18,18 @@ const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 // 試作：段の数を #41 の版（clamp(floor(高さ / 32), 8, 11)）の約2倍にして、机や読唱箱の形が出るようにする。字は読めない大きさになるので、虫眼鏡で読ませる
 const cellFor = (height: number) => Math.min(6, Math.max(4, Math.round(height / 64)));
 
-// 誘いの文は、一度虫眼鏡を開いたら、その端末では出さない。覚えられない環境では、毎回出るだけである
-const LENS_DONE = 'yomimasu.kvLensDone';
-const lensDone = () => {
-  try {
-    return localStorage.getItem(LENS_DONE) === '1';
-  } catch {
-    return false;
+// 操作の説明は、使ったあとも消さない。2回目に来た人が、虫眼鏡と回し方を思い出せるようにするためである。
+// 止めた絵（動きを減らす設定、WebGL2 がない端末）は回せないので、「長押しで拡大」だけにする。
+// 読み上げで操作が分かるよう、aria-hidden にしない
+const hintFor = (turnable: boolean) => {
+  const hint = document.createElement('p');
+  hint.className = 'kv-hint';
+  for (const text of turnable ? ['長押しで拡大', 'ドラッグで回転'] : ['長押しで拡大']) {
+    const line = document.createElement('span');
+    line.textContent = text;
+    hint.append(line);
   }
-};
-const rememberLens = () => {
-  try {
-    localStorage.setItem(LENS_DONE, '1');
-  } catch {
-    // 覚えられなくても、虫眼鏡は使える
-  }
+  return hint;
 };
 
 export function mountKv(element: HTMLElement): () => void {
@@ -47,7 +44,6 @@ export function mountKv(element: HTMLElement): () => void {
   let playing = false;
   let playingBeforeLens = false;
   let hideMore = () => {};
-  let invite: HTMLElement | null = null;
 
   // 高さは CSS の clamp で決め、先頭の項目の下端（絵の高さを除く）に 24px を足した値だけを、ここで測って渡す。
   // 画面の高さを CSS の 100svh に任せるのは、iOS の Safari でアドレスバーが縮んでも、絵の高さを変えないためである。
@@ -84,13 +80,7 @@ export function mountKv(element: HTMLElement): () => void {
     if (figure) stopLater();
     else drawStill();
     hideMore = showMore(items.at(-1));
-    if (!lensDone()) {
-      invite = document.createElement('p');
-      invite.className = 'kv-invite';
-      invite.setAttribute('aria-hidden', 'true');
-      invite.append('読手くんのカラダ、何でできていると思いますか？', document.createElement('br'), '長押しで拡大してみてください！');
-      element.append(invite);
-    }
+    element.append(hintFor(!!figure));
   };
 
   // iOS の Safari はアドレスバーの出し入れでも resize を送る。升目が変わらなければ、枠の大きさの変化はスクリプトが追う。
@@ -118,9 +108,6 @@ export function mountKv(element: HTMLElement): () => void {
       figure?.hold();
       figure?.set({ playing: false });
       playing = false;
-      invite?.remove();
-      invite = null;
-      rememberLens();
     },
     close() {
       figure?.release();

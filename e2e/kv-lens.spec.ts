@@ -1,11 +1,11 @@
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Browser, type BrowserContextOptions, type Page } from '@playwright/test';
 
 // 入口の絵の虫眼鏡と誘いの文（試作。docs/ui-guide.md の8節「入口の絵の虫眼鏡（試作）」）。
 
 const ARTIFACTS_DIR = 'e2e-artifacts';
-const INVITE = '読手くんのカラダ、何でできていると思いますか？長押しで拡大してみてください！';
+const HINT = ['長押しで拡大', 'ドラッグで回転'];
 
 test.use({ viewport: { width: 393, height: 659 } });
 
@@ -146,7 +146,7 @@ test('押したまま動かすと虫眼鏡が付いてきて、画面からは�
   await page.mouse.up();
 });
 
-test('虫眼鏡を開いているあいだは絵が止まり、閉じると動いていた絵はまた動く', async ({ page }) => {
+test('虫眼鏡を開いているあいだは、押したまま動かしても絵が止まったまま回らず、閉じると動いていた絵はまた動く', async ({ page }) => {
   await countDraws(page);
   await openHome(page);
   await expect.poll(() => draws(page)).toBeGreaterThan(3);
@@ -156,6 +156,7 @@ test('虫眼鏡を開いているあいだは絵が止まり、閉じると動�
   await expect(lens(page)).toBeVisible();
   await page.waitForTimeout(100);
   const opened = await draws(page);
+  await page.mouse.move(at.x + 60, at.y, { steps: 4 });
   await page.waitForTimeout(1000);
   expect(await draws(page)).toBe(opened);
   await page.mouse.up();
@@ -197,14 +198,16 @@ test('虫眼鏡を開いているあいだは、傾けても絵を描き直さ�
   await page.mouse.up();
 });
 
-test('誘いの文を絵の左下に重ねて出し、虫眼鏡を一度開いたら、その端末では出さない', async ({ page }) => {
+test('絵の枠の右上に「長押しで拡大」「ドラッグで回転」の2行を重ね、読み上げでも読め、虫眼鏡を使ったあとも開き直したあとも出したままにする', async ({ page }) => {
   await openHome(page);
-  const invite = page.locator('.kv-invite');
-  await expect(invite).toHaveText(INVITE);
-  await expect(invite).toHaveAttribute('aria-hidden', 'true');
-  const [kv, text] = await Promise.all([page.locator('yomimasu-kv').boundingBox(), invite.boundingBox()]);
-  expect(Math.round(text!.x)).toBe(Math.round(kv!.x));
-  expect(Math.round(text!.y + text!.height)).toBe(Math.round(kv!.y + kv!.height));
+  const hint = page.locator('.kv-hint');
+  await expect(hint.locator('span')).toHaveText(HINT);
+  await expect(hint).not.toHaveAttribute('aria-hidden');
+  const spoken = await page.locator('yomimasu-kv').ariaSnapshot();
+  for (const line of HINT) expect(spoken).toContain(line);
+  const [kv, text] = await Promise.all([page.locator('yomimasu-kv').boundingBox(), hint.boundingBox()]);
+  expect(Math.round(text!.x + text!.width)).toBe(Math.round(kv!.x + kv!.width));
+  expect(Math.round(text!.y)).toBe(Math.round(kv!.y));
   mkdirSync(ARTIFACTS_DIR, { recursive: true });
   await page.screenshot({ path: join(ARTIFACTS_DIR, 'kv-lens-closed-393x659.png') });
 
@@ -212,33 +215,81 @@ test('誘いの文を絵の左下に重ねて出し、虫眼鏡を一度開い�
   await page.mouse.move(at.x, at.y);
   await page.mouse.down();
   await expect(lens(page)).toBeVisible();
-  await expect(invite).toHaveCount(0);
+  await expect(hint).toBeVisible();
   await page.mouse.up();
+  await expect(hint).toBeVisible();
   await page.reload();
   await expect(page.locator('yomimasu-kv')).toHaveAttribute('data-kv', 'live');
-  await expect(page.locator('.kv-invite')).toHaveCount(0);
+  await expect(page.locator('.kv-hint span')).toHaveText(HINT);
 });
 
-test('端末に覚えられないときも、誘いの文と虫眼鏡は動く', async ({ page }) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(window, 'localStorage', {
-      get() {
-        throw new Error('使えない');
-      },
-    });
+for (const [width, height] of [
+  [393, 659],
+  [360, 640],
+  [375, 812],
+  [448, 940],
+] as const) {
+  test(`${width}×${height} で、操作の説明は、回していない絵の1周のどのコマでも字に重ならない`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.clock.install({ time: new Date('2026-11-06T00:00:00Z') });
+    await page.clock.pauseAt(new Date('2026-11-06T00:00:01Z'));
+    await openHome(page);
+    for (let frame = 0; frame < 24; frame++) {
+      await page.clock.runFor(500);
+      const covered = await page.locator('yomimasu-kv canvas').evaluate((canvas: HTMLCanvasElement) => {
+        const hint = document.querySelector('.kv-hint')!.getBoundingClientRect();
+        const box = canvas.getBoundingClientRect();
+        const { list, cell } = window.YomimasuKv.glyphsOf(canvas)!;
+        return list.filter(([r, c]) => {
+          const x = box.left + c * cell;
+          const y = box.top + r * cell;
+          return x + cell > hint.left && x < hint.right && y + cell > hint.top && y < hint.bottom;
+        }).length;
+      });
+      expect(covered).toBe(0);
+    }
   });
+}
+
+// 同じ時計で開いた絵を、押して離すだけのときと、押してすぐ横へなぞったときで比べる。時計を止めて進めるので、なぞりのほかは同じコマになる
+type Point = { x: number; y: number };
+const glyphsAfter = async (browser: Browser, input: (page: Page, at: Point) => Promise<void>, options: BrowserContextOptions = {}) => {
+  const page = await browser.newPage({ viewport: { width: 393, height: 659 }, ...options });
+  await page.clock.install({ time: new Date('2026-11-06T00:00:00Z') });
+  await page.clock.pauseAt(new Date('2026-11-06T00:00:01Z'));
   await openHome(page);
-  await expect(page.locator('.kv-invite')).toHaveText(INVITE);
+  await page.clock.runFor(1000);
   const at = await figurePoint(page);
-  await page.mouse.move(at.x, at.y);
-  await page.mouse.down();
-  await expect(lens(page)).toBeVisible();
-  await page.mouse.up();
+  await input(page, at);
+  await page.clock.runFor(500);
+  await expect(lens(page)).toHaveCount(0);
+  const glyphs = await page.locator('yomimasu-kv canvas').evaluate((canvas: HTMLCanvasElement) => JSON.stringify(window.YomimasuKv.glyphsOf(canvas)!.list));
+  await page.close();
+  return glyphs;
+};
+
+test('マウスで押してすぐ横へ動かすと、絵が回る', async ({ browser }) => {
+  const tap = async (page: Page, at: Point) => {
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await page.mouse.up();
+  };
+  const drag = async (page: Page, at: Point) => {
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await page.mouse.move(at.x + 120, at.y, { steps: 6 });
+    await page.mouse.up();
+  };
+  const [tapped, again, dragged] = [await glyphsAfter(browser, tap), await glyphsAfter(browser, tap), await glyphsAfter(browser, drag)];
+  expect(again).toBe(tapped);
+  expect(dragged).not.toBe(tapped);
 });
 
 test('動きを減らす設定の止めた絵でも、WebGL2 がない端末の止めた絵でも、虫眼鏡は使える', async ({ page, browser }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await openHome(page, 'still');
+  // 止めた絵は回せないので、説明は「長押しで拡大」だけにする
+  await expect(page.locator('.kv-hint span')).toHaveText([HINT[0]]);
   let at = await figurePoint(page);
   await page.mouse.move(at.x, at.y);
   await page.mouse.down();
@@ -255,6 +306,7 @@ test('動きを減らす設定の止めた絵でも、WebGL2 がない端末の�
     } as typeof getContext;
   });
   await openHome(noWebGL2, 'still');
+  await expect(noWebGL2.locator('.kv-hint span')).toHaveText([HINT[0]]);
   at = await figurePoint(noWebGL2);
   await noWebGL2.mouse.move(at.x, at.y);
   await noWebGL2.mouse.down();
@@ -291,6 +343,26 @@ test.describe('指で触る端末', () => {
     await touch(page, 'touchEnd', 0, 0, touched + 0.13);
     await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(0);
     await expect(lens(page)).toHaveCount(0);
+  });
+
+  test('1本の指で押してすぐ横へなぞると、絵が回る', async ({ browser }) => {
+    const finger = (dx: number) => async (page: Page, at: Point) => {
+      const cdp = await page.context().newCDPSession(page);
+      const touch = (type: 'touchStart' | 'touchMove' | 'touchEnd', x = 0) =>
+        cdp.send('Input.dispatchTouchEvent', { type, touchPoints: type === 'touchEnd' ? [] : [{ x, y: at.y }] });
+      await touch('touchStart', at.x);
+      for (let moved = 10; moved <= dx; moved += 10) await touch('touchMove', at.x + moved);
+      await touch('touchEnd');
+      expect(await page.evaluate(() => scrollX + scrollY)).toBe(0);
+    };
+    const options = { hasTouch: true, isMobile: true };
+    const [tapped, again, swiped] = [
+      await glyphsAfter(browser, finger(0), options),
+      await glyphsAfter(browser, finger(0), options),
+      await glyphsAfter(browser, finger(120), options),
+    ];
+    expect(again).toBe(tapped);
+    expect(swiped).not.toBe(tapped);
   });
 
   test('開いているあいだに2本目の指が触れても、絵は動き出さず、回らない', async ({ page }) => {
