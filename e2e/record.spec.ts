@@ -562,6 +562,55 @@ test('マイクを許可しないときは、理由と次の操作を出す', as
   await page.screenshot({ path: join(ARTIFACTS_DIR, 'denied.png') });
 });
 
+// SNS から来た人は、アプリの中のブラウザーで開くことが多い。そこでは許可の拒否ではない理由でマイクを開けないか、getUserMedia そのものがない。
+// 実機の挙動は確かめていないので、どちらも API の境界で再現する。
+for (const [name, breakMicrophone] of [
+  ['マイクを開けない', () => void (navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException('busy', 'NotReadableError')))],
+  ['録音の API が断る', () => void (navigator.mediaDevices.getUserMedia = () => Promise.reject(new TypeError('not supported')))],
+  ['録音の API がない', () => void Object.defineProperty(navigator, 'mediaDevices', { value: undefined })],
+] as const) {
+  test(`${name}ときは、ほかのブラウザーで開き直す案内と、例の録音で見るを出す`, async ({ page }) => {
+    const errors: Error[] = [];
+    page.on('pageerror', (error) => errors.push(error));
+    await page.addInitScript(() => localStorage.setItem('yomimasu.recHelpDone', '1'));
+    await page.addInitScript(breakMicrophone);
+    await page.goto('/read/rec/');
+
+    await startButton(page).click();
+
+    const alert = page.getByRole('alert');
+    await expect(alert).toContainText(
+      '録音を始められませんでした。ページを開き直してください。アプリの中のブラウザーで開いているときは、Safari か Chrome で開き直してください。',
+    );
+    await expect(alert.getByRole('button', { name: 'もう一度試す' })).toBeVisible();
+    await expect(alert.getByRole('link', { name: '例の録音で見る' })).toHaveAttribute('href', '/result/example/');
+    await expect(alert.getByRole('link', { name: '教科書へ戻る' })).toHaveAttribute('href', '/');
+    expect(errors).toEqual([]);
+  });
+}
+
+// 縦に1画面へ収まることは確かめない。360×560 では、案内のカードで歌の枠が下限の 300px まで縮んでも 93px はみ出し、縦のスクロールで下のボタンに届く。
+// マイクを許可しないときの案内も同じだけはみ出す（2026-11-07 に測った）。収め方は決まっていない。
+for (const [width, height] of [
+  [360, 560],
+  [393, 659],
+]) {
+  test(`録音を始められないときの案内は、${width}×${height} で横にはみ出さない`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.addInitScript(() => {
+      localStorage.setItem('yomimasu.recHelpDone', '1');
+      navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException('busy', 'NotReadableError'));
+    });
+    await page.goto('/read/rec/');
+    await startButton(page).click();
+    await expect(page.getByRole('alert').getByRole('link', { name: '例の録音で見る' })).toBeVisible();
+
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    mkdirSync(ARTIFACTS_DIR, { recursive: true });
+    await page.screenshot({ path: join(ARTIFACTS_DIR, `unavailable-${width}x${height}.png`) });
+  });
+}
+
 test('録音の準備に失敗したら、マイクを閉じて理由を見せる', async ({ baseURL }) => {
   const browser = await launchWithFakeMic();
   const page = await openPage(browser, baseURL);
