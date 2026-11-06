@@ -2,6 +2,37 @@
 
 あとの作業に影響する技術と設計の判断を、新しいものを上にして書く。理由と、採らなかった案も残す。結論を改めるときは、元の項目を消さずに、改めた日付と理由を足す。
 
+## 2026-11-07 配信の Cloudflare が差し込むアクセス解析とボット対策のスクリプトを残し、何を送るかを書く
+
+- 決めたこと（ユーザーの判断）：
+  - Cloudflare の設定は変えない。ゾーン karutalog.com の2つの機能が本番のどのページにも差し込むスクリプトを、そのまま残す。
+  - 2つが何を送るかを、「このアプリについて」（`/about/`）の最初のカードの「録音」の次の行「アクセス解析とボット対策」、NOTICE.md の「配信のサービスが差し込むスクリプト」、この項目に書く。
+  - E2E の本文つきの送信の検査（`e2e/result.spec.ts` の `openPage`）では、同じオリジンの `/cdn-cgi/rum` と `/cdn-cgi/challenge-platform/` へ送るものだけを外す。通信と `sendBeacon` の両方で外す。ほかの送り先とパスは、今までどおり落とす。検査の名前は「どの画面を開いても、配信の Cloudflare が差し込むスクリプトのほかは、本文つきの送信をしない」に直した。
+- 事実（2026-11-07 に確かめた）：
+  - 本番の https://yomimasu.karutalog.com は、ゾーン karutalog.com（Free プラン）の Cloudflare が配信している。次の2つはゾーンの機能で、配信の途中で HTML に差し込まれる。このリポジトリのコードにはない。
+  - Cloudflare Web Analytics：ゾーン全体の自動の設定（automatic setup）で動く。サイトは、同じゾーンの別のアプリのために 2026-03-15 に作ったもの。`https://static.cloudflareinsights.com/beacon.min.js/...` を読み込み、同じオリジンの `/cdn-cgi/rum` へ送る。Cloudflare の文書では、Cookie も localStorage も使わず、IP と UA で人を見分けることもしない。集めるのはページのパス、リファラー、読み込みの時間と Core Web Vitals で、Cloudflare が国、ブラウザー、OS、端末の種類と合わせて集計する。データはすでにあり、2026-11-07 までの7日間で yomimasu.karutalog.com の読み込みは116回だった。
+  - Bot Fight Mode（ゾーンの設定）の JavaScript Detections：インラインのスクリプトが `/cdn-cgi/challenge-platform/...` を読み込み、どのページを開いても（録音の画面でも）、暗号化した約 16 KB の本文を `/cdn-cgi/challenge-platform/h/b/jsd/oneshot/...` へ POST する。判定の結果は `cf_clearance` の Cookie に残る。Bot Fight Mode を使う間は、JavaScript Detections だけを止めることはできない。送った中身は、サイトの持ち主にも読めない。
+  - このアプリのコードは、録音と測った結果を2つのスクリプトに渡さない。アクセス解析が送る項目にも、ボット対策について Cloudflare が説明している中身にも、録音と結果は入っていない。ボット対策の本文は暗号化されていて、中身は確かめられない。「このアプリについて」の「録音は端末の外へ出ません。」は今も正しいので、そのままにした。
+- 理由：
+  - アクセス解析は、SNS の投稿などからどれだけ人が来たかを、コードを足さずにダッシュボードで見られる。
+  - Bot Fight Mode はゾーン全体の設定で、止めると同じゾーンの別のアプリの守りも弱まる。
+  - 差し込まれるスクリプトはアプリのコードの外にあるので、書いておかないと、使う人にも、あとで E2E やコードを読む人にも、何が送られるかが分からない。
+- E2E が見逃した理由：E2E は、組み立てた結果を `wrangler dev` で配信して開く。差し込みは本番の Cloudflare の配信の途中で起きるので、`wrangler dev` の答えには入らない。「どの画面を開いても…」の検査は本番を開いていないので、2つの送信を一度も見ていない。外す条件を足しても、手元と CI で外れる送信は今のところない。
+- データの見方：
+  - ダッシュボード：Cloudflare のダッシュボード → Web Analytics → サイト karutalog.com を開き、ホスト名 `yomimasu.karutalog.com` で絞る。リファラー、パス、国、端末の種類ごとに見られる。
+  - API：GraphQL Analytics API のデータセット `rumPageloadEventsAdaptiveGroups` を、`requestHost` で絞って読む。
+  - SNS のアプリの中のブラウザーは、リファラーを落とすことが多い。投稿から来た人が、リファラーのない直接の訪問に数えられることがある。
+- 採らなかった案：
+  - このホスト名でだけ、Configuration Rule（`disable_rum`）でアクセス解析を止め、ページの表示を Worker の中で Workers Analytics Engine で数える案。本文つきの送信をしないと言い切れるが、ダッシュボードがなく、締め切り（2026-11-08 20:00 JST）の前に作る手間が増える。
+  - アクセス解析を止め、何も数えない案。SNS から来た人が見えない。
+  - HTML の答えに `Cache-Control: no-transform` を付け、このホストでだけボット対策のスクリプトを止める案。JavaScript Detections が止まることは文書にあるが、アクセス解析も止まるかは文書にない。HTML の配信の途中での圧縮も止まる。
+  - ゾーン全体で Bot Fight Mode を止める案。同じゾーンの別のアプリの守りも弱まる。
+- 限界：
+  - Bot Fight Mode が送る中身は読めないので、何を送るかは Cloudflare の説明に頼る。
+  - Cloudflare の Cookie の文書は、Bot Fight Mode で守るサイトには、ボットの点数を計る `__cf_bm` も置くとしている。2026-11-07 に、Cookie のない新しい Playwright の Chromium で本番の `/` と `/read/` を開くと、付いた Cookie は `cf_clearance` の1つだけだった（ドメインは `.karutalog.com`、HttpOnly、Partitioned、期限は約1年後）。`__cf_bm` は付かなかった。「このアプリについて」と NOTICE.md は、この観察に合わせて `cf_clearance` だけを挙げている。Cloudflare の動きが変わって `__cf_bm` が付くようになっても、E2E では気づかない。
+  - Cloudflare が差し込むものや送り先を変えても、E2E は気づかない。本番の送信は、ブラウザーの開発者ツールで本番を開いて確かめる。
+  - E2E で外す条件はパスで決めるので、アプリのコードが `/cdn-cgi/rum` か `/cdn-cgi/challenge-platform/` へ送るようになっても、この検査は落ちない。
+
 ## 2026-11-07 PR にラベルを付けたときと、本文とタイトルを直したときは ci.yml を動かさない
 
 - 決めたこと（ユーザーが認めた）：
