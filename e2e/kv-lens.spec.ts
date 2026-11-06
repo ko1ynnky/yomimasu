@@ -43,6 +43,32 @@ const inkedPixels = (page: Page) =>
     return inked;
   });
 
+test('虫眼鏡を開く前の 5px の升目の絵も、升目ごとに決まり字と記号を字で描く', async ({ page }) => {
+  // 絵の Canvas に最後の1コマで描いた字。kv-live.js は1コマごとに Canvas を消してから字を描く
+  await page.addInitScript(() => {
+    const drawn: string[] = [];
+    Object.assign(window, { kvText: drawn });
+    const clear = CanvasRenderingContext2D.prototype.clearRect;
+    CanvasRenderingContext2D.prototype.clearRect = function (...args) {
+      if (this.canvas.closest('yomimasu-kv')) drawn.length = 0;
+      return clear.apply(this, args);
+    };
+    const fillText = CanvasRenderingContext2D.prototype.fillText;
+    CanvasRenderingContext2D.prototype.fillText = function (text, ...rest) {
+      if (this.canvas.closest('yomimasu-kv')) drawn.push(text);
+      return fillText.call(this, text, ...rest);
+    };
+  });
+  await openHome(page);
+  const { cell, painted, drawn } = await page.locator('yomimasu-kv canvas').evaluate((canvas: HTMLCanvasElement) => {
+    const glyphs = window.YomimasuKv.glyphsOf(canvas)!;
+    return { cell: glyphs.cell, painted: glyphs.list.map((glyph) => glyph[2]), drawn: [...(window as unknown as { kvText: string[] }).kvText] };
+  });
+  expect(cell).toBe(5);
+  expect(drawn).toEqual(painted);
+  expect(drawn.filter((ch) => /^[ぁ-ゖ]$/.test(ch)).length).toBeGreaterThan(500);
+});
+
 test('絵を長押しすると、指の上に虫眼鏡が開いて決まり字を描き、離すと閉じる', async ({ page }) => {
   await openHome(page);
   const at = await figurePoint(page);

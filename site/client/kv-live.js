@@ -603,27 +603,16 @@ void main(){
     return c;
   }
 
-  // 升目が字の読めない大きさ（DOT_BELOW px 未満）では、升目ごとに fillText をせず、字の濃さの印を置く。
-  // 記号はその形（点、横線、十字）に、字は四角にして、もとの濃淡に近づける。字は虫眼鏡（client/kv-lens.ts）で読ませる。
-  // 字を1回だけ並べて描いた帯（atlas）から drawImage で写す案は、Chromium で fillText より重かったので採らなかった。
-  const DOT_BELOW = 8;
-  function mark(ctx, ch, x, y, cw) {
-    if (ch === '・') ctx.fillRect(x + cw * 0.38, y + cw * 0.38, cw * 0.24, cw * 0.24);
-    else if (ch === 'ー') ctx.fillRect(x + cw * 0.1, y + cw * 0.42, cw * 0.8, cw * 0.16);
-    else if (ch === '＋') {
-      ctx.fillRect(x + cw * 0.15, y + cw * 0.42, cw * 0.7, cw * 0.16);
-      ctx.fillRect(x + cw * 0.42, y + cw * 0.15, cw * 0.16, cw * 0.7);
-    } else ctx.fillRect(x + cw * 0.2, y + cw * 0.2, cw * 0.6, cw * 0.6);
-  }
-
   // Canvas ごとの、最後に描いた字の並び。入口の虫眼鏡（client/kv-lens.ts）が、指の下の升目の字を拡大して描くのに使う
   const painted = new WeakMap();
 
+  // 升目が 4〜6px の字の読みにくい大きさでも、升目ごとに字を fillText で描き、虫眼鏡を開く前から仮名の絵に見せる（ユーザーの案）。
+  // 8px 未満の升目を字の濃さの印（点、横線、十字、四角）で描く版（PR #59）は1コマが軽いが、開く前は仮名に見えない。
+  // 字を1回だけ並べて描いた帯（atlas）から drawImage で写す案は、Chromium で fillText より重かったので採らなかった。
   function paint(ctx, ink, opt, cols, rows, t, yaw, pitch) {
     const calib = calibrate(ink.mode, cols, rows, opt.ss, opt.yaw, opt.pitch);
     const list = glyphs(stats(t, yaw, pitch, cols, rows, opt.ss), cols, rows, { ...opt, mode: ink.mode }, calib);
     const cw = opt.cell;
-    const dots = cw < DOT_BELOW;
     ctx.clearRect(0, 0, cols * cw, rows * cw);
     ctx.fillStyle = ink.color;
     ctx.font = `700 ${cw * 0.96}px ${ink.font}`;
@@ -632,8 +621,7 @@ void main(){
     for (const [r, c, ch, a, card] of list) {
       ctx.globalAlpha = a;
       ctx.fillStyle = card ? ink.card : ink.color;
-      if (dots) mark(ctx, ch, c * cw, r * cw, cw);
-      else ctx.fillText(ch, c * cw + cw / 2, r * cw + cw / 2 + cw * 0.04);
+      ctx.fillText(ch, c * cw + cw / 2, r * cw + cw / 2 + cw * 0.04);
     }
     ctx.globalAlpha = 1;
     painted.set(ctx.canvas, { list, cell: cw, ink });
