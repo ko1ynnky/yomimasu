@@ -3,8 +3,32 @@
 /* 入れる先を尋ねる画面は、入力の行がないので道具の画面（tool）として組む。間は道具の画面の 10px に詰めず、ほかの本文と同じ 16px にする（見本の t-ai） */
 .screen--stage:has(> [data-pick]) { gap: 16px; }
 
-/* 使い方の例 */
-.examples > div { padding: 10px 14px; font-size: 15px; line-height: 1.6; }
+/* 使い方の例。各行は <details> で、開くと流れの図を出す。閉じた行は文だけにし、問い「どこに入れますか？」の位置を文だけの行のときと変えない。
+   開閉の印は左の余白に置き、左右の余白の和は文だけの行と同じ 28px にする。文の幅が変わると折り返しが変わり、問いの位置が動く */
+.examples summary { position: relative; display: block; padding: 10px 10px 10px 18px; font-size: 15px; line-height: 1.6; list-style: none; cursor: pointer; }
+.examples summary::-webkit-details-marker { display: none; }
+.examples summary::before { content: ""; position: absolute; left: 7px; top: 18px; border-block: 4px solid transparent; border-left: 6px solid var(--ink-3); }
+.examples [open] > summary::before { transform: rotate(90deg); }
+.examples .flow { margin: 0 10px 12px; }
+
+/* チャットでの流れの図（site/install.ts の flowHtml）。カードの中で地を --paper にして、アプリの文と分ける。どの行にも色を付けない（docs/ui-guide.md の2節） */
+.flow { display: grid; gap: 10px; margin: 0; padding: 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--paper); font-size: 14px; line-height: 1.7; color: var(--ink); overflow-wrap: anywhere; }
+.flow p, .flow li, .flow td, .flow th { font-size: 14px; line-height: 1.7; color: var(--ink); }
+.flow b { display: inline; line-height: inherit; }
+.flow figcaption, .flow .flow-who, .flow .flow-note { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
+.flow-q { justify-self: end; max-width: 88%; display: grid; justify-items: end; }
+.flow-q p:last-child { padding: 6px 12px; border: 1px solid var(--rule); border-radius: 14px 14px 4px 14px; background: var(--card); }
+.flow-steps ul { margin: 0; padding: 0 0 0 12px; list-style: none; border-left: 2px solid var(--rule); display: grid; gap: 2px; }
+.flow-steps li { color: var(--ink-2); }
+.flow-steps li:first-child { color: var(--ink); font-weight: 700; }
+.flow code { font-family: var(--f-mono); font-size: 13px; }
+.flow-a > div { display: grid; gap: 6px; }
+.flow-a ul, .flow-a ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; }
+.flow-a table { border-collapse: collapse; background: var(--card); }
+.flow-a th, .flow-a td { padding: 2px 8px; border: 1px solid var(--rule-2); text-align: left; vertical-align: top; font-weight: 400; }
+.flow-a th { color: var(--ink-2); }
+/* 「3回中3回」の数と「回」の間で折れないよう、和文の語の中では折らない */
+.flow .flow-note { padding-top: 6px; border-top: 1px solid var(--rule-2); word-break: keep-all; }
 
 /* 選択肢の添え書き（「Claude Code、Codex、Cursor など」）は、名前の下に、番号の分だけ字下げして置く */
 .auq-opts .btn:has(small) { flex-direction: column; align-items: flex-start; gap: 0; }
@@ -24,3 +48,9 @@
 .sketch { margin: 8px 0 0; }
 .list .sketch { margin-left: -34px; }
 .sketch svg { display: block; width: 100%; height: auto; }
+
+/* 手順の画面の流れの図も、略図と同じく番号の列の下まで広げる */
+.list .flow { margin: 8px 0 0 -34px; }
+/* 図の前の断りの1行（/install/agent/）。コマンドの枠と図のあいだに置き、手順の文と同じ列に収める */
+.list .flow-lead { margin-top: 8px; }
+.flow-lead code { font-family: var(--f-mono); font-size: 14px; }
