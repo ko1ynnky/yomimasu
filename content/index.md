@@ -7,6 +7,9 @@ title: /yomimasu
 <p>競技かるたにかかわるすべての人に、<br>読みを身近に。</p>
 </section>
 
+<yomimasu-kv>
+</yomimasu-kv>
+
 <!-- ask -->
 
 <nav class="menu" aria-label="やれること">

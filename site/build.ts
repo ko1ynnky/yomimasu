@@ -7,6 +7,7 @@ import type { Card } from '../.claude/skills/yomimasu/scripts/cards.ts';
 import { commandAt } from '../.claude/skills/yomimasu/scripts/commands.ts';
 import { mouthFiguresHtml, nasalEndingsText, nasalFigureHtml } from '../content/karuta/mouth.ts';
 import { cardName, cardPage, cardUrl, expandCardRefs, finalSoundCounts, listHtml, parseAdvice } from './karuta.ts';
+import { kimarijiStream } from './kimariji-stream.ts';
 import { outputPathOf, parseSource, renderDocument, runFor } from './render.ts';
 
 const CONTENT_DIR = 'content';
@@ -24,10 +25,14 @@ const MARKS: Record<string, () => string> = {
   '<!-- 「ん」で終わる札の数 -->': () => nasalEndingsText(cards),
 };
 
+const cards = deck.cards as unknown as Card[];
+
 await build({
   logLevel: 'warn',
   publicDir: 'site/public',
   oxc: { jsx: { runtime: 'automatic', importSource: 'preact' } },
+  // 入口の絵の決まり字の列は、札の読みの表から組み立てのたびに作り、絵の処理と同じファイルに入れる（client/kv.ts）。
+  define: { __KIMARIJI_STREAM__: JSON.stringify(kimarijiStream(cards)) },
   build: { outDir: OUT_DIR, manifest: true, rollupOptions: { input: CLIENT_ENTRY } },
 });
 
@@ -37,7 +42,6 @@ const scriptPath = `/${manifest[CLIENT_ENTRY].file}`;
 const stylePaths = (manifest[CLIENT_ENTRY].css ?? []).map((file: string) => `/${file}`);
 rmSync(manifestDir, { recursive: true });
 
-const cards = deck.cards as unknown as Card[];
 const cardNames = new Map(cards.map((card) => [cardUrl(card.no).split('/')[2], cardName(card)]));
 const urlOf = (outputPath: string) => `/${outputPath.replace(/index\.html$/, '')}`;
 
