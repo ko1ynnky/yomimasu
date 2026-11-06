@@ -26,6 +26,9 @@ yomimasu-band .seg > span { font-size: 13.5px; }
 .points > div { padding: 12px 14px; display: grid; gap: 4px; }
 .sources { padding: 12px 14px; display: grid; gap: 6px; }
 .card.sources p { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
+/* このアプリについての出典の資料の一覧。URL は区切りのない長い文字なので、幅 320px でもはみ出さないよう、どこででも折り返す */
+.card.sources ul { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.card.sources li { font-size: 13px; line-height: 1.7; color: var(--ink-3); overflow-wrap: anywhere; }
 
 /* 決まり字（歌の書体） */
 .kim-in { font-family: var(--f-uta); font-weight: 400; font-synthesis: none; color: var(--shu-deep); }

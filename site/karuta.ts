@@ -8,7 +8,6 @@ import {
   PRIORITY_NOTE,
   rulePoints,
   sameStartLine,
-  sourceLines,
   startsWithVowel,
   type Point,
 } from '../content/karuta/rules.ts';
@@ -228,11 +227,10 @@ export function poemHtml(card: Card, cards: readonly Card[]): string {
 
 const prioClass = (point: Point) => (point.priority === '高' ? 'prio prio--hi' : 'prio');
 
-function sourcesHtml(card: Card, text: string): string {
-  return `<h3>出典</h3>\n<div class="card sources">${sourceLines(card, text).map((line) => `<p>${escapeHtml(line)}</p>`).join('')}</div>`;
-}
-
 export type CardPage = { path: string; title: string; command: string; readName: string; bodyHtml: string };
+
+// 資料の名前と版は、ページごとに並べず「このアプリについて」の出典にまとめる。項目のそばには短い印だけを付ける（2026-11-06 のユーザーの判断）。
+const SOURCES_NOTE = '<p class="fine">出典は<a href="/about/#sources">このアプリについて</a>にまとめています。</p>';
 
 // 全部かほとんどの札に当たる点は、1首のページに並べず「ポイントを知る」へ案内する（content/karuta/rules.ts の冒頭）。
 const COMMON_NOTE = '<p class="fine">全部の札に共通の点（余韻、四句の伸ばし、鼻濁音など）は<a href="/point/">ポイントを知る</a>にあります。</p>';
@@ -271,7 +269,7 @@ export function cardPage(card: Card, cards: readonly Card[], advice: readonly Ad
   ].join('\n');
   const body = [
     article,
-    sourcesHtml(card, article),
+    SOURCES_NOTE,
     '<!-- ask -->',
     '<p class="ask-q">次は？</p>',
     '<div class="next"><a class="btn btn--line" href="/karuta/">100首の一覧へ</a><a class="btn btn--fill" href="/read/">まず1回読む</a></div>',

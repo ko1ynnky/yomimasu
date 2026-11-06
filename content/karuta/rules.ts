@@ -15,6 +15,7 @@ import { soundOffset, type Card, type Phrase } from '../../.claude/skills/yomima
 
 export type Priority = '高' | '中' | '低';
 
+// source は「冊子 p.23、講習資料 s.19」のような短い印で書く。資料の名前と版は「このアプリについて」の出典にまとめてある。
 // count は、その札で規則が当たる箇所の数である。発音の規則だけが持つ。
 export type Point = { id: string; priority: Priority; title: string; body: string; source: string; count?: number };
 
@@ -50,7 +51,7 @@ function oyama(card: Card): Point[] {
         '決まり字までが長く読み急ぎやすいので、速すぎず遅すぎず、一定の速さを保ちます。' +
         '二句目の語の切れ目でわずかに伸ばしてもよく、読み方一覧はその読みを別の読みとして並べています。' +
         '二句目の頭は低くしても高いままでもよいのですが、同じ読手が札によって変えないようにします。',
-      source: '協会の資料（冊子 p.3、p.27、p.28、講習資料 s.10、s.11）',
+      source: '冊子 p.3、p.27、p.28、講習資料 s.10、s.11',
     },
   ];
 }
@@ -63,7 +64,7 @@ function ichiji(card: Card): Point[] {
       priority: '中',
       title: '1字決まり。1音目で札が決まる',
       body: `決まり字は1音目の${quote(card.kimariji!.kana)}だけです。1音目は、強くするよりも、はっきり出すことが大事です。`,
-      source: '協会の資料（冊子 p.15、講習資料 s.21）',
+      source: '冊子 p.15、講習資料 s.21',
     },
   ];
 }
@@ -76,7 +77,7 @@ function shoku6(card: Card): Point[] {
       priority: '高',
       title: '初句が6字。長さでなく速さをそろえる',
       body: `初句の${quote(first(card))}は6字です。初句でそろえるのは長さではなく速さです。5字の初句と同じ速さで読むので、1字分長くなるのが自然です。5字の長さに詰めると、読み急いで聞こえます。`,
-      source: '協会の資料（講習資料 s.18）',
+      source: '講習資料 s.18',
     },
   ];
 }
@@ -97,7 +98,7 @@ const CONSONANT_DROPS: readonly { from: number[]; to: number[]; transitional?: t
 
 function shiin(card: Card): Point[] {
   const points: Point[] = [];
-  const source = '協会の資料（冊子 p.27）';
+  const source = '冊子 p.27';
   for (const drop of CONSONANT_DROPS.filter((d) => d.from.includes(card.no))) {
     const when = drop.transitional ? '決まり字が変わっていく途中では、' : '';
     points.push({
@@ -114,7 +115,7 @@ function shiin(card: Card): Point[] {
       priority: '高',
       title: '1音目をはっきり出す',
       body: '1音目がはっきりしないと、「ちは」が「しは」に聞こえることがよくあります。',
-      source: '協会の資料（冊子 p.27-28）',
+      source: '冊子 p.27-28',
     });
   }
   for (const drop of CONSONANT_DROPS.filter((d) => d.to.includes(card.no))) {
@@ -185,7 +186,7 @@ function museika(card: Card): Point[] {
       title: '決まり字の中に、母音が無声になりやすい音がある',
       // 無声化の仕組みと資料ごとの言い方は「ポイントを知る」にあるので、ここでは箇所と読み方だけを書く（2026-11-06 のユーザーの判断）。
       body: `${join(spots)}は、母音が無声になりやすい所です。無理に避けず、自然に読みます。`,
-      source: '協会の資料（冊子 p.29-30、講習資料 s.19）',
+      source: '冊子 p.29-30、講習資料 s.19',
     },
   ];
 }
@@ -211,7 +212,7 @@ function hagyo(card: Card): Point[] {
   ].join('');
   // 読み替えのない札（語の頭のハ行だけの札）は、card-rules.md の「当たる札」に入らないので別の id にする。
   const id = shifted.length > 0 ? 'hagyo' : 'hagyo-kept';
-  return [{ id, priority: '中', title: '語の途中のハ行を読み替える', body, source: '協会の資料（冊子 p.23）', count: shifted.length }];
+  return [{ id, priority: '中', title: '語の途中のハ行を読み替える', body, source: '冊子 p.23', count: shifted.length }];
 }
 
 // 「いふ」のように字数の同じ綴りは、表で「い」と「ふ」の2つに分かれることがあるので、続く「ふ」までを1つの綴りとして出す。
@@ -232,7 +233,7 @@ function choon(card: Card): Point[] {
       priority: '中',
       title: '長音で読む綴りがある',
       body: `母音の後に「う」の音が続くと、音が変わって長音になります。この札では${join(spellings)}と読みます。`,
-      source: '協会の資料（冊子 p.23）',
+      source: '冊子 p.23',
       count: spellings.length,
     },
   ];
@@ -246,7 +247,7 @@ function mu(card: Card): Point[] {
     toN.length > 0 ? `助動詞の「む」「らむ」「けむ」の「む」は「ん」と読みます。この札では${join(toN)}です。` : '',
     ...kept.map((k) => `${k.text}は${k.why === '語の頭' ? '語の頭' : '語の一部'}なので、「む」のまま読みます。`),
   ].join('');
-  return [{ id: 'mu', priority: '中', title: '「む」を「ん」と読むか', body, source: '協会の資料（冊子 p.24）' }];
+  return [{ id: 'mu', priority: '中', title: '「む」を「ん」と読むか', body, source: '冊子 p.24' }];
 }
 
 // 「を」は「ワ行」の規則に入るが、読み分けを確かめるまで扱わない。
@@ -263,7 +264,7 @@ function kana(card: Card): Point[] {
       priority: '中',
       title: '「ゐ」「ゑ」「ぢ」「づ」の読み方',
       body: `「ゐ」「ゑ」は「い」「え」、「ぢ」「づ」は「じ」「ず」と読みます。この札では${join(spots)}と読みます。読み方一覧のふりがなでも確かめられます。`,
-      source: '協会の資料（冊子 p.5-15）',
+      source: '冊子 p.5-15',
     },
   ];
 }
@@ -315,7 +316,7 @@ function kamiTail(card: Card): Point[] {
         priority: '中',
         title: '上の句の終わりは1字前でも2字前でもよい',
         body: `読み方一覧は最後の2字の前に印を付けています（${where}）。2020年の改訂で、この札は最後の1字の前で伸ばしてもよくなりました。`,
-        source: '協会の資料（冊子 p.4、講習資料 s.29）',
+        source: '冊子 p.4、講習資料 s.29',
       },
     ];
   }
@@ -325,7 +326,7 @@ function kamiTail(card: Card): Point[] {
       priority: '中',
       title: '上の句の終わりは最後の2字の前で伸ばす',
       body: `ほとんどの札は最後の1字の前で伸ばしますが、この札は最後の2字の前で伸ばします（${where}）。${TWO_BEFORE_REASONS[card.no] ?? ''}`,
-      source: '協会の資料（冊子 p.4、講習資料 s.29）',
+      source: '冊子 p.4、講習資料 s.29',
     },
   ];
 }
@@ -339,7 +340,7 @@ function shimoTail(card: Card): Point[] {
       priority: '中',
       title: '下の句の終わりは最後の3字の前で伸ばす',
       body: `多くの札は下の句の最後の2字の前で伸ばしますが、この札は最後の3字${quote(fifth.slice(-3))}をひとまとめにし、その前で伸ばします。3字は続けて読み、途中で伸ばしません。`,
-      source: '協会の資料（冊子 p.4、p.27）',
+      source: '冊子 p.4、p.27',
     },
   ];
 }
@@ -355,7 +356,7 @@ function alt(card: Card): Point[] {
         `読み方一覧は、本文の横にもう1つの読み方${quote(a.marked)}を並べています。` +
         (grand ? '二句の途中でも伸ばす読みです。' : '四句の伸ばす所が違う読み方です。') +
         (card.no === 99 ? '四句の伸ばし方は、2020年の改訂で2通りになりました。' : ''),
-      source: `協会の資料（冊子 p.${card.origin.notation.page}${grand ? '、p.3、p.27' : ''}${card.no === 99 ? '、講習資料 s.31' : ''}）`,
+      source: `冊子 p.${card.origin.notation.page}${grand ? '、p.3、p.27' : ''}${card.no === 99 ? '、講習資料 s.31' : ''}`,
     };
   });
 }
@@ -371,7 +372,7 @@ function notes(card: Card): Point[] {
       priority: '低',
       title: '読み方一覧に括弧つきの注がある',
       body: `読み方一覧は、${join(spots)}のように、ふりがなに括弧に入れた小さな仮名を添えています。括弧の意味を説明する文は資料にありません。`,
-      source: `協会の資料（冊子 p.${card.origin.notation.page}）`,
+      source: `冊子 p.${card.origin.notation.page}`,
     },
   ];
 }
@@ -384,7 +385,7 @@ function joka(card: Card): Point[] {
       priority: '高',
       title: '序歌は下の句を2回読む',
       body: '序歌は百人一首に入っていない歌で、1枚目の札の前に読みます。上の句、下の句と読んだ後、下の句をもう一度読んでから、1枚目の上の句へ進みます。100首の1組とは形が違います。協会は「難波津に」の歌を序歌に指定していて、昭和29年（1954年）に選ばれました。',
-      source: '協会の資料（冊子 p.36、p.38、p.39-40、講習資料 s.13）',
+      source: '冊子 p.36、p.38、p.39-40、講習資料 s.13',
     },
   ];
 }
@@ -393,39 +394,19 @@ function joka(card: Card): Point[] {
 
 export const PRIORITY_NOTE = '優先の高・中・低は、資料が付けた順位ではなく、このアプリの案です。';
 
-// 助言の候補の出典を、画面の呼び名にし、読手のメモと協会の資料を分けて書く。候補の区分が「読手のメモ」でも、出典に協会の資料（読み方一覧の注、講習資料）が並ぶ行がある。
+// 助言の候補の出典を、画面の短い印にする。資料の名前と版は「このアプリについて」の出典にまとめてある。
+// 読手のメモには「読手個人のやり方」を添え、協会の資料と分けて書く（REVIEW.md）。候補の区分が「読手のメモ」でも、出典に協会の資料（読み方一覧の注、講習資料）が並ぶ行がある。
 export function adviceSourceText(kind: string, source: string): string {
   const parts = source
     .replaceAll('完全版', '冊子')
     .split('、')
     .map((part) => part.replace(/^メモ([12]) /, '読手のメモ$1 '));
+  if (!kind.startsWith('読手のメモ')) return parts.join('、');
   const memo = parts.filter((part) => part.startsWith('読手のメモ'));
   const others = parts.filter((part) => !part.startsWith('読手のメモ'));
-  if (!kind.startsWith('読手のメモ')) return `協会の資料（${parts.join('、')}）`;
-  const tournament = kind.includes('大会向け') ? '大会やきちんとした練習会での話で、ふだんの練習会では参考程度。' : '';
-  return `読手のメモ（読手個人のやり方。${tournament}${memo.join('、')}）${others.length > 0 ? `、協会の資料（${others.join('、')}）` : ''}`;
+  const tournament = kind.includes('大会向け') ? '。大会やきちんとした練習会での話で、ふだんの練習会では参考程度' : '';
+  return [`${memo.join('、')}（読手個人のやり方${tournament}）`, ...others].join('、');
 }
-
-// 口の形の図の出典。図は content/karuta/mouth.ts にあり、資料の詳しい一覧はスキルの references/mouth-shapes.md にある。
-const MOUTH_SOURCE =
-  '口の形の図：舌と唇の形は、一般の音声学の資料（Wikipedia 英語版「Japanese phonology」「Vowel」、日本語版「日本語の音韻」）をもとに、このアプリが描いたスケッチです。音ごとに何を「保つ」かは、このアプリの解釈です。';
-
-const NASAL_SOURCE =
-  '「ん」の朱の帯：話し言葉の発話の終わりの「ん」を実測した研究（Maekawa 2019、Hashi ほか 2016、Mizoguchi 2019、前川ほか 2018）によります。競技かるたの読みで確かめた研究は、この図を作るための調査では見つかりませんでした。';
-
-export const sourceLines = (card: Card, text: string): string[] => [
-  `伸ばす位置は読み方一覧（抜粋版 p.${card.origin.stretches.page}）、余韻の印、別の読み、注は読み方一覧（冊子 p.${card.origin.notation.page}）によります。ふりがなは、札の読みの表の発音の列から振りました。`,
-  '冊子：全日本かるた協会 競技かるた部（読唱）『小倉百人一首 競技かるた読手テキスト』冊子、令和2年4月1日初版。p. はページです。',
-  '抜粋版：同じテキストのHP掲載用抜粋版、令和7年4月1日改訂版。',
-  ...(text.includes('講習資料') ? ['講習資料：全日本かるた協会『読手講習ビデオ（PDF版）』2020年10月。s. はスライドの番号です。'] : []),
-  ...(text.includes('読手のメモ')
-    ? ['読手のメモ1、2：A級公認読手が書いたメモ。1は初めて読む人向け（2018年作成、2022年更新）、2は大会で読む人向け（2020年作成、2022年更新）。協会の基準ではなく、読手個人のやり方です。']
-    : []),
-  ...(text.includes('作者の経験') ? ['作者の経験：このアプリの作者の個人の考えです。協会の資料でも読手のメモでもありません。'] : []),
-  ...(text.includes('class="mouth"') ? [MOUTH_SOURCE] : []),
-  ...(text.includes('class="m-range"') ? [NASAL_SOURCE] : []),
-  '解説の文はこのアプリの言葉で書きました。資料の文と違う所があれば、資料が正しいものとしてください。',
-];
 
 const ORDER: Record<Priority, number> = { 高: 0, 中: 1, 低: 2 };
 

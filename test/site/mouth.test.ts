@@ -82,19 +82,30 @@ test('「ん」で終わる札の1首のページは、「ん」の位置の説�
   assert.doesNotMatch(cardPage(vowelCard, cards, advice).bodyHtml, /href="\/point\/#yoin-n"/);
 });
 
-test('1首のページの出典に、口の形の図の出典を書く', () => {
-  const html = cardPage(card(53), cards, advice).bodyHtml;
-  const sources = html.slice(html.indexOf('<h3>出典</h3>'));
-  assert.match(sources, /口の形の図/);
-  assert.match(sources, /Wikipedia/);
+const captionOf = (no: number) => cardPage(card(no), cards, advice).bodyHtml.match(/<figcaption>(.*?)<\/figcaption>/s)![1];
+
+test('1首のページの図の下の説明は1行にし、資料は「このアプリについて」の出典へリンクする', () => {
+  assert.equal(
+    captionOf(53),
+    '<p>図は、一般の音声学の資料（<a href="/about/#src-phonetics">Wikipedia ほか</a>）をもとにこのアプリが描いたスケッチで、寸法は測っていません。朱の点は舌の最も高い所の目安です。</p>',
+  );
 });
 
-test('「ん」で終わる札の1首のページの出典には、朱の帯のもとになった研究を書き、母音で終わる札には書かない', () => {
-  const sourcesOf = (no: number) => {
-    const html = cardPage(card(no), cards, advice).bodyHtml;
-    return html.slice(html.indexOf('<h3>出典</h3>'));
-  };
+test('「ん」で終わる札の図の下の説明は、朱の帯のもとの研究へリンクし、「ん」の説明への案内も残す', () => {
   const nasal = nasalEndings(cards)[0].cards[0].no;
-  assert.match(sourcesOf(nasal), /実測した研究/);
-  assert.doesNotMatch(sourcesOf(53), /実測した研究/);
+  const caption = captionOf(nasal);
+  assert.ok(
+    caption.endsWith(
+      '<p>図は、一般の音声学の資料（<a href="/about/#src-phonetics">Wikipedia ほか</a>）をもとにこのアプリが描いたスケッチで、寸法は測っていません。「ん」の朱の帯は、<a href="/about/#src-research">研究</a>で舌が上あごに付いていた所の幅です。</p>',
+    ),
+    caption,
+  );
+  assert.match(caption, /href="\/point\/#yoin-n"/);
+  assert.doesNotMatch(captionOf(53), /src-research/);
+});
+
+test('1首のページの保つ所には、このアプリの解釈だと添え、「ポイントを知る」の6つの図は今のまま「保つ」とだけ書く', () => {
+  assert.match(cardPage(card(53), cards, advice).bodyHtml, /<p class="mouth-keep">保つ（このアプリの解釈）：/);
+  assert.doesNotMatch(mouthFiguresHtml(), /このアプリの解釈）：/);
+  assert.match(mouthFiguresHtml(), /<p class="mouth-keep">保つ：/);
 });

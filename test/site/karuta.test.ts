@@ -191,11 +191,25 @@ test('何首かにまたがる助言は、規則が当たる札に添える', ()
   assert.ok(hundred.every((c) => !texts(c.no).some((t) => t.includes('母音に声をのせる'))));
 });
 
-test('読手のメモから来た助言は、読手個人のやり方として出す', () => {
-  const { bodyHtml } = cardPage(card(1), cards, advice);
-  assert.match(bodyHtml, /「かりほ」は「かりお」と読む/);
-  assert.match(bodyHtml, /読手のメモ（読手個人のやり方/);
-  assert.doesNotMatch(bodyHtml, /完全版|(?<!読手の)メモ[12] /);
+test('読手のメモから来た助言は、メモの印に「読手個人のやり方」を添えて出す', () => {
+  const html = wordsOf(1);
+  assert.match(html, /「かりほ」は「かりお」と読む。<\/p><p class="src">読手のメモ1 読み違い①（読手個人のやり方）<\/p>/);
+  assert.match(html, /<p class="src">読手のメモ2 1-7（読手個人のやり方。大会やきちんとした練習会での話で、ふだんの練習会では参考程度）<\/p>/);
+  assert.doesNotMatch(pageOf(1), /完全版|(?<!読手の)メモ[12] /);
+});
+
+test('協会の資料から来た項目と助言は、資料の名前とページだけの短い印で出典を書く', () => {
+  assert.match(pageOf(53), /<p class="src">冊子 p\.23<\/p>/);
+  assert.match(wordsOf(70), /<p class="src">講習資料 s\.20<\/p>/);
+  for (const c of cards) assert.doesNotMatch(cardPage(c, cards, advice).bodyHtml, /協会の資料（/, `${c.no}番`);
+});
+
+test('どの1首のページも、出典の節を置かず、終わりに「このアプリについて」の出典への1行を置く', () => {
+  for (const c of cards) {
+    const html = cardPage(c, cards, advice).bodyHtml;
+    assert.doesNotMatch(html, /card sources|<h3>出典<\/h3>/, `${c.no}番`);
+    assert.match(html, /<\/article>\n<p class="fine">出典は<a href="\/about\/#sources">このアプリについて<\/a>にまとめています。<\/p>\n<!-- ask -->/, `${c.no}番`);
+  }
 });
 
 test('余韻で伸ばす最後の音は、結句の発音の最後の字で決め、母音と「ん」で分ける', () => {
@@ -220,9 +234,9 @@ test('どの1首のページにも歌番号を出さない', () => {
   for (const c of cards) assert.doesNotMatch(cardPage(c, cards, advice).bodyHtml, /\d+番/, `${c.no}番`);
 });
 
-test('読手のメモの助言に協会の資料の出典が並ぶときは、協会の資料として分けて書く', () => {
-  const { bodyHtml } = cardPage(card(95), cards, advice);
-  assert.match(bodyHtml, /読手のメモ（読手個人のやり方。読手のメモ1 長音の一覧）、協会の資料（講習資料 s.31）/);
+test('読手のメモの助言に協会の資料の出典が並ぶときは、メモの印のあとに分けて書く', () => {
+  assert.match(wordsOf(95), /<p class="src">読手のメモ1 長音の一覧（読手個人のやり方）、講習資料 s\.31<\/p>/);
+  assert.match(wordsOf(77), /<p class="src">読手のメモ1 長音の一覧（読手個人のやり方）、読み方一覧（冊子 p\.15）<\/p>/);
 });
 
 test('1首のページの優先は、このアプリの案だと断る', () => {
