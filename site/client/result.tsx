@@ -1,5 +1,4 @@
 import { render } from 'preact';
-import { createPortal } from 'preact/compat';
 import { useEffect, useState } from 'preact/hooks';
 import type { Measurement } from '../../.claude/skills/yomimasu/scripts/measure.ts';
 import { nextPoint } from '../../.claude/skills/yomimasu/scripts/next-point.ts';
@@ -39,20 +38,14 @@ function useHasKept(example: boolean) {
   return hasKept;
 }
 
-// 実行の行は画面の組み立て（render.ts）が置き、この部品の外にある。読んだばかりの録音のときだけ、その下に1行足す（docs/ui-guide.md の8節）。
-function RecordedNote() {
-  const [run, setRun] = useState<Element | null>(null);
-  useEffect(() => setRun(document.querySelector('.screen > .run')), []);
-  return run && createPortal(<div class="read">● 録音しました</div>, run);
-}
-
 // 例の録音は利用者が読んだものではないので、「もう1回読む」「読み直す」ではなく、同じ組を読んでみるよう誘う。
 const exampleAgain = (take: Take) => ({ label: '読んでみる', url: againUrl(take.pair) });
 
 // Take は声の処理の設定を持つが、measure に autoGainControl を渡していない。iPhone で設定の値を信じられるかを実機で確かめるまで渡さない（docs/measure.md）ので、声の大きさは出さない。
 // 聴き比べ（C6）は、この take をそのまま鳴らす。例の録音は端末に残さないので、records.ts の loadTake では読み直せない。
 // 例の録音は利用者が読んだものではないので、「自分の読み」と書かない。
-// justRead は、このページで読んだばかりの録音である。読む流れの進み具合（3 / 3 結果）と「● 録音しました」は、そのときだけ出す。
+// justRead は、このページで読んだばかりの録音である。読む流れの進み具合（3 / 3 結果）は、そのときだけ出す。
+// 「● 録音しました」は、読む画面から移るときに殻が実行の行に置く（ui/shell.ts の go）。部品が足すと、殻が読んだ行を 110ms 隠す順に間に合わない。
 function Result({ take, measurement, example, justRead = false }: { take: Take; measurement: Measurement; example: boolean; justRead?: boolean }) {
   const notice = noticeOf(measurement);
   const level = levelSentence(measurement);
@@ -60,7 +53,6 @@ function Result({ take, measurement, example, justRead = false }: { take: Take; 
   return (
     <>
       <Assist assisted={take.assisted} progress={justRead ? RESULT_PROGRESS : undefined} />
-      {justRead && <RecordedNote />}
       {example && <span class="tag">例の録音です</span>}
       <div class="card rows res">
         {resultRows(measurement).map((row) => (

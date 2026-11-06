@@ -177,9 +177,18 @@ function scrollAfter(url: URL, y: number) {
   else scrollTo(0, y);
 }
 
-type Arrival = { push: boolean; motion: boolean; scrollY?: number };
+// 画面の部品が実行の行に足すと、部品は差し込んだあとで読み込んで描くので、reveal() が読んだ行を集めたあとになり、110ms 隠す順から漏れる。
+// そのため、移る側が決める読んだ行（録音のあとの「● 録音しました」）は、入れ替えと同時に殻が置く。
+function addRead(text: string) {
+  const read = document.createElement('div');
+  read.className = 'read';
+  read.textContent = text;
+  document.querySelector('main .screen > .run')?.append(read);
+}
 
-async function arrive(url: URL, page: Promise<Document | null>, mine: number, { push, motion, scrollY = 0 }: Arrival) {
+type Arrival = { push: boolean; motion: boolean; scrollY?: number; read?: string };
+
+async function arrive(url: URL, page: Promise<Document | null>, mine: number, { push, motion, scrollY = 0, read }: Arrival) {
   const doc = await page;
   if (mine !== generation) return;
   busy = false;
@@ -193,6 +202,7 @@ async function arrive(url: URL, page: Promise<Document | null>, mine: number, { 
     history.pushState({ prev: shown }, '', url.href);
   }
   swap(doc, url);
+  if (read) addRead(read);
   if (!motion) return scrollAfter(url, scrollY);
   scrollTo(0, 0);
   await reveal(document.querySelector('main .screen')!);
@@ -217,12 +227,13 @@ async function follow(link: HTMLAnchorElement, url: URL) {
 
 // リンクを押さずに移る（読み終えたあとの結果の画面など）。打ち込みは呼ぶ側が行う。
 // 取得は呼んだ時点で始め、ready が true になってから入れ替える。false なら移らない。待つあいだに戻る・進む操作があれば、そちらを採る。
-export async function go(href: string, ready: Promise<boolean>) {
+// read を渡すと、入れ替えた画面の実行の行の下に、読んだ行として出す。
+export async function go(href: string, ready: Promise<boolean>, read?: string) {
   const url = new URL(href, location.href);
   const mine = ++generation;
   busy = true;
   const page = load(url);
-  if (await ready) return arrive(url, page, mine, { push: pathOf(url) !== shown, motion: !reduced() });
+  if (await ready) return arrive(url, page, mine, { push: pathOf(url) !== shown, motion: !reduced(), read });
   if (mine === generation) busy = false;
 }
 

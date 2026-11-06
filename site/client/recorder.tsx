@@ -31,6 +31,8 @@ const HELP_KEY = 'yomimasu.recHelpDone';
 // 声を出せない人とマイクを許可しない人が、録音しないで結果の画面まで進む入口（C9）。
 const EXAMPLE_RESULT = '/result/example/';
 const RESULT = '/result/';
+// 録音のあとに結果の画面の実行の行の下へ出す行（docs/ui-guide.md の8節）。
+const RECORDED = '● 録音しました';
 // 押したら実行の行に打ち込み、ひと呼吸置いてから移る（docs/ui-guide.md の8節「押したあとの動き」）。
 const TYPE_MS = 280;
 const SEND_HOLD_MS = 90;
@@ -202,7 +204,7 @@ function Recorder({ fix }: { fix?: string }) {
   async function finishByUser() {
     if (!session.current) return;
     const kept = Promise.all([finish(), typeRun('読み終えた')]).then(([take]) => take !== null);
-    void go(RESULT, kept);
+    void go(RESULT, kept, RECORDED);
     if (!(await kept)) setTyped(null);
   }
 
@@ -214,7 +216,7 @@ function Recorder({ fix }: { fix?: string }) {
       setView({ kind: 'count', beat: COUNT_FROM - Math.floor(elapsed / COUNT_BEAT_SEC), elapsed });
     } else if (elapsed - COUNT_SEC >= LIMIT_SEC) {
       // 利用者が押していない動きなので、打ち込まずに移る（docs/ui-guide.md の8節）。
-      void go(RESULT, finish().then((take) => take !== null));
+      void go(RESULT, finish().then((take) => take !== null), RECORDED);
       return;
     } else {
       setView({ kind: 'reading', t: elapsed - COUNT_SEC, elapsed });

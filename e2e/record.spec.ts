@@ -108,6 +108,28 @@ const watchRunLine = (page: Page) =>
 const runLineSeen = (page: Page) => page.evaluate(() => (window as unknown as { runLineSeen: string[] }).runLineSeen);
 const askLineSeen = (page: Page) => page.evaluate(() => (window as unknown as { askLineSeen: string[] }).askLineSeen);
 
+// 結果の画面へ入れ替えた時点に「● 録音しました」が実行の行にあって隠れているかと、それが見えた時刻を残す。
+// 入れ替えの時刻は、実行の行が「結果を見る」になったのを見た時点とする。
+const watchRecordedNote = (page: Page) =>
+  page.evaluate(() => {
+    const state: { swapped?: { hasNote: boolean; held: boolean; at: number }; shownAt?: number } = {};
+    const note = () => document.querySelector('.run .read');
+    new MutationObserver(() => {
+      if (state.swapped || !document.querySelector('.run [data-run]')?.textContent?.includes('結果を見る')) return;
+      const read = note();
+      state.swapped = { hasNote: read?.textContent === '● 録音しました', held: read?.classList.contains('is-held') ?? false, at: performance.now() };
+    }).observe(document.body, { subtree: true, childList: true, characterData: true });
+    const frame = () => {
+      const read = note();
+      if (state.swapped && read && !read.classList.contains('is-held')) state.shownAt = performance.now();
+      else requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+    Object.assign(window, { recordedNote: state });
+  });
+const recordedNoteOf = (page: Page) =>
+  page.evaluate(() => (window as unknown as { recordedNote: { swapped?: { hasNote: boolean; held: boolean; at: number }; shownAt?: number } }).recordedNote);
+
 // 開き直すと置き場の録音が消えるので、開いたときの印が残っているかで、開き直していないことを確かめる。
 const markDocument = (page: Page) => page.evaluate(() => Object.assign(window, { sameDocument: true }));
 const sameDocument = (page: Page) => page.evaluate(() => (window as unknown as { sameDocument?: boolean }).sameDocument === true);
@@ -153,7 +175,7 @@ const showsResult = async (page: Page) => {
   await expect(page.getByText('まず聴いてみましょう')).toHaveCount(0);
 };
 
-test('読み終えたは上の句の区間から押せ、押すと「読み終えた」を打ち込んでから、開き直さずに結果の画面へ移る', async ({ baseURL }) => {
+test('読み終えたは上の句の区間から押せ、押すと「読み終えた」を打ち込んでから、開き直さずに結果の画面へ移り、実行の行の 110ms 後に「● 録音しました」を出す', async ({ baseURL }) => {
   const browser = await launchWithFakeMic();
   const page = await openPage(browser, baseURL);
   const lyrics = page.getByTestId('lyrics');
@@ -170,11 +192,16 @@ test('読み終えたは上の句の区間から押せ、押すと「読み終�
   await expect(block(page, 'kami')).toHaveClass(/is-now/, { timeout: 6000 });
   expect(await lyrics.boundingBox()).toEqual(before);
   await watchRunLine(page);
+  await watchRecordedNote(page);
   await finishButton(page).click();
   const wallSec = (Date.now() - pressedAt) / 1000;
 
   await showsResult(page);
   expect(await runLineSeen(page)).toContain('> /yomimasu 読み終えた');
+  // 殻は入れ替えた時点の読んだ行を 110ms 隠してから出す（docs/ui-guide.md の8節）。「● 録音しました」もその時点で実行の行にあり、同じ順で出る。
+  const note = await recordedNoteOf(page);
+  expect(note.swapped).toMatchObject({ hasNote: true, held: true });
+  expect(note.shownAt! - note.swapped!.at).toBeGreaterThanOrEqual(100);
   expect(await sameDocument(page)).toBe(true);
   expect(new URL(page.url()).pathname).toBe('/result/');
   await expect(page.locator('.bar .step')).toHaveText('3 / 3 結果・補助あり');
