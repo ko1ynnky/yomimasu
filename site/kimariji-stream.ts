@@ -33,7 +33,7 @@ export function kimarijiInOrder(cards: readonly Card[], order: readonly number[]
 
 // 読む順は Python の random.Random(種).shuffle と同じにする。入口の置き方を決めるときにユーザーが見た見本は、
 // Python でこの順に並べた列で描いていたので、同じ字の並びにするためである。種から順を決めるだけなら、ほかの乱数でもよい。
-// 乱数は MT19937（メルセンヌ・ツイスタ）で、初期化と引き方を CPython の random に合わせて書いた。
+// 乱数は MT19937（メルセンヌ・ツイスタ）で、初期化と引き方を CPython の random に合わせて書いた。元の mt19937ar.c の著作権表示は NOTICE.md にある。
 class PythonRandom {
   #state = new Uint32Array(624);
   #index = 624;
