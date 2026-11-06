@@ -60,6 +60,23 @@ test('どの行にも優先の札があり、テーマの中は高、中、低�
   }
 });
 
+test('目次で移っても履歴を積まず、そのあとの「戻る」は1つ前のページを尋ね、選ぶと前の画面へ戻る', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: /\/総論を学ぶ/ }).click();
+  await page.locator('.next').getByRole('link', { name: 'ポイントを知る' }).click();
+  await expect(page).toHaveURL(/\/point\/$/);
+  await toc(page).getByRole('link', { name: /練習のしかた/ }).click();
+  await expect(page).toHaveURL(/\/point\/#t-renshu$/);
+  await expect(page.locator('#t-renshu')).toBeInViewport();
+
+  const question = page.getByRole('group', { name: 'どこに戻りますか？' });
+  await page.getByRole('link', { name: '戻る' }).click();
+  await expect(question.getByRole('button')).toHaveText(['1. 1つ前のページ（総論.md）', '2. トップページ', 'キャンセル']);
+  await question.getByRole('button', { name: '1. 1つ前のページ（総論.md）' }).click();
+  await expect(page).toHaveURL(/\/soron\/$/);
+  await expect(page.locator('.run .read')).toHaveText('● Read 総論.md');
+});
+
 test('開け閉めと目次のリンクでは、入力の行に何も打ち込まず、画面を入れ替えない', async ({ page }) => {
   await page.goto('/point/');
   await page.locator('main [data-typed]').evaluate((line) => {

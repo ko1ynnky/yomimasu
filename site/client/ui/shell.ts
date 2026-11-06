@@ -359,9 +359,16 @@ document.addEventListener('click', (event) => {
   if (!(link instanceof HTMLAnchorElement) || link.target) return;
   if (link.hasAttribute('download')) return void (link.closest('main') && echo(link.textContent?.trim() ?? ''));
   const url = new URL(link.href);
-  // 画面は / で終わる URL にある。ファイルや外のページ、同じ画面の中の見出しへのリンクはブラウザーに任せる。
-  if (url.origin !== location.origin || !url.pathname.endsWith('/') || (pathOf(url) === shown && url.hash)) return;
+  // 画面は / で終わる URL にある。ファイルや外のページへのリンクはブラウザーに任せる。
+  if (url.origin !== location.origin || !url.pathname.endsWith('/')) return;
   event.preventDefault();
+  // 同じ画面の中の見出しへのリンク（「ポイントを知る」の目次）は、打ち込まず、履歴を積まずに移る。
+  // ブラウザーに任せると state のない履歴が積まれ、「戻る」が前の画面（history.state.prev）を見失う。積んだ項目へ history.back() で戻っても、パスが同じなので popstate は画面を入れ替えない。
+  if (pathOf(url) === shown && url.hash) {
+    history.replaceState(history.state, '', url.href);
+    showTarget(url.hash);
+    return;
+  }
   if (busy) return;
   if (link.matches('[data-back]')) void back(link);
   else if (link.closest('[data-pick]')) void pick(link, url);
@@ -431,7 +438,7 @@ addEventListener('popstate', () => {
   void arrive(url, load(url), mine, { push: false, motion, scrollY: history.state?.scrollY });
 });
 
-// 同じ画面の中のリンク（目次など）と戻る・進むで hash だけが変わったときは、ブラウザーが移したあとで、閉じた <details> の中の先を開いて移り直す。
+// アドレスバーで hash だけを替えたときと、戻る・進むで hash だけが変わったときは、ブラウザーが移したあとで、閉じた <details> の中の先を開いて移り直す。目次のリンクは click の処理で開いて移るので、ここを通らない。
 addEventListener('hashchange', () => showTarget(location.hash));
 
 prefetchNames();
