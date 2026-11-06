@@ -13,7 +13,7 @@ test('このアプリについては about/index.html に組み立てられる',
 test('このアプリについては、実行の行と読んだ行を出す', () => {
   const { title, command, readName } = source();
   const html = renderDocument({ title, command, readName, bodyHtml: '', scriptPath: '/assets/main.js', stylePaths: [] });
-  assert.match(html, /\/yomimasu このアプリについて<\/div>/);
+  assert.match(html, /\/yomimasu このアプリについて<\/span><\/div>/);
   assert.match(html, /<div class="read">● Read このアプリについて\.md<\/div>/);
 });
 
@@ -34,6 +34,18 @@ test('再利用の節は、札の文字のデータも再利用を認めない�
 test('再利用の節は、資料から来た内容がどこにあっても MIT License の範囲外だと書く', () => {
   const reuse = source().markdown.split('## 再利用について')[1] ?? '';
   assert.match(reuse, /資料から来た内容は、どのファイルにあっても MIT License の範囲外/);
+});
+
+test('お手本の音声は「A級公認読手のお手本」として、使っている形で書く', () => {
+  const { markdown } = source();
+  assert.match(markdown, /「A級公認読手のお手本」/);
+  assert.match(markdown, /序歌と100首の上の句と下の句のお手本を、許諾を得て使っています。/);
+  assert.doesNotMatch(markdown, /お手本の音声を使っていません/);
+});
+
+test('再利用の節は、お手本の音声も再利用を認めないと書く', () => {
+  const reuse = source().markdown.split('## 再利用について')[1] ?? '';
+  assert.match(reuse, /お手本の音声は録音した人の権利のままで、再利用を認めません。/);
 });
 
 test('録音を端末の外へ出さないことを書く', () => {
