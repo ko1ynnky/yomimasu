@@ -11,10 +11,51 @@ export type Command = { button: string; say: string; read?: string; path: string
 // 候補の表は、Web の本文と違い、選ぶ前の行を区分と出典つきで並べている（references/README.md の「書き方の決まり」）。
 const CANDIDATES = '候補の表から答えるときは、行の区分と出典を添え、読手のメモから来た内容は読手個人のやり方として書く。';
 
-// 入れる手順は、リポジトリを公開してから実行して確かめる（README.md）。確かめるまで、入れられると言い切らない。
+// コーディングエージェントに入れる手順は、リポジトリを公開してから実行して確かめる（README.md）。確かめるまで、入れられると言い切らない。
 const UNCHECKED = 'この手順は、リポジトリを公開してから実行して確かめるもので、まだ確かめていません。';
 
-const NOT_YET ='に入れる手順は、入れて答えることを確かめてから足します。いまはコーディングエージェントに入れる手順だけがあります（`インストール エージェント`）。';
+// 汎用の AI（Claude、ChatGPT、Gemini）に入れる手順。Web の手順の画面（content/Claudeに入れる.md など）と同じ段と文で書く。
+// Web とスキルは同じ内容を返す決まり（docs/ui-guide.md の8節）なので、食い違いは test/site/install.test.ts が見る。
+// ChatGPT にはプラグインのアーカイブ（yomimasu-chatgpt.zip）を入れる。スキルとして上げると Work でしか使われなかった（2026-11-06）。
+type Step = readonly [title: string, text: string];
+const ASK_EXAMPLE = '競技かるたの読みで、余韻の3秒はどこから数える？';
+const SCREEN_CHECKED = '画面の名前は、2026年11月4日にパソコンのブラウザーで確かめたものです。';
+
+function procedure(where: string, path: string, steps: readonly Step[], { checked = SCREEN_CHECKED, file = 'yomimasu.zip' } = {}): string {
+  const save: Step = ['ファイルを保存する', `Web アプリの https://yomimasu.karutalog.com${path} で「${file} を保存」を押します。/yomimasu の知識をまとめたファイルです。開かずに、そのまま次へ進みます。`];
+  return [where, ...[save, ...steps].map(([title, text], i) => `${i + 1}. ${title}：${text}`), `プランによっては使えません。${checked}`].join('\n');
+}
+
+const CLAUDE_STEPS: readonly Step[] = [
+  ['コードの実行をオンにする', '左下の名前から「設定」を開き、「機能」の「クラウドでコードを実行」をオンにします。スキルを使うのに要ります。'],
+  ['ファイルをアップロードする', '左の「カスタマイズ」から「Skills」、「＋追加」、「Skills をアップロード」の順に押します。保存したファイルを選び、「アップロード」を押します。'],
+  ['聞いてみる', `新しいチャットで、読みのことを聞きます。例：${ASK_EXAMPLE}`],
+];
+
+const CHATGPT_STEPS: readonly Step[] = [
+  ['ファイルをアップロードする', '左の「プラグイン」を開き、右上の「追加」から「プラグインアーカイブをアップロード」を押します。保存したファイルを選び、「プラグインを追加」を押します。'],
+  ['プラグインをインストールする', '開いたページで「プラグインをインストール」を押します。'],
+  ['聞いてみる', `ふだんのチャットで、読みのことを聞きます。スキルを指定して聞くときは、入力欄で「@」を打ち、「yomimasu」を選んでから聞きます。例：${ASK_EXAMPLE}`],
+];
+
+const GEMINI_STEPS: readonly Step[] = [
+  ['ファイルをアップロードする', '左の「カスタマイズ」から「スキル」、「作成」、「アップロード」の順に押し、保存したファイルを選びます。'],
+  ['聞いてみる', `新しいチャットで、読みのことを聞きます。例：${ASK_EXAMPLE}`],
+];
+
+// 入れる先を尋ねる画面（/install/）の選択肢と例。選択肢は Web の site/install.ts の INSTALL_TARGETS と同じ順にする。
+const INSTALL_MENU = [
+  '/yomimasu の読みの知識（スキル yomimasu）を、ふだん使う AI に入れます。入れる先を選び、次のどれかを打ち込みます。',
+  '- Claude：`インストール Claude`',
+  '- ChatGPT：`インストール ChatGPT`',
+  '- Gemini：`インストール Gemini`',
+  '- コーディングエージェント（Claude Code、Codex、Cursor など）：`インストール エージェント`',
+  'たとえば：',
+  '- 読みを頼まれた日の前に、5-3-1-6 の要点を教えてほしい',
+  '- 日本語を母語としない自分のために、Wikipedia などの音声学の資料も読ませて、間違えやすい発音を英語で教えてほしい',
+  '- （コーディングエージェントで）大山札が決まり字の前に聞き分けられるか、プログラムを作って確かめたい',
+  '- （コーディングエージェントで）5-3-1-6 の区切りで鳴る、自分の練習用のタイマーを作りたい',
+].join('\n');
 
 export const COMMANDS: readonly Command[] = [
   { button: 'まず1回読む', say: 'まず1回読む', path: '/read/', skill: { open: ['timing.md'], run: 'pair' } },
@@ -35,11 +76,34 @@ export const COMMANDS: readonly Command[] = [
     say: 'インストール',
     read: 'インストール.md',
     path: '/install/',
-    skill: { note: `スキル yomimasu をコーディングエージェント（Claude Code、Codex、Cursor など）に入れる手順は \`インストール エージェント\` で出ます。${UNCHECKED}Claude、ChatGPT、Gemini${NOT_YET}` },
+    skill: { note: INSTALL_MENU },
   },
-  { button: 'Claude', say: 'インストール Claude', read: 'Claudeに入れる.md', path: '/install/claude/', skill: { note: 'Claude' + NOT_YET } },
-  { button: 'ChatGPT', say: 'インストール ChatGPT', read: 'ChatGPTに入れる.md', path: '/install/chatgpt/', skill: { note: 'ChatGPT' + NOT_YET } },
-  { button: 'Gemini', say: 'インストール Gemini', read: 'Geminiに入れる.md', path: '/install/gemini/', skill: { note: 'Gemini' + NOT_YET } },
+  {
+    button: 'Claude',
+    say: 'インストール Claude',
+    read: 'Claudeに入れる.md',
+    path: '/install/claude/',
+    skill: { note: procedure('パソコンのブラウザーで、claude.ai を開いて進めます。', '/install/claude/', CLAUDE_STEPS) },
+  },
+  {
+    button: 'ChatGPT',
+    say: 'インストール ChatGPT',
+    read: 'ChatGPTに入れる.md',
+    path: '/install/chatgpt/',
+    skill: {
+      note: procedure('パソコンのブラウザーで、chatgpt.com を開いて進めます。', '/install/chatgpt/', CHATGPT_STEPS, {
+        checked: '画面の名前は、2026年11月6日にパソコンのブラウザーで確かめたものです。',
+        file: 'yomimasu-chatgpt.zip',
+      }),
+    },
+  },
+  {
+    button: 'Gemini',
+    say: 'インストール Gemini',
+    read: 'Geminiに入れる.md',
+    path: '/install/gemini/',
+    skill: { note: procedure('パソコンのブラウザーで、gemini.google.com を開いて進めます。', '/install/gemini/', GEMINI_STEPS) },
+  },
   {
     button: 'コーディングエージェント',
     say: 'インストール エージェント',

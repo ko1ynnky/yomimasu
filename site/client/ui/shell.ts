@@ -3,7 +3,7 @@ import './shell.css';
 
 // 押したものをターミナルに打ち込み、ひと呼吸置いてから本文を入れ替える殻（docs/ui-guide.md の8節）。
 // ページを読み直さずに main の中だけを入れ替えるので、録音のように端末のメモリーにしかないものを次の画面へ渡せる。
-// 横取りするのはリンクと「戻る」だけで、画面の中のボタン（並べ方、再生、録音など）は各画面の部品のまま、すぐ動く。
+// 横取りするのはリンク、「戻る」、AI に入れる手順のコピーと保存だけで、画面の中のボタン（並べ方、再生、録音など）は各画面の部品のまま、すぐ動く。
 // 音を鳴らすボタンを遅らせて押し直すと、iOS の Safari は利用者の操作として扱わず、音が出ないおそれがある。打ち込む形をボタンにつなぐのは別の作業（Y-18）である。
 
 const PROMPT = '/yomimasu ';
@@ -240,7 +240,10 @@ async function back(button: HTMLElement) {
 
 async function askWhere(button: HTMLElement, term: Terminal | null, prev: string) {
   const group = button.closest<HTMLElement>('.ask') ?? button.closest<HTMLElement>('.back-row')!;
-  const covered = [...group.children].filter((el): el is HTMLElement => el instanceof HTMLElement && !el.matches('.ask-line'));
+  // 入れる先を尋ねる画面では、その問いも隠す。問いが2つ並ぶと、どちらに答えればよいか分からない。
+  const covered = [...group.children, ...document.querySelectorAll('main [data-pick]')].filter(
+    (el): el is HTMLElement => el instanceof HTMLElement && !el.matches('.ask-line'),
+  );
   const prevCommand = await commandFor(prev);
   const options: [string, string][] = [
     ['prev', `1つ前のページ（${prevCommand?.read ?? prevCommand?.say ?? prev}）`],
@@ -293,6 +296,19 @@ async function askWhere(button: HTMLElement, term: Terminal | null, prev: string
   });
 }
 
+// 入れる先の選択肢は打ち込まない。「戻る」の質問と同じく、選んだ答えを問いの下に出し、ひと呼吸置いてから手順の画面へ移る（docs/ui-guide.md の8節「AI に入れる」）。
+async function pick(link: HTMLAnchorElement, url: URL) {
+  const mine = ++generation;
+  busy = true;
+  const page = load(url);
+  const answer = document.createElement('p');
+  answer.className = 'auq-a';
+  answer.textContent = `❯ ${link.dataset.label}`;
+  link.closest('.auq-opts')?.replaceWith(answer);
+  if (!reduced()) await wait(TYPE_MS + HOLD_MS);
+  await arrive(url, page, mine, { push: true, motion: !reduced() });
+}
+
 function choice(text: string, to: string, label: string, className: string) {
   const button = document.createElement('button');
   button.type = 'button';
@@ -306,14 +322,57 @@ function choice(text: string, to: string, label: string, className: string) {
 document.addEventListener('click', (event) => {
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   const link = (event.target as Element).closest?.('a[href]');
-  if (!(link instanceof HTMLAnchorElement) || link.target || link.hasAttribute('download')) return;
+  if (!(link instanceof HTMLAnchorElement) || link.target) return;
+  if (link.hasAttribute('download')) return void reflect(link);
   const url = new URL(link.href);
   // 画面は / で終わる URL にある。ファイルや外のページ、同じ画面の中の見出しへのリンクはブラウザーに任せる。
   if (url.origin !== location.origin || !url.pathname.endsWith('/') || (pathOf(url) === shown && url.hash)) return;
   event.preventDefault();
   if (busy) return;
   if (link.matches('[data-back]')) void back(link);
+  else if (link.closest('[data-pick]')) void pick(link, url);
   else void follow(link, url);
+});
+
+// 保存（yomimasu.zip）は、ボタンの文字を打ち込んで入力の行を空に戻すだけで、保存そのものはブラウザーに任せてすぐ始める。
+// 打ち込んでから保存を始める形は採らない。利用者の操作から時間を空けてファイルを落とすと、ブラウザーが利用者の操作として扱わないおそれがある（iOS の Safari の音と同じ理由）。
+async function reflect(link: HTMLAnchorElement) {
+  if (busy || !link.closest('main')) return;
+  busy = true;
+  const term = await typeIn(sayOfButton(link.textContent?.trim() ?? ''));
+  busy = false;
+  settle(term);
+}
+
+// コピーは押した操作の中でクリップボードに書き始め、打ち込み終えてから結果を出す。書けなければ文字を選んだ状態にして「選びました」と出す。
+// 打ち込んだあとに書き始める形は、保存と同じ理由で採らない。
+const COPY_LABEL = 'コピー';
+const COPY_RESET_MS = 1600;
+
+document.addEventListener('click', async (event) => {
+  const button = (event.target as Element).closest?.<HTMLButtonElement>('main [data-copy]');
+  const code = button?.closest('.cmd')?.querySelector('code');
+  if (!button || !code || busy) return;
+  busy = true;
+  let written: Promise<boolean>;
+  try {
+    written = navigator.clipboard.writeText(code.textContent ?? '').then(
+      () => true,
+      () => false,
+    );
+  } catch {
+    // 安全でない接続（http の別の端末など）では navigator.clipboard がない。
+    written = Promise.resolve(false);
+  }
+  const term = await typeIn(sayOfButton(COPY_LABEL));
+  const copied = await written;
+  busy = false;
+  if (!copied) getSelection()?.selectAllChildren(code);
+  button.textContent = copied ? 'コピーしました' : '選びました';
+  settle(term);
+  setTimeout(() => {
+    if (button.isConnected) button.textContent = COPY_LABEL;
+  }, COPY_RESET_MS);
 });
 
 // ブラウザーの戻る・進む操作では動きを出さない。「戻る」の質問から選んだときだけ、押して開いたときと同じに出す。

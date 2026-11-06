@@ -66,8 +66,22 @@ test('候補の表を開く答えは、区分と出典を添え、メモの内�
   for (const say of ['1首 なげき', 'ポイントを知る']) assert.match(ask(say).text, /区分と出典を添え、読手のメモから来た内容は読手個人のやり方として書く/, say);
 });
 
-test('インストールの答えは、まだ確かめていない手順を、確かめていないと書く', () => {
-  for (const say of ['インストール', 'インストール エージェント']) assert.match(ask(say).text, /まだ確かめていません/, say);
+test('コーディングエージェントに入れる答えは、まだ実行して確かめていない手順を、確かめていないと書く', () => {
+  assert.match(ask('インストール エージェント').text, /まだ確かめていません/);
+});
+
+test('Claude、ChatGPT、Gemini に入れる答えは、保存するファイルからの段を番号つきで返し、「確かめてから足す」とは書かない', () => {
+  for (const [say, file] of [
+    ['インストール Claude', 'yomimasu.zip'],
+    ['インストール ChatGPT', 'yomimasu-chatgpt.zip'],
+    ['インストール Gemini', 'yomimasu.zip'],
+  ]) {
+    const { ok, text } = ask(say);
+    assert.equal(ok, true, say);
+    assert.match(text, new RegExp(`^1\\. ファイルを保存する：.*「${file} を保存」`, 'm'), say);
+    assert.match(text, /^\d\. 聞いてみる：/m, say);
+    assert.doesNotMatch(text, /確かめてから足します/, say);
+  }
 });
 
 test('決まり字の分からない札は、答えずに理由を返す', () => {
