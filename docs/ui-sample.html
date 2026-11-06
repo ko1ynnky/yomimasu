@@ -123,8 +123,11 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
 .menu small { font-family: var(--f-sans); text-align: right; min-width: 0; }
 /* コマンド名は折り返さない。狭い画面では添え書きの側を折り返す */
 .menu span { white-space: nowrap; }
-.menu .first { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; min-height: 64px; background: var(--shu); color: var(--on-shu); font-size: 17px; font-weight: 600; }
-.menu .first small { color: inherit; text-align: left; }
+/* 朱の項目は、先頭と「/練習モード」の2つ。字を大きくして2段に積むのは先頭だけにする */
+.menu .lead { background: var(--shu); color: var(--on-shu); font-weight: 600; }
+.menu .lead small { color: inherit; }
+.menu .first { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; min-height: 64px; font-size: 17px; }
+.menu .first small { text-align: left; }
 
 /* 教科書 */
 .head { font-family: var(--f-serif); font-weight: 700; font-size: 24px; line-height: 1.45; }
@@ -318,12 +321,12 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
   <section class="ask" data-ask>
     <div class="ask-line"><span class="gt">&gt;</span> <span data-typed>/yomimasu </span><span class="caret"></span></div>
     <nav class="menu" aria-label="やれること">
-      <a class="first" href="#/read/"><small>はじめての人はここから</small><span>/まず1回読む</span></a>
+      <a class="lead first" href="#/read/"><small>はじめての人はここから</small><span>/まず1回読む</span></a>
       <a href="#/soron/"><span>/総論を学ぶ</span><small>5-3-1-6 の配分</small></a>
       <a href="#/point/"><span>/ポイントを知る</span></a>
       <a href="#/karuta/"><span>/1首ずつ学ぶ</span><small>100首と序歌</small></a>
       <a href="#/saitei/"><span>/最低限これだけ</span><small>急に頼まれたら</small></a>
-      <a href="#/practice/"><span>/練習モード</span><small>読んで、秒数を測る</small></a>
+      <a class="lead" href="#/practice/"><span>/練習モード</span><small>読んで、秒数を測る</small></a>
       <a href="#/install/"><span>/インストール</span><small>/yomimasuの知識をあなたのAIに</small></a>
     </nav>
   </section>

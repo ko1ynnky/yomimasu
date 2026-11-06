@@ -32,8 +32,12 @@ yomimasu-kv { position: relative; -webkit-touch-callout: none; -webkit-user-sele
 .menu small { font-family: var(--f-sans); text-align: right; min-width: 0; }
 /* コマンド名は折り返さない。狭い画面では添え書きの側を折り返す（幅 375px で「/つまずきどころ」が2行に折れた） */
 .menu span { white-space: nowrap; }
-.menu .first { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; min-height: 64px; background: var(--shu); color: var(--on-shu); font-size: 17px; font-weight: 600; }
-.menu .first small { color: inherit; text-align: left; }
+/* 朱の項目は、先頭の「/まず1回読む」と「/練習モード」の2つにして、学ぶ項目を上下から挟む（docs/ui-guide.md の5節と8節）。
+   字を大きくして2段に積むのは先頭だけにする。「/練習モード」は添え書きを右に置く1行のままにし、一覧の行の高さを変えない */
+.menu .lead { background: var(--shu); color: var(--on-shu); font-weight: 600; }
+.menu .lead small { color: inherit; }
+.menu .first { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; min-height: 64px; font-size: 17px; }
+.menu .first small { text-align: left; }
 /* 一覧の最後の項目と取り違えて押さないよう、一覧から 28px 離す */
 .footnote { padding-top: 28px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .foot-link { display: inline-flex; align-items: center; min-height: 44px; padding-inline: 4px; font-family: var(--f-mono); color: var(--ink-2); }

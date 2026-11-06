@@ -69,6 +69,27 @@ test('入口に、題、標語、入力の行、7つの項目、下端の行を�
   await expect(page.locator('body')).not.toContainText(/考え中|考えました/);
 });
 
+test('入口の一覧は、並びを変えずに、「/まず1回読む」と「/練習モード」の2項目だけを朱に塗る', async ({ page }) => {
+  const SHU = 'rgb(178, 58, 28)';
+  const ON_SHU = 'rgb(255, 253, 249)';
+  const INK = 'rgb(32, 29, 25)';
+  const LEADS = ['/まず1回読む', '/練習モード'];
+  await page.setViewportSize({ width: 393, height: 659 });
+  await page.goto('/');
+  const items = page.getByRole('navigation', { name: 'やれること' }).getByRole('link');
+  const looks = await items.evaluateAll((links) =>
+    links.map((a) => [a.querySelector('span')!.textContent, getComputedStyle(a).backgroundColor, getComputedStyle(a).color]),
+  );
+  expect(looks).toEqual(MENU.map((name) => (LEADS.includes(name) ? [name, SHU, ON_SHU] : [name, 'rgba(0, 0, 0, 0)', INK])));
+  // 朱の上の添え書きも、地に沈まないよう朱の上の字の色にする。
+  await expect(items.first().locator('small')).toHaveCSS('color', ON_SHU);
+  await expect(items.nth(5).locator('small')).toHaveCSS('color', ON_SHU);
+
+  await page.locator('.menu').evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  mkdirSync(ARTIFACTS_DIR, { recursive: true });
+  await page.screenshot({ path: join(ARTIFACTS_DIR, 'home-menu-393x659.png') });
+});
+
 for (const [width, height] of [
   [393, 659],
   [360, 640],
