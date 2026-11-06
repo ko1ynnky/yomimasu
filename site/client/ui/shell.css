@@ -1,7 +1,16 @@
 /* 入口と、殻（shell.ts）が出し入れする部品の見た目。値と意味は docs/ui-guide.md の4、5、8節と、見本の docs/ui-sample.html にある。 */
 
 /* 入口 */
-.hero { display: grid; gap: 8px; padding-block: 20px 16px; }
+.hero { display: grid; gap: 8px; padding-block: 12px 8px; }
+/* 題の下の絵（client/kv.ts）。高さは max(160, min(520, 画面の高さ − 先頭の項目の下端 − 24))px で、先頭の項目の下端は絵の高さを除いて測る。
+   --kv-rest はその下端に 24px を足した値で、kv.ts が測って入れる。既定の値は、JS が測る前の1コマで項目が跳ねないよう、360〜448px の幅で測った値にした。
+   題、絵、入力の行のあいだは詰める（docs/ui-guide.md の8節）。margin で .screen の 16px の間を打ち消す。 */
+yomimasu-kv {
+  display: block; margin-block: -16px; color: var(--ink); font-family: var(--f-sans);
+  height: clamp(160px, calc(100vh - var(--kv-rest, 344px)), 520px);
+  height: clamp(160px, calc(100svh - var(--kv-rest, 344px)), 520px);
+}
+yomimasu-kv canvas { margin-inline: auto; }
 .hero h1 { font-family: var(--f-serif); font-weight: 700; font-size: 30px; line-height: 1.4; }
 .hero p { color: var(--ink-2); }
 .menu { display: grid; overflow: hidden; background: var(--card); border: 1px solid var(--rule); border-radius: 14px; font-family: var(--f-mono); }
@@ -31,6 +40,17 @@
 .auq-opts { display: grid; gap: 6px; }
 .auq-opts .btn { justify-content: flex-start; text-align: left; }
 
+/* 一覧が最初の画面からはみ出すときに、下端の中央に出す「↓」（client/kv.ts）。押せない印で、1.4秒で 4px 浮いて沈む。
+   固定の位置に置く部品はこれだけである（docs/ui-guide.md の4節）。スクロールが始まったら消し、往復も止める */
+.kv-more {
+  position: fixed; left: 50%; bottom: 2px; transform: translateX(-50%); height: 20px; min-width: 48px; padding: 0 14px;
+  display: grid; place-items: center; font: 600 15px/1 var(--f-sans); color: var(--ink-2); background: var(--card);
+  border: 1px solid var(--rule); border-radius: 999px; pointer-events: none; transition: opacity 0.2s;
+  animation: more-bob 1.4s ease-in-out infinite;
+}
+@keyframes more-bob { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -4px); } }
+.kv-more.gone { opacity: 0; animation-play-state: paused; }
+
 /* 入れ替えたあとの焦点の置き場。main 全体に枠を出さない */
 main:focus { outline: none; }
 
@@ -42,4 +62,5 @@ main:focus { outline: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .fade-in { animation: none; }
+  .kv-more { transition: none; animation: none; }
 }
