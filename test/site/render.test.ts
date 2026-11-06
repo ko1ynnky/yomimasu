@@ -85,7 +85,8 @@ test('本文の <!-- ask --> から後ろは、入力の行の下に次の操作
 
 test('タイトルとコマンドの記号は HTML として解釈させない', () => {
   const html = renderDocument({ ...page, title: '<b>&"', command: '<i>' });
-  assert.match(html, /<title>&lt;b&gt;&amp;&quot;<\/title>/);
+  assert.match(html, /<title>&lt;b&gt;&amp;&quot; - \/yomimasu<\/title>/);
+  assert.match(html, /<meta property="og:title" content="&lt;b&gt;&amp;&quot; - \/yomimasu">/);
   assert.match(html, /\/yomimasu &lt;i&gt;/);
 });
 
