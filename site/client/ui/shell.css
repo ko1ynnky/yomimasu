@@ -43,9 +43,12 @@ yomimasu-kv { position: relative; -webkit-touch-callout: none; -webkit-user-sele
 /* 戻る：主の操作の右に細く置く。主の操作を押すつもりで触れないよう、間を 12px 取る */
 .main-row { display: flex; gap: 12px; }
 .next > .main-row { flex-basis: 100%; }
-.main-row > .btn--fill { flex: 1 1 auto; min-width: 0; }
+/* 読む流れでは、再生中の「やめる」など塗りでないボタンが主の操作の場所に入る */
+.main-row > :not(.back) { flex: 1 1 auto; min-width: 0; }
 .btn.back { flex: none; width: 76px; }
 .back-row { display: flex; flex-wrap: wrap; justify-content: flex-end; }
+/* 質問を出しているあいだは、主のボタン群（入力の欄、「戻る」の行、読む流れの data-back-group）の中身を隠す。入力の行は残す（client/ui/shell.ts の askWhere） */
+.is-asking > :not(.ask-line, .auq) { display: none !important; }
 
 /* 「戻る」の質問（Claude Code の AskUserQuestion の形）。主のボタン群と入れ替えて出す */
 .auq { display: grid; gap: 6px; width: 100%; }

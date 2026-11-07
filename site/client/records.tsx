@@ -153,17 +153,23 @@ function Records() {
   if (state.kind === 'loading') return null;
   if (state.kind === 'failed') {
     return (
-      <p role="alert">
-        端末に残した録音を開けませんでした。ページを開き直してください。
-      </p>
+      <>
+        <p role="alert">
+          端末に残した録音を開けませんでした。ページを開き直してください。
+        </p>
+        <AskNext />
+      </>
     );
   }
   const { records } = state;
   if (records.length === 0) {
     return (
-      <p role="status">
-        まだ録音がありません。<a href="/read/">まず1回読む</a>
-      </p>
+      <>
+        <p role="status">
+          まだ録音がありません。<a href="/read/">まず1回読む</a>
+        </p>
+        <AskNext />
+      </>
     );
   }
 

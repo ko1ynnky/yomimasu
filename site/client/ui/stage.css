@@ -56,6 +56,12 @@
    高さは読む前の操作（ボタン 48px が2段と、44px の説明のリンク）が入る分である */
 .controls { flex: none; display: grid; align-content: start; gap: 6px; min-height: 152px; }
 .controls .fine { display: flex; flex-wrap: wrap; align-items: center; column-gap: 1em; }
+/* 読む前の1段目は「読み始める」「例の録音で見る」「戻る」を1段に並べ、段を足さない（docs/ui-guide.md の9節）。
+   幅 375px 以下では「例の録音で見る」が1行に入らない。「見る」を分けずに折り、行を詰めて段の高さを 48px に保つ。「読み始める」は折らない。
+   折って段が 56px になると、360×560 で 5px はみ出した。<wbr> で折る所を決める案は、読み上げの名前が「例の録音で 見る」に割れるので採らなかった */
+.rec-start .btn--fill { min-width: max-content; }
+.rec-start .pair > .btn--line { padding-block: 4px; line-height: 1.25; }
+.rec-start .nobr { white-space: nowrap; }
 .fix-chip { padding: 2px 10px; border-radius: 8px; background: var(--shu-soft); color: var(--shu-deep); font-size: 14px; font-weight: 700; line-height: 1.6; }
 .alert { padding: 12px 14px; display: grid; gap: 8px; }
 .alert b { line-height: 1.6; }

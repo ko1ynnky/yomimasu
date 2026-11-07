@@ -113,6 +113,8 @@ test('入口から、導入、お手本を聞く、読む、結果、前回と�
   const table = page.getByRole('table', { name: '前回と今回' });
   await expect(table).toBeVisible();
   await expect(table.locator('thead th b')).toHaveText(['今回']);
+  // 前回と比べる画面も、「次は？」の塗りのボタンの右に「戻る」を置く。
+  await expect(page.locator('main .ask .next .main-row').getByRole('link')).toHaveText(['もう1回読む', '戻る']);
   await shot('compare');
 
   // ブラウザーの戻る操作で、同じ録音の結果に戻る。
@@ -120,6 +122,16 @@ test('入口から、導入、お手本を聞く、読む、結果、前回と�
   await expect(page).toHaveURL(/\/result\/$/);
   await expect(result.locator('.res')).toBeVisible();
   expect(await valuesOf(page)).toEqual(values);
+
+  // 録音のあとの結果の画面は入口から1つ目ではないので、「戻る」はいつも行き先を尋ね、尋ねるあいだは「次は？」を隠す（docs/ui-guide.md の8節「戻る」）。
+  const next = page.locator('main .ask .next');
+  await next.getByRole('link', { name: '戻る', exact: true }).click();
+  const where = page.getByRole('group', { name: 'どこに戻りますか？' });
+  await expect(where.getByRole('button')).toHaveText(['1. 1つ前のページ（読む ほ あはれ）', '2. トップページ', 'キャンセル']);
+  await expect(next).toBeHidden();
+  await where.getByRole('button', { name: 'キャンセル' }).click();
+  await expect(next).toBeVisible();
+  await expect(next.locator('[data-back]')).toHaveCount(1);
 
   expect(loads).toEqual(['/']);
   expect(await page.evaluate(() => (window as unknown as { sameDocument?: boolean }).sameDocument)).toBe(true);

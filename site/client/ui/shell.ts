@@ -265,19 +265,20 @@ async function back(button: HTMLElement) {
   }
   const term = await typeIn(sayOfButton('戻る'));
   if (mine !== generation) return;
-  busy = false;
+  // 尋ねるときは、質問を付け終えるまで busy のままにする。前の画面の名前を引くあいだ（札の名前の読み込み）に「戻る」をまた押すと、質問が2つ付く。
   if (prev !== '/') return askWhere(button, term, prev);
+  busy = false;
   // 入口へは履歴を戻って移るので、ブラウザーの進む操作で元の画面に戻れる。
   backWithMotion = true;
   history.back();
 }
 
 async function askWhere(button: HTMLElement, term: Terminal | null, prev: string) {
-  const group = button.closest<HTMLElement>('.ask') ?? button.closest<HTMLElement>('.back-row')!;
+  // 質問と入れ替える主のボタン群。教科書の画面は入力の欄か「戻る」だけの行で、読む流れの部品は操作の欄に data-back-group を付ける（ui/back.tsx）。
+  const group = button.closest<HTMLElement>('.ask, [data-back-group]') ?? button.closest<HTMLElement>('.back-row') ?? button.parentElement!;
+  // 群の子に hidden を付けず、群に印を付けて CSS で隠す。子ごとに付けると、部品（Preact）が描き直して作った子は隠れずに出て、「戻る」も2つ目が押せる。
   // 入れる先を尋ねる画面では、その問いも隠す。問いが2つ並ぶと、どちらに答えればよいか分からない。
-  const covered = [...group.children, ...document.querySelectorAll('main [data-pick]')].filter(
-    (el): el is HTMLElement => el instanceof HTMLElement && !el.matches('.ask-line'),
-  );
+  const picks = [...document.querySelectorAll<HTMLElement>('main [data-pick]')];
   const prevCommand = await commandFor(prev);
   const options: [string, string][] = [
     ['prev', `1つ前のページ（${prevCommand?.read ?? prevCommand?.say ?? prev}）`],
@@ -295,8 +296,10 @@ async function askWhere(button: HTMLElement, term: Terminal | null, prev: string
   for (const [i, [to, label]] of options.entries()) choices.append(choice(`${i + 1}. ${label}`, to, label, 'btn'));
   choices.append(choice('キャンセル', 'cancel', 'キャンセル', 'btn btn--line'));
   box.append(question, choices);
-  for (const el of covered) el.hidden = true;
+  group.classList.add('is-asking');
+  for (const el of picks) el.hidden = true;
   group.append(box);
+  busy = false;
   if (!reduced()) await prepare([question], [choices])(() => box.isConnected);
   choices.querySelector('button')?.focus();
 
@@ -306,9 +309,11 @@ async function askWhere(button: HTMLElement, term: Terminal | null, prev: string
     // キャンセルは止める操作なので、打ち込まずにすぐ閉じる。
     if (picked.dataset.to === 'cancel') {
       box.remove();
-      for (const el of covered) el.hidden = false;
+      group.classList.remove('is-asking');
+      for (const el of picks) el.hidden = false;
       settle(term);
-      button.focus();
+      // 尋ねるあいだに部品が描き直して「戻る」を作り直したときは、今の「戻る」へ戻す。
+      (button.isConnected ? button : group.querySelector<HTMLElement>('[data-back]'))?.focus();
       return;
     }
     const answer = document.createElement('p');
