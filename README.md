@@ -47,7 +47,16 @@ npx skills add ko1ynnky/yomimasu --skill yomimasu
 
 入れたら、`/yomimasu 余韻の3秒はどこから数える？` のように聞きます。更新するときは `npx skills update` を実行します。
 
-`--skill yomimasu` を付けると、`yomimasu` だけが入ります。付けないと、このリポジトリの開発用のスキル（`review-pr` と `verify`）も入れる候補に出ます。2026年11月7日に skills 1.7.6 で、空のフォルダーに `-a claude-code -y --copy` も付けて入れ、`.claude/skills/yomimasu` に `yomimasu` だけが入ることを確かめました。選ぶ画面から入れる手順、`npx skills update`、Claude Code 以外のエージェントに入れる手順は確かめていません。読みの知識はスキルに順に足している途中です。
+`--skill yomimasu` を付けると、`yomimasu` だけが入ります。付けないと、このリポジトリの開発用のスキル（`review-pr` と `verify`）も入れる候補に出ます。読みの知識はスキルに順に足している途中です。
+
+skills 1.7.6 を使い、空のフォルダーに入れて次を確かめました。
+
+- 2026年11月7日、Claude Code：`-a claude-code -y --copy` も付けて入れると、`.claude/skills/yomimasu` に `yomimasu` だけが入りました。
+- 2026年11月8日、Codex と Cursor：`-a codex -y` か `-a cursor -y` も付けて入れると、どちらも `.agents/skills/yomimasu` に入りました。Codex CLI 0.164.0 と Cursor の CLI（cursor-agent 2026.11.05）に「競技かるたの読みで、余韻の3秒はどこから数えますか？」と聞くと、どちらも `SKILL.md`、`references/README.md`、`references/timing.md` の順に読み、下の句の最後の字から数えると答えました。
+- 2026年11月8日、Codex で測る：間を2.2秒にした合成音の WAV を置いて `/yomimasu 結果を見る ./reading.wav ほ あはれ` と頼むと、Codex はスキルのスクリプトを自分で実行し、作った音のとおりの秒数（下の句＋余韻 8.0秒、間 2.2秒、上の句 6.0秒）と、次に直す1点「間を1.0秒にそろえる」を返しました。
+- 2026年11月8日、更新：入れたスキルを古い版に見せかけてから `npx skills update -p -y` を実行すると、新しい版を取り直して上書きしました。入れたままの版では、何もしませんでした。
+
+選ぶ画面から入れる手順、`-g`（ユーザー全体）に入れる形、Claude Code に `--copy` を付けずに入れる形、Gemini CLI などほかのエージェントは確かめていません。
 
 ### スキルで読みを測る
 

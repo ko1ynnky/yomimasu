@@ -12,8 +12,8 @@ export type Command = { button: string; say: string; read?: string; path: string
 const CANDIDATES = '候補の表から答えるときは、行の区分と出典を添え、読手のメモから来た内容は読手個人のやり方として書く。';
 
 // `--skill yomimasu` は外さない。リポジトリには開発用のスキル（review-pr、verify）もあり、付けないとそれも入れる候補に並ぶ。
-// 確かめたのは Claude Code に入るところまでなので、ほかは確かめていないと断る（README.md）。
-const AGENT_CHECKED = 'yomimasu だけが入ることを、2026年11月7日に skills 1.7.6 で確かめました。更新と、Claude Code 以外のエージェントに入れる手順は、確かめていません。';
+// 確かめたのは README.md の「AI に入れる」に書いた範囲だけなので、確かめたときのオプションを添え、選ぶ画面、ユーザー全体に入れる形、Codex と Cursor のほかのエージェントは確かめていないと断る。
+const AGENT_CHECKED = 'Claude Code に yomimasu だけが入ることを、2026年11月7日に skills 1.7.6 で、`--copy` を付けて確かめました。2026年11月8日には、Codex と Cursor の CLI に入れて聞くとスキルを読んで答えること、Codex で WAV を測れること、`npx skills update -p -y` で新しい版に替わることも確かめました。選ぶ画面から入れる手順、ユーザー全体に入れる形、Gemini CLI などほかのエージェントは確かめていません。';
 
 // 汎用の AI（Claude、ChatGPT、Gemini）に入れる手順。Web の手順の画面（content/Claudeに入れる.md など）と同じ段と文で書く。
 // Web とスキルは同じ内容を返す決まり（docs/ui-guide.md の8節）なので、食い違いは test/site/install.test.ts が見る。

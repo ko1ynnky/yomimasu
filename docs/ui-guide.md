@@ -683,7 +683,7 @@ Web のボタンが打ち込む文字は、スキルでも同じ内容を返す�
 
 コーディングエージェントの手順（`/install/agent/`）：
 
-- `npx skills add ko1ynnky/yomimasu --skill yomimasu` の1行と、聞いてみる例 `/yomimasu 余韻の3秒はどこから数える？` を出す。`skills` はリポジトリの `.claude/skills/` からスキルを探し、入れる先のエージェントを選ばせる。リポジトリには開発用のスキル（`review-pr`、`verify`）もあり、`--skill yomimasu` を付けないとそれも入れる候補に並ぶので、付けて `yomimasu` だけにする。2026-11-07 に skills 1.7.6 で確かめた（15節の「AI に入れる」の表）。
+- `npx skills add ko1ynnky/yomimasu --skill yomimasu` の1行と、聞いてみる例 `/yomimasu 余韻の3秒はどこから数える？` を出す。`skills` はリポジトリの `.claude/skills/` からスキルを探し、入れる先のエージェントを選ばせる。リポジトリには開発用のスキル（`review-pr`、`verify`）もあり、`--skill yomimasu` を付けないとそれも入れる候補に並ぶので、付けて `yomimasu` だけにする。2026-11-07 に skills 1.7.6 で確かめた。2026-11-08 には、Codex と Cursor の CLI に入れて聞くとスキルを読んで答えること、Codex で WAV を測れること、`npx skills update -p -y` が新しい版を取り直すことを確かめた（15節の「AI に入れる」の表）。手順の下の注記に、更新のコマンドと、Codex と Cursor の CLI で確かめた日と skills の版を出す。
 - 採らなかった案：Claude Code のプラグイン（`claude plugin install`）は、リポジトリに設定のファイルが要り、コマンド名が `/yomimasu:yomimasu` に変わる。版36の「clone して `~/.claude/skills` へ写す」形は、手順が3段になり、更新のたびに写し直す必要がある。
 - スキルだけを配るので、`npx skills add` でも `yomimasu.zip` でも、SKILL.md が指すリポジトリの `docs/measure.md` は付いてこない。スキルで測った答えの末尾に、公開リポジトリの `docs/measure.md` の URL を出し、配った先でも定義をたどれるようにした（#45）。
 - 打ち込む文字は枠（`.cmd`）で出し、右にコピーのボタンを置く。枠の文字はコマンドの行と同じ 14px、行の高さ 1.7 にする。コピーはその場の操作なので、線のボタン（`btn`）にする。コマンドは語の切れ目でだけ折り、折れた続きは字下げする。引数の中で折ると「cp -」と「R」のように割れて読み違えた。値を取るオプション（`--skill yomimasu`）は、名前と値を1つの `span` で包み、間で折らない。横に送る形は、375px でコマンドがどれも途中で切れて全体を読めなかったので、やめた。
@@ -991,6 +991,7 @@ PR ごとに次を確かめる。画面に触る PR は `npm run e2e` の画像�
 | 尋ねる画面の「戻る」 | Playwright の Chromium（動きを減らす設定、375×812）で、手順の画面から尋ねる画面へ移り「戻る」を押した。「どこに戻りますか？」だけが出て、入れる先の問いは隠れる。キャンセルで入れる先の問いに戻り、「1つ前のページ」で手順の画面に戻る |
 | 各社に入れて答えるか | 2026-11-06 に、ユーザーが URL を外した知識の版を入れて試した。Claude と Gemini は、問いに対してスキルを読み込んで答えた。ChatGPT は、スキルとして上げると Work でだけ使い、Chat では使わなかった。プラグインのアーカイブにすると、ふだんの Chat でも使った |
 | コーディングエージェントに入れるコマンド | 2026-11-07 に、公開したリポジトリで skills 1.7.6 を使って確かめた。`npx skills add ko1ynnky/yomimasu --list` はスキルを3つ（`review-pr`、`verify`、`yomimasu`）並べた。空のフォルダーで `--skill yomimasu -a claude-code -y --copy` を付けて入れると、`.claude/skills/yomimasu` に `yomimasu` だけが入った（`SKILL.md`、`references/`、`scripts/`、`assets/`）。`-a` と `-y` を付けなければ、`--skill yomimasu` を付けても入れる先のエージェントを選ぶ画面が出る |
+| Codex と Cursor に入れて答えるか、更新 | 2026-11-08 に skills 1.7.6 で、使い捨ての空のフォルダーで確かめた。`--skill yomimasu -a codex -y` と `--skill yomimasu -a cursor -y`（`--copy` なし）で、どちらも `.agents/skills/yomimasu` に入った。Codex CLI 0.164.0（`codex exec -s read-only`）と cursor-agent 2026.11.05（`cursor-agent -p --trust --mode ask`）に「競技かるたの読みで、余韻の3秒はどこから数えますか？」と聞くと、どちらも `SKILL.md`、`references/README.md`、`references/timing.md` の順に読んだ。Codex は「下の句の最後の字を発し始めたところから」と講習資料 s.8 を挙げて答え、Cursor は「下の句の最後の字から、その字を含めて数える」と答えた。`cursor-agent` は `--trust` がないと、フォルダーを信頼するかを尋ねて止まる（ヘッドレスで動かしたとき）。間を 2.2 秒にした合成音の WAV を置いて Codex に `/yomimasu 結果を見る ./reading.wav ほ あはれ` と頼むと、`node .agents/skills/yomimasu/scripts/yomimasu.ts 結果を見る ./reading.wav ほ あはれ` を自分で実行し、下の句＋余韻 8.0秒、間 2.2秒（ちょっと長い）、上の句 6.0秒と、次に直す1点「間を1.0秒にそろえる」を返した（作った音のとおりの値）。`npx skills update -p -y` は、入れたままでは「All project skills are up to date」と出して何もしなかった。`skills-lock.json` の hash を変え、`SKILL.md` の末尾に1行足して古い版に見せかけると、取り直して上書きし、足した行は消えた |
 
 歌の枠を区切りの形にした見本は、2026-11-04 夜に、Claude のデスクトップアプリのブラウザーのペイン（Chromium）と、iOS のシミュレーターの Safari（iPhone SE 第3世代、375×547）で確かめた。シミュレーターの値は、見本の写しから寸法をローカルのサーバーへ送って読んだ（確認用の写しは残していない）。
 
@@ -1012,7 +1013,7 @@ PR ごとに次を確かめる。画面に触る PR は `npm run e2e` の画像�
 - このアプリが組み立てた `yomimasu-chatgpt.zip` を ChatGPT に入れて、答えるところまで。プラグインの道は、手で作った同じ形の ZIP で確かめた。
 - iOS の Safari での、`yomimasu.zip` の保存とコピーの動き。
 - 無料のプランとスマホのアプリで入れられるか。
-- `npx skills add` の、選ぶ画面から入れる手順と `--copy` を付けない既定の入れ方、Claude Code 以外のエージェント（Codex、Cursor、Gemini CLI など）に入れること、`npx skills update`、入れたあとに聞いて答えるところ。
+- `npx skills add` の、選ぶ画面から入れる手順、`-g`（ユーザー全体）に入れる形、Claude Code に `--copy` を付けずに入れる形、Codex と Cursor のほかのエージェント（Gemini CLI など）に入れること。
 - はんなり明朝で出した歌の見た目。見本の確認に使った環境にフォントがなく、`--f-serif` で出ていた。
 - Android の画面。仮想デバイスの Chrome が初回の同意画面で止まったので、見ていない。`NotoSerifCJK-Regular.ttc` があることだけを確かめた。太字は機械的に作られる見込みである（推測）。
 - 実機、実際のマイク、実際の音声。
