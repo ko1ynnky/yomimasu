@@ -6,6 +6,13 @@ Built with Claude: Japan 2026 の応募作で、期間中にこのリポジト�
 
 2026-11-10 の審査が終わるまで、Issue と PR は受け付けません。
 
+## 審査の方へ
+
+- デモ動画：https://youtu.be/zh4ETlFuMLs （2分57秒）
+- アプリ：https://yomimasu.karutalog.com 。ログインは要りません。マイクを使わずに結果の画面まで見るときは、https://yomimasu.karutalog.com/result/example/ を開きます（[マイクを使わずに結果まで見る](#マイクを使わずに結果まで見る)）。
+- Claude の活用：[Claude の活用と開発の記録](#claude-の活用と開発の記録)にまとめました。ラベルを付けた Issue から GitHub Actions の Claude が自走で開き、マージした PR は8件です（[#6](https://github.com/ko1ynnky/yomimasu/pull/6)、[#17](https://github.com/ko1ynnky/yomimasu/pull/17)、[#22](https://github.com/ko1ynnky/yomimasu/pull/22)、[#36](https://github.com/ko1ynnky/yomimasu/pull/36)、[#38](https://github.com/ko1ynnky/yomimasu/pull/38)、[#39](https://github.com/ko1ynnky/yomimasu/pull/39)、[#47](https://github.com/ko1ynnky/yomimasu/pull/47)、[#56](https://github.com/ko1ynnky/yomimasu/pull/56)）。ほかの PR も、手元のセッションで Claude Code と作りました。
+- 公開アプリは、録音を端末の外へ出さないために、実行時に Claude を呼びません。この決まりは [REVIEW.md](REVIEW.md) の「マージを止める項目」にあります。
+
 ## 提出の時点でできること
 
 - 教科書：入口の「/総論を学ぶ」「/最低限これだけ」「/ポイントを知る」「/1首ずつ学ぶ」から、読みの決まりと要点、序歌と100首の1首ずつのページを読めます。1首のページでは、その札のお手本を聞けます。
