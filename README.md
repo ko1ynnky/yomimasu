@@ -42,12 +42,12 @@ Node.js 22.18 以上で `npm ci` と `npm run dev` を実行すると、http://1
 Claude Code、Codex、Cursor、Gemini CLI などのコーディングエージェントには、ターミナルで次を実行します。入れる先のエージェントを選ぶ画面が出ます。Node.js が要ります。
 
 ```sh
-npx skills add ko1ynnky/yomimasu
+npx skills add ko1ynnky/yomimasu --skill yomimasu
 ```
 
 入れたら、`/yomimasu 余韻の3秒はどこから数える？` のように聞きます。更新するときは `npx skills update` を実行します。
 
-この手順は、リポジトリを公開してから実行して確かめます。読みの知識はスキルに順に足している途中です。
+`--skill yomimasu` を付けると、`yomimasu` だけが入ります。付けないと、このリポジトリの開発用のスキル（`review-pr` と `verify`）も入れる候補に出ます。2026年11月7日に skills 1.7.6 で、空のフォルダーに `-a claude-code -y --copy` も付けて入れ、`.claude/skills/yomimasu` に `yomimasu` だけが入ることを確かめました。選ぶ画面から入れる手順、`npx skills update`、Claude Code 以外のエージェントに入れる手順は確かめていません。読みの知識はスキルに順に足している途中です。
 
 ### スキルで読みを測る
 

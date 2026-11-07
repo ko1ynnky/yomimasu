@@ -11,8 +11,9 @@ export type Command = { button: string; say: string; read?: string; path: string
 // 候補の表は、Web の本文と違い、選ぶ前の行を区分と出典つきで並べている（references/README.md の「書き方の決まり」）。
 const CANDIDATES = '候補の表から答えるときは、行の区分と出典を添え、読手のメモから来た内容は読手個人のやり方として書く。';
 
-// コーディングエージェントに入れる手順は、リポジトリを公開してから実行して確かめる（README.md）。確かめるまで、入れられると言い切らない。
-const UNCHECKED = 'この手順は、リポジトリを公開してから実行して確かめるもので、まだ確かめていません。';
+// `--skill yomimasu` は外さない。リポジトリには開発用のスキル（review-pr、verify）もあり、付けないとそれも入れる候補に並ぶ。
+// 確かめたのは Claude Code に入るところまでなので、ほかは確かめていないと断る（README.md）。
+const AGENT_CHECKED = 'yomimasu だけが入ることを、2026年11月7日に skills 1.7.6 で確かめました。更新と、Claude Code 以外のエージェントに入れる手順は、確かめていません。';
 
 // 汎用の AI（Claude、ChatGPT、Gemini）に入れる手順。Web の手順の画面（content/Claudeに入れる.md など）と同じ段と文で書く。
 // Web とスキルは同じ内容を返す決まり（docs/ui-guide.md の8節）なので、食い違いは test/site/install.test.ts が見る。
@@ -110,7 +111,7 @@ export const COMMANDS: readonly Command[] = [
     read: 'エージェントに入れる.md',
     path: '/install/agent/',
     skill: {
-      note: 'ターミナルで `npx skills add ko1ynnky/yomimasu` を実行し、入れる先のエージェントを選びます。Node.js が要ります。入れたら `/yomimasu 余韻の3秒はどこから数える？` のように聞きます。更新は `npx skills update` です。' + UNCHECKED,
+      note: 'ターミナルで `npx skills add ko1ynnky/yomimasu --skill yomimasu` を実行し、入れる先のエージェントを選びます。Node.js が要ります。入れたら `/yomimasu 余韻の3秒はどこから数える？` のように聞きます。更新は `npx skills update` です。' + AGENT_CHECKED,
     },
   },
   { button: '1首のページ', say: '1首 {札}', read: '{札}.md', path: '/karuta/{札}/', skill: { open: ['card-rules.md', 'card-advice-candidates.md'], run: 'card', note: CANDIDATES } },
