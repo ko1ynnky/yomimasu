@@ -36,11 +36,23 @@ test('再利用の節は、資料から来た内容がどこにあっても MIT 
   assert.match(reuse, /資料から来た内容は、どのファイルにあっても MIT License の範囲外/);
 });
 
-test('お手本の音声は「A級公認読手のお手本」として、使っている形で書く', () => {
+test('お手本の音声は、最初のカードでも出典でも、髙橋A級公認読手の読みを許諾を得て使っていると書く', () => {
   const { markdown } = source();
-  assert.match(markdown, /「A級公認読手のお手本」/);
-  assert.match(markdown, /序歌と100首の上の句と下の句のお手本を、許諾を得て使っています。/);
-  assert.doesNotMatch(markdown, /お手本の音声を使っていません/);
+  const card = markdown.match(/<div><b>お手本の音声<\/b>.*<\/div>/)?.[0] ?? '';
+  const audio = markdown.split('<h3 id="src-audio">')[1].split('## ')[0];
+  for (const [where, text] of [['最初のカード', card], ['出典', audio]]) {
+    assert.match(text, /髙橋A級公認読手の読み/, where);
+    assert.match(text, /許諾を得て使っています/, where);
+  }
+});
+
+test('読手のメモは、髙橋A級公認読手が書いたものとして出典に書く', () => {
+  const memo = source().markdown.split('<h3 id="src-memo">')[1].split('<h3 ')[0];
+  assert.match(memo, /髙橋A級公認読手が書いた/);
+});
+
+test('読手と著者の名前を書かないとは、もう書かない', () => {
+  assert.doesNotMatch(source().markdown, /名前は書きません/);
 });
 
 test('再利用の節は、お手本の音声も再利用を認めないと書く', () => {
