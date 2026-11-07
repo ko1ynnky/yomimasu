@@ -66,12 +66,16 @@ test('候補の表を開く答えは、区分と出典を添え、メモの内�
   for (const say of ['1首 なげき', 'ポイントを知る']) assert.match(ask(say).text, /区分と出典を添え、読手のメモから来た内容は読手個人のやり方として書く/, say);
 });
 
-test('コーディングエージェントに入れる答えは、yomimasu だけを入れるコマンドと、確かめた日と skills の版を書き、確かめていない範囲を断る', () => {
+test('コーディングエージェントに入れる答えは、yomimasu だけを入れるコマンド、確かめた日と skills の版、Codex と Cursor で答えることと更新を確かめたことを書き、確かめていない入れ方とエージェントを断る', () => {
   const { ok, text } = ask('インストール エージェント');
   assert.equal(ok, true);
   assert.ok(text.includes('`npx skills add ko1ynnky/yomimasu --skill yomimasu`'), text);
-  assert.match(text, /2026年11月7日に skills 1\.7\.6 で確かめました/);
-  assert.match(text, /更新と、Claude Code 以外のエージェントに入れる手順は、確かめていません。/);
+  assert.match(text, /Claude Code に yomimasu だけが入ることを、2026年11月7日に skills 1\.7\.6 で、`--copy` を付けて確かめました/);
+  const checked = text.match(/2026年11月8日には、[^。]+も確かめました。/)?.[0] ?? '';
+  for (const fact of ['Codex と Cursor の CLI', '答える', '`npx skills update -p -y`']) assert.ok(checked.includes(fact), `${fact}：${text}`);
+  const unchecked = text.match(/[^。]+は確かめていません。/)?.[0] ?? '';
+  for (const scope of ['選ぶ画面', 'ユーザー全体', 'Gemini CLI']) assert.ok(unchecked.includes(scope), `${scope}：${text}`);
+  assert.doesNotMatch(unchecked, /Codex|Cursor|update/);
   assert.doesNotMatch(text, /まだ確かめていません/);
 });
 

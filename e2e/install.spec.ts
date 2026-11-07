@@ -228,7 +228,7 @@ for (const path of OFFERED) {
       await expect(page.locator('.cmd code')).toHaveText(['npx skills add ko1ynnky/yomimasu --skill yomimasu', '/yomimasu 余韻の3秒はどこから数える？']);
       await expect(page.locator('.list p:has(+ .flow)')).toHaveText(AGENT_FLOW_LEAD);
       await expect(page.getByRole('link', { name: 'yomimasu.zip を保存' })).toHaveCount(0);
-      await expect(page.locator('main .fine')).toContainText('npx skills update');
+      await expect(page.locator('main .fine')).toHaveText(/^更新するときは npx skills update を実行します。2026年11月\d+日に skills \d+\.\d+\.\d+ で、Codex と Cursor の CLI に入れて聞くと、スキルを読んで答えることを確かめました。$/);
     } else {
       // ChatGPT にはプラグインのアーカイブを、Claude と Gemini にはスキルの ZIP を配る（docs/ui-guide.md の8節「保存するファイル」）。
       const file = path === '/install/chatgpt/' ? 'yomimasu-chatgpt.zip' : 'yomimasu.zip';
