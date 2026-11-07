@@ -121,8 +121,8 @@ function headTags(title: string, path: string | undefined): string {
   ].join('\n');
 }
 
-// 「戻る」は入口のほかのどの画面にも置く決まりだが、読む流れ（聞く、読む、練習モード、結果）に置くのは別の作業（Y-18）である。
-// 今は教科書のページ、つまり読んだ行のある画面にだけ置く。
+// 「戻る」は入口のほかのどの画面にも置く（docs/ui-guide.md の8節「戻る」）。ここで置くのは教科書のページ、つまり読んだ行のある画面である。
+// 読む流れ（聞く、読む、練習モード、結果、前回と比べる）は、画面の部品が置く（client/ui/back.tsx）。主の操作が部品の中にあって状態で替わり、録音中は出さないからである。
 export function renderDocument({ title, path, bodyHtml, scriptPath, stylePaths, command, readName, tool }: DocumentParts): string {
   return `<!doctype html>
 <html lang="ja">

@@ -1,10 +1,11 @@
 import { render } from 'preact';
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { startCapture, type Capture } from './capture.ts';
 import { pairLines } from './lyrics.ts';
 import { segmentsOf } from './pair.ts';
 import { keepTake } from './records.ts';
 import type { Take } from './take.ts';
+import { Back } from './ui/back.tsx';
 import { go } from './ui/shell.ts';
 import { cards, pairOf, Stage } from './ui/stage.tsx';
 
@@ -124,6 +125,22 @@ function RecState({ elapsed }: { elapsed: number | null }) {
     [],
   );
   return null;
+}
+
+// 殻（ui/shell.ts）も押したもの（「戻る」など）を data-run の行へ打ち込むので、字は Preact の子にせず、変わったときに書き込む。
+// Preact の子にすると、殻が書き換えたあとの描き直し（「読み終えた」の打ち込み）が、外れた字の節を直して画面に出ない。
+function RunLine({ text }: { text: string }) {
+  const line = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    if (line.current) line.current.textContent = `/yomimasu ${text}`;
+  }, [text]);
+  return (
+    <div class="run">
+      <div>
+        <span class="gt">&gt;</span> <span data-run ref={line} />
+      </div>
+    </div>
+  );
 }
 
 function Recorder({ fix }: { fix?: string }) {
@@ -286,15 +303,7 @@ function Recorder({ fix }: { fix?: string }) {
 
   const sending = closing || typed !== null;
   // 読み直しの1行は実行の行の代わりに出す。打ち込むときは、実行の行に戻す。
-  const run = fix && typed === null ? (
-    <div class="fix-chip">直す1点：{fix}</div>
-  ) : (
-    <div class="run">
-      <div>
-        <span class="gt">&gt;</span> /yomimasu {typed ?? `読む ${kimariji}`}
-      </div>
-    </div>
-  );
+  const run = fix && typed === null ? <div class="fix-chip">直す1点：{fix}</div> : <RunLine text={typed ?? `読む ${kimariji}`} />;
 
   return (
     <>
@@ -320,18 +329,26 @@ function Recorder({ fix }: { fix?: string }) {
           </div>
         )}
       </Stage>
-      <div class="controls">
+      {/* 「戻る」は読む前と失敗の案内にだけ置き、マイクを開き始めてから録音を終えるまでは出さない（docs/ui-guide.md の8節「戻る」）。尋ねるあいだは操作の欄ごと質問と入れ替える */}
+      <div class="controls" data-back-group>
         {view.kind === 'idle' && (
           <>
-            {/* 見本は「例の録音で見る」を注記の行に置くが、注記の行が2段になり、360×560 で 41px はみ出した。読み始めると同じ場所に「やめる」「読み終えた」が並ぶ */}
-            <div class="pair">
-              <button class="btn btn--fill" type="button" onClick={start}>
-                <Icon path={REC_ICON} />
-                読み始める
-              </button>
-              <a class="btn btn--line" href={EXAMPLE_RESULT}>
-                例の録音で見る
-              </a>
+            {/* 見本は「例の録音で見る」を注記の行に置くが、注記の行が2段になり、360×560 で 41px はみ出した。読み始めると同じ場所に「やめる」「読み終えた」が並ぶ。
+                「戻る」も段を足さずに同じ段の右端に置く。段を足すと 360×560 に収まらない */}
+            <div class="main-row rec-start">
+              <div class="pair">
+                <button class="btn btn--fill" type="button" onClick={start}>
+                  <Icon path={REC_ICON} />
+                  読み始める
+                </button>
+                <a class="btn btn--line" href={EXAMPLE_RESULT}>
+                  {/* ボタンは flex なので、外の span で1つの箱にまとめる。まとめないと「例の録音で」と「見る」が別の箱になり、読み上げの名前も割れる */}
+                  <span>
+                    例の録音で<span class="nobr">見る</span>
+                  </span>
+                </a>
+              </div>
+              <Back />
             </div>
             <div class="pair">
               <button class="btn" type="button" aria-pressed={assisted} onClick={() => setAssisted(true)}>
@@ -366,9 +383,13 @@ function Recorder({ fix }: { fix?: string }) {
           <div class="card alert" role="alert">
             <b>{FAILURES[view.failure][0]}</b>
             <p class="fine">{FAILURES[view.failure][1]}</p>
-            <button class="btn btn--fill" type="button" onClick={start}>
-              もう一度試す
-            </button>
+            <div class="main-row">
+              <button class="btn btn--fill" type="button" onClick={start}>
+                もう一度試す
+              </button>
+              <Back />
+            </div>
+            {/* 「教科書へ戻る」は 9節と11節の表が決めた失敗の案内の操作なので残す。「戻る」は8節の決まりで、塗りのボタンの右に足す */}
             <div class="pair">
               <a class="btn btn--line" href={EXAMPLE_RESULT}>
                 例の録音で見る

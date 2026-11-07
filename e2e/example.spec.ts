@@ -94,10 +94,12 @@ for (const { maSec, judgement, point } of [
     await expect(card.locator('.t')).toHaveText(point.fix);
     await expect(card).toContainText(point.how);
     // 例の録音は利用者が読んだものではないので、塗りのボタンは「もう1回読む」ではなく同じ組を読んでみる誘いにする。端末に残さないので、前回と比べる画面へは進めない。
+    // 塗りのボタンの右には「戻る」を置く（docs/ui-guide.md の8節「戻る」）。
     const next = page.locator('main .ask .next .btn');
-    await expect(next).toHaveText([texts.points.ma.link, '読んでみる']);
-    await expect(next.last()).toHaveClass(/btn--fill/);
-    await expect(next.last()).toHaveAttribute('href', EXAMPLE_AGAIN);
+    await expect(next).toHaveText([texts.points.ma.link, '読んでみる', '戻る']);
+    const fill = page.locator('main .ask .next .btn--fill');
+    await expect(fill).toHaveText('読んでみる');
+    await expect(fill).toHaveAttribute('href', EXAMPLE_AGAIN);
 
     expect(asked).toEqual([EXAMPLE_AUDIO]);
     expect(sent).toEqual([]);

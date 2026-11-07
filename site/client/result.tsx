@@ -4,7 +4,7 @@ import type { Measurement } from '../../.claude/skills/yomimasu/scripts/measure.
 import { nextPoint } from '../../.claude/skills/yomimasu/scripts/next-point.ts';
 import { loadExample } from './example.ts';
 import { ListenBack } from './listen-back.tsx';
-import { againUrl, NextPoint } from './next-point.tsx';
+import { AskNext, againUrl, NextPoint } from './next-point.tsx';
 import { latestKept, listRecords } from './records.ts';
 import { lastTake, measurementOf, type Take } from './take.ts';
 import { levelSentence, NOT_MEASURED, noticeOf, resultRows, UNMEASURED_ROW } from './verdict.ts';
@@ -100,9 +100,12 @@ function OwnScreen() {
   if (shown === undefined) return null;
   if (!shown) {
     return (
-      <p role="status">
-        まだ録音がありません。<a href="/read/">まず1回読む</a>
-      </p>
+      <>
+        <p role="status">
+          まだ録音がありません。<a href="/read/">まず1回読む</a>
+        </p>
+        <AskNext />
+      </>
     );
   }
   const { take } = shown;
@@ -135,9 +138,12 @@ function ExampleScreen() {
   if (shown === undefined) return null;
   if (!shown) {
     return (
-      <p role="status">
-        例の録音を読み込めませんでした。<a href="/">入口へ戻る</a>
-      </p>
+      <>
+        <p role="status">
+          例の録音を読み込めませんでした。<a href="/">入口へ戻る</a>
+        </p>
+        <AskNext />
+      </>
     );
   }
   return <Result take={shown.take} measurement={shown.measurement} example />;

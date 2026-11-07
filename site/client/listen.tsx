@@ -4,11 +4,13 @@ import type { Card } from '../../.claude/skills/yomimasu/scripts/cards.ts';
 import { pairLines } from './lyrics.ts';
 import { DEFAULT_PAIR, pairFromSearch, segmentsOf, type CardNo, type Pair } from './pair.ts';
 import { pairLoader, play, storedAudioSource, type Playback } from './playback.ts';
+import { Back } from './ui/back.tsx';
 import { Band } from './ui/band.tsx';
 import { cards, pairOf, Stage } from './ui/stage.tsx';
 
 // 聞く画面（C1）と、練習モードの組の選択（A1）。
-// 押したらターミナルに打ち込む形、冒頭の文を流す形、「戻る」は Y-12 が作るので、ここには入れない。Y-18 でつなぐ。
+// 押したらターミナルに打ち込む形と冒頭の文を流す形は Y-12 が作るので、ここには入れない。Y-18 でつなぐ。
+// 「戻る」は塗りのボタンの右に置き、尋ねるあいだは操作の欄（data-back-group）を質問と入れ替える（docs/ui-guide.md の8節「戻る」）。
 // 画面の CSS を置くファイルはこの Issue の範囲の外なので、見た目は STYLE に持つ。Y-18 で listen.css へ移す。
 const STYLE = `
 yomimasu-listen { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10px; }
@@ -24,6 +26,7 @@ yomimasu-listen { flex: 1 1 auto; display: flex; flex-direction: column; gap: 10
 .choose { display: grid; gap: 8px; padding: 12px 14px; }
 .choose label { display: grid; gap: 4px; font-size: 14px; color: var(--ink-2); }
 .choose select { min-height: 44px; padding: 6px 10px; border: 1px solid var(--rule); border-radius: 10px; background: var(--card); color: var(--ink); font-family: var(--f-uta); font-size: 16px; }
+.practice { display: contents; }
 `;
 
 // 帯と歌の後ろの色を ①② で説明する段は置かない。歌の枠から帯と地の減りをなくしたからである（ui-guide 8節。2026-11-04 夜のユーザーの判断）。
@@ -193,18 +196,27 @@ function Listen() {
           <Stage segments={segments} lines={lines} t={t ?? 0} notationLocked={step < 3 || playing} />
         </>
       )}
-      <div class="listen-controls">
+      <div class="listen-controls" data-back-group>
         {failed && (
           <div class="card listen-alert" role="alert">
             <p>{LOAD_FAILED}</p>
           </div>
         )}
         {step === 1 && (
-          <button class="btn btn--fill" type="button" onClick={() => go(2)}>
-            次へ
-          </button>
+          <div class="main-row">
+            <button class="btn btn--fill" type="button" onClick={() => go(2)}>
+              次へ
+            </button>
+            <Back />
+          </div>
         )}
-        {step === 2 && listenButton('btn btn--fill')}
+        {/* 再生中は塗りのボタンが「やめる」に替わるが、行の形を変えないよう「戻る」は残す */}
+        {step === 2 && (
+          <div class="main-row">
+            {listenButton('btn btn--fill')}
+            <Back />
+          </div>
+        )}
         {/* 段3へは聞き終えたときに進むので、読み込めないと行き止まりになる。読み込めなかったときだけ、聞かずに進む道を出す */}
         {step === 2 && failed && (
           <button class="btn btn--line" type="button" onClick={() => go(3)}>
@@ -214,9 +226,12 @@ function Listen() {
         {step === 3 && (
           <>
             {listenButton('btn')}
-            <a class="btn btn--fill" href={`/read/rec/${pairQuery(pair)}`}>
-              読んでみる
-            </a>
+            <div class="main-row">
+              <a class="btn btn--fill" href={`/read/rec/${pairQuery(pair)}`}>
+                読んでみる
+              </a>
+              <Back />
+            </div>
             {!chosen && (
               <button class="link-btn" type="button" onClick={() => go(1)}>
                 はじめの説明をもう一度見る
@@ -273,38 +288,44 @@ function Practice() {
   const [kami, setKami] = useState('');
   const pair = shimo && kami && shimo !== kami ? { shimo: Number(shimo), kami: Number(kami) } : null;
 
+  // 組を選ぶカードも主のボタン群に入れ、尋ねるあいだは隠す。箱は display: contents なので、並びと間は変わらない。
   return (
     <>
       <style>{STYLE}</style>
-      <div class="listen-controls">
-        <a class="btn btn--fill" href={`/read/rec/${pairQuery(random)}`}>
-          ランダムに出題する
-        </a>
-        <button class="btn btn--line" type="button" aria-expanded={choosing} onClick={() => setChoosing(!choosing)}>
-          自分で選ぶ
-        </button>
-      </div>
-      {choosing && (
-        <div class="card choose">
-          <CardSelect label="下の句の札" value={shimo} onChange={setShimo} />
-          <CardSelect label="上の句の札" value={kami} onChange={setKami} />
-          {shimo && kami && shimo === kami && <p class="fine">下の句と上の句は別の札から選びます。</p>}
-          {pair && (
-            <>
-              <PairName pair={pair} />
-              <div class="pair">
-                <a class="btn" href={`/read/${pairQuery(pair)}`}>
-                  お手本を聞く
-                </a>
-                <a class="btn" href={`/read/rec/${pairQuery(pair)}`}>
-                  読む
-                </a>
-              </div>
-            </>
-          )}
+      <div class="practice" data-back-group>
+        <div class="listen-controls">
+          <div class="main-row">
+            <a class="btn btn--fill" href={`/read/rec/${pairQuery(random)}`}>
+              ランダムに出題する
+            </a>
+            <Back />
+          </div>
+          <button class="btn btn--line" type="button" aria-expanded={choosing} onClick={() => setChoosing(!choosing)}>
+            自分で選ぶ
+          </button>
         </div>
-      )}
-      <p class="fine">ランダムは、下の句と上の句を別々の札から選びます。</p>
+        {choosing && (
+          <div class="card choose">
+            <CardSelect label="下の句の札" value={shimo} onChange={setShimo} />
+            <CardSelect label="上の句の札" value={kami} onChange={setKami} />
+            {shimo && kami && shimo === kami && <p class="fine">下の句と上の句は別の札から選びます。</p>}
+            {pair && (
+              <>
+                <PairName pair={pair} />
+                <div class="pair">
+                  <a class="btn" href={`/read/${pairQuery(pair)}`}>
+                    お手本を聞く
+                  </a>
+                  <a class="btn" href={`/read/rec/${pairQuery(pair)}`}>
+                    読む
+                  </a>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+        <p class="fine">ランダムは、下の句と上の句を別々の札から選びます。</p>
+      </div>
     </>
   );
 }

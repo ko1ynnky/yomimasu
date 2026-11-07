@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { createPortal } from 'preact/compat';
 import type { NextPoint as Answer, Pair, Point } from '../../.claude/skills/yomimasu/scripts/next-point.ts';
+import { Back } from './ui/back.tsx';
 import './next-point.css';
 
 type Link = Point['link'];
@@ -9,10 +10,20 @@ type Link = Point['link'];
 export const againUrl = ({ shimo, kami }: Pair) => `/read/rec/?shimo=${shimo}&kami=${kami}`;
 
 // 「次は？」は画面の組み立て（render.ts）が置く入力の欄の中にあり、この部品の外にある。結果の部品の中に別の欄を作ると、入力の行が2つに見える。
-export function AskNext({ links = [], again }: { links?: readonly Link[]; again: Link }) {
+// 「戻る」も同じ欄に置き、並べ方は教科書の画面（render.ts の withBack）に合わせる。塗りのボタンがあればその右に、なければ「戻る」だけを右に寄せる。
+// 尋ねるあいだは殻（ui/shell.ts）が欄の中身を隠すので、ここで描き直した子も隠れたままになる。
+export function AskNext({ links = [], again }: { links?: readonly Link[]; again?: Link }) {
   const [ask, setAsk] = useState<Element | null>(null);
   useEffect(() => setAsk(document.querySelector('.screen > .ask')), []);
   if (!ask) return null;
+  if (!again) {
+    return createPortal(
+      <div class="back-row">
+        <Back />
+      </div>,
+      ask,
+    );
+  }
   return createPortal(
     <>
       <p class="ask-q">次は？</p>
@@ -22,9 +33,12 @@ export function AskNext({ links = [], again }: { links?: readonly Link[]; again:
             {link.label}
           </a>
         ))}
-        <a class="btn btn--fill" href={again.url}>
-          {again.label}
-        </a>
+        <div class="main-row">
+          <a class="btn btn--fill" href={again.url}>
+            {again.label}
+          </a>
+          <Back />
+        </div>
       </div>
     </>,
     ask,
