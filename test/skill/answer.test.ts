@@ -66,8 +66,13 @@ test('候補の表を開く答えは、区分と出典を添え、メモの内�
   for (const say of ['1首 なげき', 'ポイントを知る']) assert.match(ask(say).text, /区分と出典を添え、読手のメモから来た内容は読手個人のやり方として書く/, say);
 });
 
-test('コーディングエージェントに入れる答えは、まだ実行して確かめていない手順を、確かめていないと書く', () => {
-  assert.match(ask('インストール エージェント').text, /まだ確かめていません/);
+test('コーディングエージェントに入れる答えは、yomimasu だけを入れるコマンドと、確かめた日と skills の版を書き、確かめていない範囲を断る', () => {
+  const { ok, text } = ask('インストール エージェント');
+  assert.equal(ok, true);
+  assert.ok(text.includes('`npx skills add ko1ynnky/yomimasu --skill yomimasu`'), text);
+  assert.match(text, /2026年11月7日に skills 1\.7\.6 で確かめました/);
+  assert.match(text, /更新と、Claude Code 以外のエージェントに入れる手順は、確かめていません。/);
+  assert.doesNotMatch(text, /まだ確かめていません/);
 });
 
 test('Claude、ChatGPT、Gemini に入れる答えは、保存するファイルからの段を番号つきで返し、「確かめてから足す」とは書かない', () => {

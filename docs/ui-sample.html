@@ -451,11 +451,10 @@ small, .fine { font-size: 13px; line-height: 1.7; color: var(--ink-3); }
   <h2 class="head">コーディング<br>エージェントに入れる</h2>
   <p>ターミナルで1行実行して入れます。</p>
   <div class="card rows list">
-    <div><span class="n">1</span><div><b>ターミナルで実行する</b><p>入れる先のエージェント（Claude Code、Codex、Cursor、Gemini CLI など）を選ぶ画面が出ます。Node.js が要ります。</p><div class="cmd"><code><span>npx</span> <span>skills</span> <span>add</span> <span>ko1ynnky/yomimasu</span></code><button class="btn" type="button" data-copy>コピー</button></div></div></div>
+    <div><span class="n">1</span><div><b>ターミナルで実行する</b><p>入れる先のエージェント（Claude Code、Codex、Cursor、Gemini CLI など）を選ぶ画面が出ます。Node.js が要ります。</p><div class="cmd"><code><span>npx</span> <span>skills</span> <span>add</span> <span>ko1ynnky/yomimasu</span> <span>--skill yomimasu</span></code><button class="btn" type="button" data-copy>コピー</button></div></div></div>
     <div><span class="n">2</span><div><b>聞いてみる</b><div class="cmd"><code><span>/yomimasu</span> 余韻の3秒はどこから数える？</code><button class="btn" type="button" data-copy>コピー</button></div></div></div>
   </div>
   <p class="fine">更新するときは <code>npx skills update</code> を実行します。</p>
-  <p class="fine">見本の注記：リポジトリは提出の時点で公開します。それまでこのコマンドは動きません。</p>
   <section class="ask" data-ask>
     <div class="ask-line"><span class="gt">&gt;</span> <span data-typed>/yomimasu </span><span class="caret"></span></div>
     <p class="ask-q">次は？</p>

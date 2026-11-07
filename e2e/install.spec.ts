@@ -225,7 +225,7 @@ for (const path of OFFERED) {
     for (const [i, question] of (expected.flows ?? []).entries()) await expectFlow(flows.nth(i), question);
 
     if (path === '/install/agent/') {
-      await expect(page.locator('.cmd code')).toHaveText(['npx skills add ko1ynnky/yomimasu', '/yomimasu 余韻の3秒はどこから数える？']);
+      await expect(page.locator('.cmd code')).toHaveText(['npx skills add ko1ynnky/yomimasu --skill yomimasu', '/yomimasu 余韻の3秒はどこから数える？']);
       await expect(page.locator('.list p:has(+ .flow)')).toHaveText(AGENT_FLOW_LEAD);
       await expect(page.getByRole('link', { name: 'yomimasu.zip を保存' })).toHaveCount(0);
       await expect(page.locator('main .fine')).toContainText('npx skills update');
@@ -278,7 +278,7 @@ test('コピーを押すと、打ち込んでからクリップボードに書�
   const copy = page.locator('.cmd').first().getByRole('button');
   await copy.click();
   await expect(copy).toHaveText('コピーしました');
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('npx skills add ko1ynnky/yomimasu');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe('npx skills add ko1ynnky/yomimasu --skill yomimasu');
   expect(await typedSeen(page)).toContain('/yomimasu コピー');
   await expect(page.locator('.ask-line')).toHaveText('> /yomimasu ');
   await expect(copy).toHaveText('コピー', { timeout: 3000 });

@@ -406,6 +406,8 @@
   - ZIP の中の出典は URL をたどれない。資料の名前と参照日から探すか、リポジトリの同じファイルを見ることになる。リポジトリは公開する前である。
   - URL を外す正規表現は、空白、かっこ、かぎかっこ、句読点で URL が終わるとみなす。それ以外で終わる URL の後ろが残っても、`http://` と `https://` が残らないことだけはテストで確かめている。
   - `npx skills add ko1ynnky/yomimasu` は、リポジトリを公開するまで動かない。公開は 11/7 の予定で、画面には断りを出さない。出すと公開のあとに消し忘れる。
+    - 改めた点（2026-11-07）：リポジトリを公開したあとに skills 1.7.6 で確かめると、`npx skills add ko1ynnky/yomimasu --list` は `yomimasu` のほかに開発用のスキル（`review-pr`、`verify`）も並べた。このままでは、使う人に開発用のスキルも入れる候補として出る。案内するコマンドを `npx skills add ko1ynnky/yomimasu --skill yomimasu` に改め、README、`/install/agent/`、見本、スキルの `インストール エージェント` の答え、ガイド8節と15節をそろえた。空のフォルダーで `--skill yomimasu -a claude-code -y --copy` を付けて入れると、`.claude/skills/yomimasu` に `yomimasu` だけが入った。`-a` と `-y` を付けなければ、入れる先のエージェントを選ぶ画面は出るので、`/install/agent/` の「選ぶ画面が出ます」の文は変えていない。スキルの答えの「まだ確かめていません」は、確かめた日と版、確かめていない範囲に替えた。見本の「提出の時点で公開します。それまでこのコマンドは動きません。」の注記は外した。選ぶ画面から入れる手順と `--copy` を付けない既定の入れ方、Claude Code 以外のエージェントに入れること、`npx skills update`、入れたあとの答えは確かめていない。
+    - 採らなかった案：開発用のスキルを `.claude/skills/` の外へ移す案。Claude Code がリポジトリのスキルとして読む場所で、`/verify`（AGENTS.md）と `/review-pr`（`.github/workflows/review.yml`）が使っている。
   - iOS の Safari での保存とコピーは確かめていない。
   - deflate の出力は Node の `zlib` の版で変わりうる。同じ版の中で同じバイト列になることだけを確かめた。
 
