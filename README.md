@@ -105,7 +105,7 @@ Claude、ChatGPT、Gemini には、Web アプリの https://yomimasu.karutalog.c
 
 ## Claude の活用と開発の記録
 
-Claude Code を開発の中心に置き、1人で次の体制を組みました。まとめ役のセッションが、仕事を別のセッションに切り出します。私が Issue にラベルを付けると、GitHub Actions の Claude が実装から PR の作成、レビュー、修正まで進めます。競技かるたの読みの知識は、協会の許可の範囲で Agent Skill `/yomimasu` にまとめ、実装する Claude にも利用者にも同じ知識を渡します。公開アプリは実行時に Claude を呼びません。次に直す1点を選ぶ規則は、開発のときに14通りの数値を Claude に評価させ、評価が規則の答えと一致することを確かめてから決めました。私の判断が要る所は、Claude が Artifact に並べて見せました。
+Claude Code を開発の中心に置き、1人で次の体制を組みました。まとめ役のセッションが、仕事を別のセッションに切り出します。私が Issue にラベルを付けると、GitHub Actions の Claude が実装から PR の作成、レビュー、修正まで進めます。競技かるたの読みの知識は、協会の許可の範囲で Agent Skill `/yomimasu` にまとめ、実装する Claude にも利用者にも同じ知識を渡します。スキルが実際に役立つかを確かめるため、Web アプリもこのスキルを通して作りました。コードを書く前の最初のコミット（[c3ca69f](https://github.com/ko1ynnky/yomimasu/commit/c3ca69f95ff35e3d391b5a0ea8f9947f087da444)）の AGENTS.md で、「読みや測定に触る Issue は、`/yomimasu` の読み込みから始める」と決めています。Web アプリは、スキルの札の表と、測定と次に直す1点のスクリプトをそのまま読み込んでいます（例：[site/build.ts](site/build.ts) が札の表を、[site/client/take.ts](site/client/take.ts) が `scripts/measure.ts` を読み込みます）。公開アプリは実行時に Claude を呼びません。次に直す1点を選ぶ規則は、開発のときに14通りの数値を Claude に評価させ、評価が規則の答えと一致することを確かめてから決めました。私の判断が要る所は、Claude が Artifact に並べて見せました。
 
 仕組みと記録は次の場所にあります。
 
