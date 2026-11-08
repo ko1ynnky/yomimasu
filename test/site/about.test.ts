@@ -103,3 +103,12 @@ test('読手のメモは、協会の基準ではなく読手個人のやり方�
   const memo = source().markdown.split('<h3 id="src-memo">')[1].split('<h3 ')[0];
   assert.match(memo, /協会の基準ではなく、読手個人のやり方です。/);
 });
+
+test('最初のカードの最後に、作者へのメールと X の問い合わせ先を置く', () => {
+  const card = source().markdown.split('<div class="card rows points">')[1].split('\n</div>')[0];
+  const rows = card.trim().split('\n');
+  const contact = rows.at(-1) ?? '';
+  assert.match(contact, /^<div><b>問い合わせ<\/b>/);
+  assert.match(contact, /<a href="mailto:koichi\.okuda\.dev@gmail\.com">koichi\.okuda\.dev@gmail\.com<\/a>/);
+  assert.match(contact, /<a href="https:\/\/x\.com\/0kdynnkw">@0kdynnkw<\/a>/);
+});
