@@ -10,8 +10,12 @@ Built with Claude: Japan 2026 の応募作で、期間中にこのリポジト�
 
 - デモ動画：https://youtu.be/FTb_2Lg6iB0 （2分59秒）。アプリを実際に使う場面は 1:37〜2:29 で、https://youtu.be/FTb_2Lg6iB0?t=97 からそこを再生できます。
 - アプリ：https://yomimasu.karutalog.com 。ログインは要りません。マイクを使わずに結果の画面まで見るときは、https://yomimasu.karutalog.com/result/example/ を開きます（[マイクを使わずに結果まで見る](#マイクを使わずに結果まで見る)）。
-- Claude の活用：[Claude の活用と開発の記録](#claude-の活用と開発の記録)にまとめました。ラベルを付けた Issue から GitHub Actions の Claude が自走で開き、マージした PR は8件です（[#6](https://github.com/ko1ynnky/yomimasu/pull/6)、[#17](https://github.com/ko1ynnky/yomimasu/pull/17)、[#22](https://github.com/ko1ynnky/yomimasu/pull/22)、[#36](https://github.com/ko1ynnky/yomimasu/pull/36)、[#38](https://github.com/ko1ynnky/yomimasu/pull/38)、[#39](https://github.com/ko1ynnky/yomimasu/pull/39)、[#47](https://github.com/ko1ynnky/yomimasu/pull/47)、[#56](https://github.com/ko1ynnky/yomimasu/pull/56)）。ほかの PR も、手元のセッションで Claude Code と作りました。
-- 公開アプリは、録音を端末の外へ出さないために、実行時に Claude を呼びません。この決まりは [REVIEW.md](REVIEW.md) の「マージを止める項目」にあります。
+- Claude の活用：詳しくは[Claude の活用と開発の記録](#claude-の活用と開発の記録)にあります。要点は次の3つです。
+  - 読みの知識を、開発する Claude と利用者で共有しました。競技かるたの読みの知識と測定のコードを Agent Skill `/yomimasu` にまとめ、両方に同じスキルを渡します。Web アプリも、スキルの測定のスクリプトをそのまま読み込みます（[site/client/take.ts](site/client/take.ts)）。
+  - Claude Code を中心に、1人で開発を回しました。期間中にマージした PR は70件を超えます。そのうち8件は、ラベルを付けた Issue から GitHub Actions の Claude が自走で開いたものです（[#6](https://github.com/ko1ynnky/yomimasu/pull/6)、[#17](https://github.com/ko1ynnky/yomimasu/pull/17)、[#22](https://github.com/ko1ynnky/yomimasu/pull/22)、[#36](https://github.com/ko1ynnky/yomimasu/pull/36)、[#38](https://github.com/ko1ynnky/yomimasu/pull/38)、[#39](https://github.com/ko1ynnky/yomimasu/pull/39)、[#47](https://github.com/ko1ynnky/yomimasu/pull/47)、[#56](https://github.com/ko1ynnky/yomimasu/pull/56)）。その PR は、別の実行の Claude が [REVIEW.md](REVIEW.md) でレビューします。ほかの PR も、手元のセッションで Claude Code と作りました。
+  - 目的ごとに機能を分けました。スキルは、知識と測定の `yomimasu`、動かして確かめる `verify`、PR をレビューする `review-pr` の3つです。ほかに、読み取りだけのレビュー担当のサブエージェント（[reviewer.md](.claude/agents/reviewer.md)）と、音声ファイルと鍵の書き込みを止める hook（[.claude/hooks/](.claude/hooks/)）を置きました。私の判断が要る所は、Claude が Artifact に並べて見せました。札の読みの表を協会の一覧と照らすときは、Claude が序歌と100首のふりがなと伸ばす所を Artifact に並べ、私が1首ずつ確かめました。表を変えたのは54番の1か所です（[docs/decisions.md](docs/decisions.md) の「2026-11-04 54番の四句の「けふ」を…」）。
+- 公開アプリは、録音を端末の外へ出さないために、実行時に Claude を呼びません。この決まりは [REVIEW.md](REVIEW.md) の「マージを止める項目」にあります。次に直す1点を選ぶ規則は、開発のときに14通りの数値を Claude に評価させ、規則の答えと一致することを確かめてから決めました（[PR #38](https://github.com/ko1ynnky/yomimasu/pull/38) の「Claude の記録」）。
+- 測る範囲：良し悪しを判定するのは、下の句＋余韻、間、上の句の3つの秒数です。余韻だけの秒数は誤差が目標に届かず、決まり字までの速さは基にするお手本の値をまだ入れていないので、どちらも出しません。声の明瞭さは測りません。測り方の定義と、人が付けた正解データとはまだ比べていないことは、[docs/measure.md](docs/measure.md) にあります。
 
 ## 提出の時点でできること
 
