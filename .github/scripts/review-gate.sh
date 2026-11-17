@@ -13,7 +13,7 @@ hand_over() {
   exit 1
 }
 
-comments=$(gh pr view "$PR" --json comments) || hand_over 'PR のコメントを読めないので人に渡します。'
+comments=$(gh api --paginate "repos/{owner}/{repo}/issues/$PR/comments") || hand_over 'PR のコメントを読めないので人に渡します。'
 round=$(bash "$here/review-round.sh" <<<"$comments")
 if ((round > MAX_ROUNDS)); then
   hand_over 'レビューの上限を超えたので人に渡します。'

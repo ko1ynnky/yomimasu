@@ -2,6 +2,35 @@
 
 あとの作業に影響する技術と設計の判断を、新しいものを上にして書く。理由と、採らなかった案も残す。結論を改めるときは、元の項目を消さずに、改めた日付と理由を足す。
 
+## 2026-11-17 Issue と PR を外から受け付け、Claude を動かす Workflow は外の人の操作で動かさない
+
+- 決めたこと（2026-11-17 のユーザーの判断）：
+  - 審査が終わったので、Issue と PR を外から受け付ける。README の「受け付けません」の文を改めた。
+  - Claude の利用枠を使う Workflow は、外の人の操作では動かさない。`auto.yml` は止めたままにする。
+  - `review.yml` の `review` と `review-gate` は、PR の作者が `claude[bot]` で、head がこのリポジトリのブランチのときだけ動かす。後者は `github.event.pull_request.head.repo.full_name == github.repository` で書く。
+  - `checks.test.sh` で、`anthropics/claude-code-action` を使う job ごとに、外の人が起こせるイベントに合わせた条件が、その job か `needs` で先に動く job の `if` にあるかを見る。`pull_request` には上のフォークの条件を、`issues` には `github.event.sender.login == github.repository_owner` を求める。`schedule` と `workflow_dispatch` は書き込みの権限を持つ人しか起こせないので、求めない。ほかのイベントは、条件を決めてこの検査に足すまで止める。CI では `check` の job のシェルの検査で動く。
+  - `review-comments.sh` は、コメントを `gh api --paginate repos/{owner}/{repo}/issues/<番号>/comments` から受け、書いた人を REST の `user.login` と `user.type` で見る。レビューは `github-actions[bot]`、Claude の答えは `claude[bot]` のコメントで、どちらも `type` が `Bot` のものに限る。`review-round.sh`、`review-gate.sh`、`auto-target.sh`、`auto.yml` も同じ取り方にそろえた。
+  - `ci.yml` の `deny-names` は、フォークの PR では最初の step で、一覧（secret）が渡らないのでメンテナーが確かめる、という文を出して失敗する。
+  - `ci.yml` の concurrency の group を、PR では番号で分ける（`ci-${{ github.event.pull_request.number || github.ref }}`）。`head_ref` はフォークの人が決めるブランチ名なので、同じ名前のほかの PR と実行を取り消し合う。push と手動の起動には PR がないので、今までどおり `github.ref` で分ける。`review.yml` と `risk-gate.yml` も PR の番号で分けている。
+  - フォークの PR の `deny-names` は、PR の上の検査の色によらず、ユーザーが確かめる。`ci.yml` を `main` で手動で起こし、`scan_refs` を true にする。PR の参照（`refs/pull/<番号>/head`）から辿れて `main` から辿れないコミットの、メッセージ、足した行、ファイル名を見て、ログには PR の番号と SHA と件数だけが出る。通ったら、PR の上の `deny-names` が赤なら、管理者の権限で要件を外してマージする。
+  - フォークの PR の検査の色は当てにしない。`pull_request` の実行は PR の側の Workflow を使うので、PR の中で検査を書き換えて緑にできる。`.github/` を変えるフォークの PR は、差分を読んで確かめる。
+- 経緯：2026-11-10 に審査が終わった。ユーザーは、Issue も PR も受け付け、AI の利用枠を使う処理は外の人が動かせないようにすると決めた。
+- 判断：
+  - `gh pr view --json comments` の `author.login` は、Claude の App のコメントを `claude` と出す（#38 で確かめた）。この出力では、App と同じ名前の利用者を見分けられない。REST の `user` は App を `claude[bot]`、`type` を `Bot` と出す。
+  - フォークの判定に `head.repo.fork` を使わない。fork を消した PR では `head.repo` が null になり、否定の条件が真になる。
+  - フォークの PR の `deny-names` は通さず、理由の文を出して落とす。一覧なしで通すと検査がないのと同じになる（2026-11-02 の「CI の検査を決める」と同じ考え方）。文を出すのは、外の人に、直す必要のない失敗だと分かるようにするためである。
+- 採らなかった案：
+  - `pull_request_target` で base の Workflow を動かし、フォークの PR にも一覧を渡す案。2026-11-02 の「CI の検査を決める」と同じ理由で採らない。
+  - フォークの PR では `deny-names` の job を飛ばす案。飛ばした必須の検査は通った扱いになる。
+  - 条件の検査を、Workflow の外の新しいスクリプトにする案。Claude の job の権限とトークンの検査が `checks.test.sh` にあり、同じ形で読むほうが1か所で済む。
+- 限界：
+  - `checks.test.sh` は条件の文字列があるかを見るだけで、`&&` でつながって効いているかは読まない。`if` を書き換えるときは、レビューで式を見る。`always()`、`cancelled()`、`failure()` のある job は、`needs` の先の job が飛んでも動くので、その先の条件を引き継がずに見る。
+  - フォークの PR は PR の側の Workflow で動くので、`if` の条件は PR の中で外せる。それでも Claude の鍵に届かないのは、GitHub がフォークの PR の実行に secret を渡さないからである。条件は、鍵のない実行を始めないためにある。
+  - 外の人の PR で Workflow を動かす前に承認を求めるかは、リポジトリの Actions の設定で決まる。この変更では設定を変えていない。
+  - GitHub Actions のフォークの PR ではまだ動かしていない。`review` と `review-gate` が飛ぶこと、`deny-names` が理由の文を出して落ちることは、実物で確かめる。
+  - コメントの取り方を GraphQL（`gh pr view`）から REST（`issues/<番号>/comments`）に変えた。GitHub の表では、この API は Issues と Pull requests のどちらかの読み取りで読める。`review.yml` の `review` と `auto.yml` の `work` の `GITHUB_TOKEN` は `pull-requests: read` だけなので、この表に頼っている。Claude の PR の実行ではまだ確かめていない。読めないと、`review` の job が失敗し、`review-gate` が人に渡す。
+- 根拠の文書（確認日 2026-11-17）：GitHub Docs「Permissions required for fine-grained personal access tokens」の Issues と Pull requests の節（`GET /repos/{owner}/{repo}/issues/{issue_number}/comments` は、どちらかの読み取りで足りる）。
+
 ## 2026-11-17 検索に出るよう、sitemap.xml、robots.txt、canonical、ページごとの説明を入れ、1首のページの題を歌番号と決まり字にする
 
 - 背景：2026-11-10 に審査が終わり、ユーザーが検索に出るように整えると決めた。2026-11-17 に本番を確かめると、Google に載っているのは入口の1件だけだった。noindex、robots の meta、X-Robots-Tag はない。`/robots.txt` は Cloudflare の管理のもので、`/sitemap.xml` は 404 だった。どのページにも canonical がなく、説明は全ページで同じ文だった。1首のページの題は「1首 あきの - /yomimasu」の形で歌の字がなく、「秋の田の」で検索しても当たらなかった。Search Console への登録はユーザーが行う。

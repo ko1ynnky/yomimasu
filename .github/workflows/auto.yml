@@ -104,7 +104,7 @@ jobs:
           mkdir -p ~/.claude/hooks
           cp .github/scripts/allow-skill-write.sh ~/.claude/hooks/allow-skill-write.sh
           if [[ -n $PR ]]; then
-            gh pr view "$PR" --json comments | bash .github/scripts/review-comments.sh >previous-reviews.json
+            gh api --paginate "repos/{owner}/{repo}/issues/$PR/comments" | bash .github/scripts/review-comments.sh >previous-reviews.json
             head=$(gh pr view "$PR" --json headRefOid --jq .headRefOid)
             echo "head=$head" >>"$GITHUB_OUTPUT"
           fi

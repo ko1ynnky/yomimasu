@@ -35,7 +35,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.head_ref || github.ref }}
+  # PR は番号で分ける。head_ref はフォークの人が決めるブランチ名なので、同じ名前のほかの PR の実行を取り消し合う。
+  group: ci-${{ github.event.pull_request.number || github.ref }}
   # main の実行を取り消すと、そのコミットのメッセージを誰も見なくなる。
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
@@ -203,6 +204,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # フォークの PR には secret が渡らず、一覧なしでは検査できない。通すと検査がないのと同じになるので、PR の作者に理由を見せて落とす。
+      # PR の側の Workflow で動くので、この step は PR の中で外せる。フォークの PR は、検査の色によらず、
+      # ユーザーが main で scan_refs を付けて起動し、PR の参照のコミットを見る（docs/decisions.md）。
+      - name: フォークの PR はメンテナーが確かめる
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: |
+          echo '::error::フォークからの PR には、この検査が使う一覧（secret）が渡りません。メンテナーが別に確かめるので、この失敗への対応は要りません。'
+          exit 1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0

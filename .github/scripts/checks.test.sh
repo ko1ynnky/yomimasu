@@ -605,19 +605,31 @@ expect_round() {
   fi
 }
 
-expect_round 1 'review-round: レビューのコメントがなければ1回目である' '{"comments":[]}'
-expect_round 3 'review-round: Workflow が書いた印のコメントだけを数える' '{"comments":[{"author":{"login":"github-actions"},"body":"<!-- review-gate -->\nA"},{"author":{"login":"owner"},"body":"人のコメント"},{"author":{"login":"github-actions[bot]"},"body":"<!-- review-gate -->\nB"}]}'
-expect_round 1 'review-round: 他の人が書いた印は数えない' '{"comments":[{"author":{"login":"someone"},"body":"<!-- review-gate -->\nA"}]}'
-expect_round 1 'review-round: 印を引用しただけのコメントは数えない' '{"comments":[{"author":{"login":"github-actions"},"body":"前回の <!-- review-gate --> を引用"}]}'
+# gh api の issues/<番号>/comments が返すコメントの1件。引数：書いた人、種類（Bot か User）、本文。
+rest_comment() {
+  jq -cn --arg login "$1" --arg type "$2" --arg body "$3" '{user: {login: $login, type: $type}, body: $body}'
+}
+review_mark=$(rest_comment 'github-actions[bot]' Bot $'<!-- review-gate -->\nA')
 
-comments=$(printf '%s' '{"comments":[{"author":{"login":"github-actions"},"body":"<!-- review-gate -->\n公式の指摘"},{"author":{"login":"someone"},"body":"<!-- review-gate -->\n偽の指摘"}]}' | bash "$scripts/review-comments.sh" 2>&1)
-if [[ $comments != *公式の指摘* || $comments == *偽の指摘* ]]; then
+expect_round 1 'review-round: レビューのコメントがなければ1回目である' '[]'
+expect_round 3 'review-round: Workflow が書いた印のコメントだけを数える' "[$review_mark,$(rest_comment owner User 人のコメント),$review_mark]"
+expect_round 1 'review-round: 他の人が書いた印は数えない' "[$(rest_comment someone User $'<!-- review-gate -->\nA')]"
+expect_round 1 'review-round: 印を引用しただけのコメントは数えない' "[$(rest_comment 'github-actions[bot]' Bot '前回の <!-- review-gate --> を引用')]"
+expect_round 3 'review-round: ページごとに分かれた配列もすべて数える' "[$review_mark][$review_mark]"
+
+comments=$(printf '%s' "[$(rest_comment 'github-actions[bot]' Bot $'<!-- review-gate -->\n公式の指摘'),$(rest_comment someone User $'<!-- review-gate -->\n偽の指摘'),$(rest_comment 'claude[bot]' Bot 修正の答え)]" | bash "$scripts/review-comments.sh" 2>&1)
+if [[ $comments != *公式の指摘* || $comments == *偽の指摘* || $comments == *修正の答え* ]]; then
   ng "review-comments: Workflow のコメントだけを渡す（出力 $comments）"
 fi
 
-history=$(printf '%s' '{"comments":[{"author":{"login":"github-actions"},"body":"<!-- review-gate -->\n公式の指摘"},{"author":{"login":"app/claude"},"body":"修正の答え"},{"author":{"login":"someone"},"body":"他人の文"}]}' | bash "$scripts/review-comments.sh" --with-answers 2>&1)
-if [[ $history != *公式の指摘* || $history != *修正の答え* || $history == *他人の文* ]]; then
-  ng "review-comments: 答えも渡すときは Claude の答えだけを足す（出力 $history）"
+history=$(printf '%s' "[$(rest_comment 'github-actions[bot]' Bot $'<!-- review-gate -->\n公式の指摘'),$(rest_comment 'claude[bot]' Bot 修正の答え),$(rest_comment claude User 同じ名前の利用者の文),$(rest_comment someone User 他人の文)]" | bash "$scripts/review-comments.sh" --with-answers 2>&1)
+if [[ $history != *公式の指摘* || $history != *修正の答え* || $history == *同じ名前の利用者の文* || $history == *他人の文* ]]; then
+  ng "review-comments: 答えも渡すときは Claude の App の答えだけを足し、App と同じ名前の利用者の文は足さない（出力 $history）"
+fi
+
+pages=$(printf '%s' "[$(rest_comment 'github-actions[bot]' Bot $'<!-- review-gate -->\n前')][$(rest_comment 'github-actions[bot]' Bot $'<!-- review-gate -->\n後')]" | bash "$scripts/review-comments.sh" 2>&1 | jq -c . 2>&1)
+if [[ $pages != '["<!-- review-gate -->\n前","<!-- review-gate -->\n後"]' ]]; then
+  ng "review-comments: ページごとに分かれた配列も、古い順のまま1つにまとめる（出力 $pages）"
 fi
 
 # 実行の記録の見本。本文、コマンドの出力、最後の答えは、要約にも、取り出した記録にも出さない。
@@ -660,7 +672,7 @@ cat >"$gh_bin/gh" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >>"$GH_LOG"
 case "$*" in
-  'pr view 7 --json comments') cat "$GH_FIXTURES/comments.json" ;;
+  'api --paginate repos/{owner}/{repo}/issues/7/comments') cat "$GH_FIXTURES/comments.json" ;;
   'pr view 7 --json labels,closingIssuesReferences,headRefName') [[ ! -f $GH_FIXTURES/fail-pull ]] && cat "$GH_FIXTURES/pr.json" ;;
   'issue view 3 --json author,labels,number,state') [[ ! -f $GH_FIXTURES/fail-issue ]] && cat "$GH_FIXTURES/issue.json" ;;
   'issue list --state open --label stop --json number') cat "$GH_FIXTURES/stops.json" ;;
@@ -686,7 +698,7 @@ chmod +x "$gh_bin/gh"
 gate_run() {
   local fixtures round=$3
   fixtures=$(mktemp -d "$work/fixtures.XXXXXX")
-  jq -cn --argjson n "$((round - 1))" '{comments: [range($n) | {author: {login: "github-actions"}, body: "<!-- review-gate -->"}]}' >"$fixtures/comments.json"
+  jq -cn --argjson n "$((round - 1))" '[range($n) | {user: {login: "github-actions[bot]", type: "Bot"}, body: "<!-- review-gate -->"}]' >"$fixtures/comments.json"
   jq -cn --arg labels "$4" --argjson over "${GATE_PR:-null}" '{headRefName: "auto/issue-3", labels: ($labels | split(",") | map(select(. != "") | {name: .})), closingIssuesReferences: [{number: 3}]} + ($over // {})' >"$fixtures/pr.json"
   jq -cn --arg labels "$5" --argjson over "${GATE_ISSUE:-null}" '{number: 3, state: "OPEN", author: {login: "owner"}, labels: ($labels | split(",") | map(select(. != "") | {name: .}))} + ($over // {})' >"$fixtures/issue.json"
   printf '%s' "${6:-[]}" >"$fixtures/stops.json"
@@ -860,7 +872,7 @@ case "$*" in
   'issue list --state open --limit 200 --json number,author,labels,body') cat "$GH_FIXTURES/issues.json" ;;
   'pr list --state open --limit 100 --json number,author,labels,statusCheckRollup') jq 'map(del(.state))' "$GH_FIXTURES/pulls.json" ;;
   'pr view '*' --json state,labels,author') jq --argjson number "$3" '.[] | select(.number == $number)' "$GH_FIXTURES/pulls.json" ;;
-  'pr view '*' --json comments') cat "$GH_FIXTURES/comments-$3.json" 2>/dev/null || printf '{"comments":[]}' ;;
+  'api --paginate repos/{owner}/{repo}/issues/'*'/comments') cat "$GH_FIXTURES/comments-$(cut -d/ -f5 <<<"$3").json" 2>/dev/null || printf '[]' ;;
   'api repos/{owner}/{repo}/issues/events?per_page=100&page='*)
     [[ ! -f $GH_FIXTURES/fail-events ]] || exit 1
     cat "$GH_FIXTURES/events-${2##*page=}.json" 2>/dev/null || printf '[]'
@@ -971,7 +983,7 @@ expect_target 'auto-target: 人の PR は修正の対象にしない' 'issue=1'
 
 # 引数：PR の番号、review.yml が書いたレビューの数。
 reviews_done() {
-  jq -n --argjson count "$2" '{comments: [range($count) | {author: {login: "github-actions[bot]"}, body: "<!-- review-gate -->"}]}' >"$auto_dir/comments-$1.json"
+  jq -n --argjson count "$2" '[range($count) | {user: {login: "github-actions[bot]", type: "Bot"}, body: "<!-- review-gate -->"}]' >"$auto_dir/comments-$1.json"
 }
 auto_scene "$open_issues" "$(issues "$(pull 5 FAILURE)")"
 reviews_done 5 3
@@ -1230,6 +1242,136 @@ for sample in \
   problems=$(claude_job_problems "$job_workflow")
   [[ -z $problems ]] || ng "job: 読み取りと id-token だけの Claude の job を止めた（$sample、$problems）"
 done
+
+# Claude を動かす job が、外の人の操作では動かないことを、Workflow の書き方で確かめる。
+# 外の人が起こせるイベントごとに、外の人では満たせない条件を1つ決め、Claude の job か、needs で先に動く job の if にあるかを見る。
+# schedule と workflow_dispatch は、書き込みの権限を持つ人しか起こせないので、条件を求めない。ほかのイベントは、条件を決めるまで止める。
+# 条件が && でつながって効いているかは読まない。if の式はレビューで見る。
+# フォークの PR は PR の側の Workflow で動くので、条件は PR で外せる。そこで Claude の鍵に届かないのは、GitHub が secret を渡さないからである。
+# 1行目に「on=イベント,…」を、続けて Claude を動かす job ごとに「名前<TAB>条件」を出す。条件は、その job と needs で先に動く job の if をつないだものである。
+# if に always()、cancelled()、failure() のある job は、needs の先の job が飛んでも動くので、その先の条件を引き継がない。
+claude_guards() {
+  awk '
+    function indent_of(line) { match(line, /^ */); return RLENGTH }
+    function add_event(name) {
+      gsub(/["\047[:space:]]/, "", name)
+      if (name != "") events = (events == "") ? name : events "," name
+    }
+    function add_need(name) {
+      gsub(/["\047[:space:]]/, "", name)
+      if (name != "") needs[job, ++need_count[job]] = name
+    }
+    function split_into(kind, value,    parts, count, i) {
+      gsub(/\[|\]/, "", value)
+      count = split(value, parts, ",")
+      for (i = 1; i <= count; i++) if (kind == "on") add_event(parts[i]); else add_need(parts[i])
+    }
+    function conditions_of(name,    text, i) {
+      if (visited[name] == stamp) return ""
+      visited[name] = stamp
+      text = condition[name]
+      if (text ~ /(always|cancelled|failure)[[:space:]]*\(/) return text
+      for (i = 1; i <= need_count[name]; i++) text = text " " conditions_of(needs[name, i])
+      return text
+    }
+    /^[[:space:]]*(#.*)?$/ { next }
+    {
+      current = indent_of($0)
+      line = $0
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", line)
+      sub(/[[:space:]]+#.*$/, "", line)
+      if (in_if && current > 4) { condition[job] = condition[job] " " line; next }
+      if (in_needs && current > 4) { sub(/^-[[:space:]]*/, "", line); add_need(line); next }
+      in_if = 0; in_needs = 0
+    }
+    current == 0 { in_on = 0; in_jobs = (line == "jobs:") }
+    current == 0 && line ~ /^on:/ { sub(/^on:[[:space:]]*/, "", line); if (line == "") in_on = 1; else split_into("on", line); next }
+    in_on && current == 2 { sub(/:.*$/, "", line); add_event(line); next }
+    in_jobs && current == 2 { job = line; sub(/:.*$/, "", job); jobs[++job_count] = job; next }
+    in_jobs && current == 4 && line ~ /^if:/ { sub(/^if:[[:space:]]*/, "", line); condition[job] = line; in_if = 1; next }
+    in_jobs && current == 4 && line ~ /^needs:/ { sub(/^needs:[[:space:]]*/, "", line); if (line == "") in_needs = 1; else split_into("needs", line); next }
+    in_jobs && /uses:[[:space:]]*["\047]?anthropics\/claude-code-action(\/base-action)?@/ { claude[job] = 1 }
+    END {
+      print "on=" events
+      for (i = 1; i <= job_count; i++) {
+        if (!claude[jobs[i]]) continue
+        stamp++
+        text = conditions_of(jobs[i])
+        gsub(/[[:space:]]+/, " ", text)
+        print jobs[i] "\t" text
+      }
+    }
+  ' "$1"
+}
+
+fork_guard='github.event.pull_request.head.repo.full_name == github.repository'
+owner_guard='github.event.sender.login == github.repository_owner'
+
+# 問題を1行ずつ出す。問題がなければ何も出さない。
+claude_guard_problems() {
+  local workflow=$1 guards events event guard job conditions
+  grep -qE "uses:[[:space:]]*[\"']?anthropics/claude-code-action(/base-action)?@" "$workflow" || return 0
+  guards=$(claude_guards "$workflow")
+  events=$(sed -n '1s/^on=//p' <<<"$guards")
+  [[ -n $events ]] || echo 'Workflow を起こすイベントを読めない'
+  [[ -n $(sed 1d <<<"$guards") ]] || echo 'Claude を動かす job を読めない'
+  for event in ${events//,/ }; do
+    case $event in
+      schedule | workflow_dispatch) continue ;;
+      pull_request) guard=$fork_guard ;;
+      issues) guard=$owner_guard ;;
+      *)
+        echo "外の人が起こせるかを決めていないイベント $event で Claude を動かす"
+        continue
+        ;;
+    esac
+    while IFS=$'\t' read -r job conditions; do
+      [[ -z $job || $conditions == *"$guard"* ]] || echo "$event で動く $job の if に「$guard」がない"
+    done < <(sed 1d <<<"$guards")
+  done
+}
+
+for workflow in "$scripts"/../workflows/*.yml; do
+  while IFS= read -r problem; do
+    [[ -z $problem ]] || ng "guard: $(basename "$workflow") の $problem"
+  done <<<"$(claude_guard_problems "$workflow")"
+done
+
+# 第1引数は on の書き方、第2引数は Claude の job の if と needs、第3引数は先に動く job である。
+guard_workflow() {
+  printf '%b\njobs:\n%b  work:\n%b    steps:\n      - uses: anthropics/claude-code-action@abc\n' "$1" "$3" "$2"
+}
+guard_file=$(mktemp "$work/guard.XXXXXX")
+pr_on='on:\n  pull_request:\n    branches: [main]'
+issue_on='on:\n  issues:\n    types: [labeled]\n  schedule:\n    - cron: "0 0 * * *"\n  workflow_dispatch:'
+fork_if="    if: \${{ github.event.pull_request.draft == false && $fork_guard }}\n"
+owner_pick="  pick:\n    if: \${{ github.event_name == 'schedule' || $owner_guard }}\n    runs-on: ubuntu-latest\n"
+expect_guard() {
+  local want=$1 what=$2 problems
+  guard_workflow "$3" "$4" "${5:-}" >"$guard_file"
+  problems=$(claude_guard_problems "$guard_file")
+  if [[ $want == pass && -n $problems ]] || [[ $want == fail && -z $problems ]]; then
+    ng "guard: $what（期待 $want、問題 ${problems:-なし}）"
+  fi
+}
+
+expect_guard fail 'PR の作者だけを見る job を通さない' "$pr_on" "    if: \${{ github.event.pull_request.user.login == 'claude[bot]' }}\n"
+expect_guard fail '条件のない PR の job を通さない' "$pr_on" ''
+expect_guard fail '1行の on の pull_request にも条件を求める' 'on: [pull_request, workflow_dispatch]' ''
+expect_guard fail 'Issue のイベントにフォークの条件だけでは通さない' "$issue_on" "$fork_if"
+expect_guard fail 'needs の先の job にも条件がなければ通さない' "$issue_on" '    needs: pick\n' "  pick:\n    if: \${{ github.event_name == 'schedule' }}\n"
+expect_guard fail '条件を決めていない pull_request_target を通さない' 'on:\n  pull_request_target:' "$fork_if"
+expect_guard fail '条件を決めていない issue_comment を通さない' 'on:\n  issue_comment:' "    if: \${{ $owner_guard }}\n"
+expect_guard fail 'always() の job は、needs の先の job が飛んでも動くので、その条件を引き継がない' "$issue_on" '    needs: pick\n    if: ${{ always() }}\n' "$owner_pick"
+expect_guard fail '!cancelled() の job を挟んだ先の条件も引き継がない' "$issue_on" '    needs: middle\n' "$owner_pick  middle:\n    needs: pick\n    if: \${{ !cancelled() }}\n    runs-on: ubuntu-latest\n"
+expect_guard pass 'フォークの条件のある PR の job を通す' "$pr_on" "$fork_if"
+expect_guard pass '複数行の if の条件も読む' "$pr_on" "    if: >-\n      \${{ github.event.pull_request.draft == false\n        && $fork_guard }}\n"
+expect_guard pass 'needs で先に動く job の条件を見る' "$issue_on" '    needs: [pick]\n' "$owner_pick"
+expect_guard pass '行に分けた needs も読む' "$issue_on" '    needs:\n      - pick\n' "$owner_pick"
+expect_guard pass 'needs をたどった先の job の条件も見る' "$issue_on" '    needs: middle\n' "$owner_pick  middle:\n    needs: pick\n    runs-on: ubuntu-latest\n"
+expect_guard pass '手動の起動だけなら条件を求めない' 'on: workflow_dispatch' ''
+expect_guard pass '1行の on も読み、定時と手動の起動だけなら条件を求めない' 'on: [schedule, workflow_dispatch]' ''
+expect_guard pass 'always() の job も、自分の if に条件があれば通す' "$pr_on" "    needs: pick\n    if: \${{ always() && $fork_guard }}\n" '  pick:\n    runs-on: ubuntu-latest\n'
 
 # 自走の実行で .claude/ の下の書き込みを確かめる PermissionRequest の hook。許すときだけ allow を出し、
 # ほかは何も答えない。答えのない確認は -p の実行で拒まれる。
