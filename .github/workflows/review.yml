@@ -39,7 +39,7 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh pr view "$PR" --json comments | bash .github/scripts/review-comments.sh --with-answers >previous-reviews.json
+        run: gh api --paginate "repos/{owner}/{repo}/issues/$PR/comments" | bash .github/scripts/review-comments.sh --with-answers >previous-reviews.json
 
       # job の時間切れは取り消しの扱いで review-gate が飛ぶので、step の時間切れで失敗にする。
       - uses: anthropics/claude-code-action@d535f5172dec02b204866b393d6b20b9b2aaf98d # v1

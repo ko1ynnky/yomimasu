@@ -33,7 +33,7 @@ waiting=$(gh pr list --state open --limit 100 --json number,author,labels,status
       | max_by(.startedAt) | .conclusion == \"FAILURE\")))
   | sort_by(.number) | .[].number")
 for pr in $waiting; do
-  round=$(gh pr view "$pr" --json comments | bash "$here/review-round.sh")
+  round=$(gh api --paginate "repos/{owner}/{repo}/issues/$pr/comments" | bash "$here/review-round.sh")
   if ((round <= max_rounds)); then
     echo "pr=$pr" >>"$GITHUB_OUTPUT"
     exit 0

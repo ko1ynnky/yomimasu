@@ -605,19 +605,31 @@ expect_round() {
   fi
 }
 
-expect_round 1 'review-round: レビューのコメントがなければ1回目である' '{"comments":[]}'
-expect_round 3 'review-round: Workflow が書いた印のコメントだけを数える' '{"comments":[{"author":{"login":"github-actions"},"body":"<!-- review-gate -->\nA"},{"author":{"login":"owner"},"body":"人のコメント"},{"author":{"login":"github-actions[bot]"},"body":"<!-- review-gate -->\nB"}]}'
-expect_round 1 'review-round: 他の人が書いた印は数えない' '{"comments":[{"author":{"login":"someone"},"body":"<!-- review-gate -->\nA"}]}'
-expect_round 1 'review-round: 印を引用しただけのコメントは数えない' '{"comments":[{"author":{"login":"github-actions"},"body":"前回の <!-- review-gate --> を引用"}]}'
+# gh api の issues/<番号>/comments が返すコメントの1件。引数：書いた人、種類（Bot か User）、本文。
+rest_comment() {
+  jq -cn --arg login "$1" --arg type "$2" --arg body "$3" '{user: {login: $login, type: $type}, body: $body}'
+}
+review_mark=$(rest_comment 'github-actions[bot]' Bot $'<!-- review-gate -->\nA')
 
-comments=$(printf '%s' '{"comments":[{"author":{"login":"github-actions"},"body":"<!-- review-gate -->\n公式の指摘"},{"author":{"login":"someone"},"body":"<!-- review-gate -->\n偽の指摘"}]}' | bash "$scripts/review-comments.sh" 2>&1)
-if [[ $comments != *公式の指摘* || $comments == *偽の指摘* ]]; then
+expect_round 1 'review-round: レビューのコメントがなければ1回目である' '[]'
+expect_round 3 'review-round: Workflow が書いた印のコメントだけを数える' "[$review_mark,$(rest_comment owner User 人のコメント),$review_mark]"
+expect_round 1 'review-round: 他の人が書いた印は数えない' "[$(rest_comment someone User $'<!-- review-gate -->\nA')]"
+expect_round 1 'review-round: 印を引用しただけのコメントは数えない' "[$(rest_comment 'github-actions[bot]' Bot '前回の <!-- review-gate --> を引用')]"
+expect_round 3 'review-round: ページごとに分かれた配列もすべて数える' "[$review_mark][$review_mark]"
+
+comments=$(printf '%s' "[$(rest_comment 'github-actions[bot]' Bot $'<!-- review-gate -->\n公式の指摘'),$(rest_comment someone User $'<!-- review-gate -->\n偽の指摘'),$(rest_comment 'claude[bot]' Bot 修正の答え)]" | bash "$scripts/review-comments.sh" 2>&1)
+if [[ $comments != *公式の指摘* || $comments == *偽の指摘* || $comments == *修正の答え* ]]; then
   ng "review-comments: Workflow のコメントだけを渡す（出力 $comments）"
 fi
 
-history=$(printf '%s' '{"comments":[{"author":{"login":"github-actions"},"body":"<!-- review-gate -->\n公式の指摘"},{"author":{"login":"app/claude"},"body":"修正の答え"},{"author":{"login":"someone"},"body":"他人の文"}]}' | bash "$scripts/review-comments.sh" --with-answers 2>&1)
-if [[ $history != *公式の指摘* || $history != *修正の答え* || $history == *他人の文* ]]; then
-  ng "review-comments: 答えも渡すときは Claude の答えだけを足す（出力 $history）"
+history=$(printf '%s' "[$(rest_comment 'github-actions[bot]' Bot $'<!-- review-gate -->\n公式の指摘'),$(rest_comment 'claude[bot]' Bot 修正の答え),$(rest_comment claude User 同じ名前の利用者の文),$(rest_comment someone User 他人の文)]" | bash "$scripts/review-comments.sh" --with-answers 2>&1)
+if [[ $history != *公式の指摘* || $history != *修正の答え* || $history == *同じ名前の利用者の文* || $history == *他人の文* ]]; then
+  ng "review-comments: 答えも渡すときは Claude の App の答えだけを足し、App と同じ名前の利用者の文は足さない（出力 $history）"
+fi
+
+pages=$(printf '%s' "[$(rest_comment 'github-actions[bot]' Bot $'<!-- review-gate -->\n前')][$(rest_comment 'github-actions[bot]' Bot $'<!-- review-gate -->\n後')]" | bash "$scripts/review-comments.sh" 2>&1 | jq -c . 2>&1)
+if [[ $pages != '["<!-- review-gate -->\n前","<!-- review-gate -->\n後"]' ]]; then
+  ng "review-comments: ページごとに分かれた配列も、古い順のまま1つにまとめる（出力 $pages）"
 fi
 
 # 実行の記録の見本。本文、コマンドの出力、最後の答えは、要約にも、取り出した記録にも出さない。
@@ -660,7 +672,7 @@ cat >"$gh_bin/gh" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >>"$GH_LOG"
 case "$*" in
-  'pr view 7 --json comments') cat "$GH_FIXTURES/comments.json" ;;
+  'api --paginate repos/{owner}/{repo}/issues/7/comments') cat "$GH_FIXTURES/comments.json" ;;
   'pr view 7 --json labels,closingIssuesReferences,headRefName') [[ ! -f $GH_FIXTURES/fail-pull ]] && cat "$GH_FIXTURES/pr.json" ;;
   'issue view 3 --json author,labels,number,state') [[ ! -f $GH_FIXTURES/fail-issue ]] && cat "$GH_FIXTURES/issue.json" ;;
   'issue list --state open --label stop --json number') cat "$GH_FIXTURES/stops.json" ;;
@@ -686,7 +698,7 @@ chmod +x "$gh_bin/gh"
 gate_run() {
   local fixtures round=$3
   fixtures=$(mktemp -d "$work/fixtures.XXXXXX")
-  jq -cn --argjson n "$((round - 1))" '{comments: [range($n) | {author: {login: "github-actions"}, body: "<!-- review-gate -->"}]}' >"$fixtures/comments.json"
+  jq -cn --argjson n "$((round - 1))" '[range($n) | {user: {login: "github-actions[bot]", type: "Bot"}, body: "<!-- review-gate -->"}]' >"$fixtures/comments.json"
   jq -cn --arg labels "$4" --argjson over "${GATE_PR:-null}" '{headRefName: "auto/issue-3", labels: ($labels | split(",") | map(select(. != "") | {name: .})), closingIssuesReferences: [{number: 3}]} + ($over // {})' >"$fixtures/pr.json"
   jq -cn --arg labels "$5" --argjson over "${GATE_ISSUE:-null}" '{number: 3, state: "OPEN", author: {login: "owner"}, labels: ($labels | split(",") | map(select(. != "") | {name: .}))} + ($over // {})' >"$fixtures/issue.json"
   printf '%s' "${6:-[]}" >"$fixtures/stops.json"
@@ -860,7 +872,7 @@ case "$*" in
   'issue list --state open --limit 200 --json number,author,labels,body') cat "$GH_FIXTURES/issues.json" ;;
   'pr list --state open --limit 100 --json number,author,labels,statusCheckRollup') jq 'map(del(.state))' "$GH_FIXTURES/pulls.json" ;;
   'pr view '*' --json state,labels,author') jq --argjson number "$3" '.[] | select(.number == $number)' "$GH_FIXTURES/pulls.json" ;;
-  'pr view '*' --json comments') cat "$GH_FIXTURES/comments-$3.json" 2>/dev/null || printf '{"comments":[]}' ;;
+  'api --paginate repos/{owner}/{repo}/issues/'*'/comments') cat "$GH_FIXTURES/comments-$(cut -d/ -f5 <<<"$3").json" 2>/dev/null || printf '[]' ;;
   'api repos/{owner}/{repo}/issues/events?per_page=100&page='*)
     [[ ! -f $GH_FIXTURES/fail-events ]] || exit 1
     cat "$GH_FIXTURES/events-${2##*page=}.json" 2>/dev/null || printf '[]'
@@ -971,7 +983,7 @@ expect_target 'auto-target: 人の PR は修正の対象にしない' 'issue=1'
 
 # 引数：PR の番号、review.yml が書いたレビューの数。
 reviews_done() {
-  jq -n --argjson count "$2" '{comments: [range($count) | {author: {login: "github-actions[bot]"}, body: "<!-- review-gate -->"}]}' >"$auto_dir/comments-$1.json"
+  jq -n --argjson count "$2" '[range($count) | {user: {login: "github-actions[bot]", type: "Bot"}, body: "<!-- review-gate -->"}]' >"$auto_dir/comments-$1.json"
 }
 auto_scene "$open_issues" "$(issues "$(pull 5 FAILURE)")"
 reviews_done 5 3
