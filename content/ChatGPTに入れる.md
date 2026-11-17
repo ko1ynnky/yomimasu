@@ -1,5 +1,6 @@
 ---
 title: ChatGPT に入れる
+description: /yomimasu の読みの知識を、chatgpt.com の ChatGPT にプラグインとして入れる手順です。ファイルの保存とアップロードから、入れたあとに聞いてみる例までを載せています。
 slug: install/chatgpt
 ---
 

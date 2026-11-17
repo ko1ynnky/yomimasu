@@ -1,5 +1,6 @@
 ---
 title: /yomimasu
+description: 競技かるたの読みを、家で録音して測り、次に直す1点を受け取る Web アプリ。総論、ポイント、100首の読み方も学べます。
 ---
 
 <section class="hero">

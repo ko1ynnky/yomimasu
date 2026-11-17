@@ -72,6 +72,22 @@ test('1首のページは歌番号の URL に置き、コマンドと読んだ�
   );
 });
 
+test('1首のページの題は、歌番号と決まり字で書く。序歌は「序歌の読み方」にする', () => {
+  assert.equal(cardPage(card(1), cards, advice).title, '1番「あきの」の読み方');
+  assert.equal(cardPage(card(100), cards, advice).title, '100番「もも」の読み方');
+  assert.equal(cardPage(card(0), cards, advice).title, '序歌の読み方');
+});
+
+test('1首のページの説明は、歌の全文と決まり字を書き、札ごとに違う', () => {
+  const description = cardPage(card(1), cards, advice).description;
+  assert.ok(description.includes('「秋の田の かりほの庵の 苫をあらみ わが衣手は 露にぬれつつ」'), description);
+  assert.ok(description.includes('あきの'), description);
+  const joka = cardPage(card(0), cards, advice).description;
+  assert.ok(joka.includes('「難波津に 咲くやこの花 冬ごもり 今を春べと 咲くやこの花」'), joka);
+  assert.ok(joka.includes('序歌'), joka);
+  assert.equal(new Set(cards.map((c) => cardPage(c, cards, advice).description)).size, cards.length);
+});
+
 test('1首のページは歌番号を出さず、歌に伸ばす印、ふりがな、余韻の印を付ける', () => {
   const { bodyHtml } = cardPage(card(53), cards, advice);
   assert.doesNotMatch(bodyHtml, /53番|５３/);

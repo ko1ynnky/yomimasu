@@ -163,11 +163,22 @@ function prefetchNames() {
   if (document.querySelector('main a[href^="/karuta/"]:not([href="/karuta/"]), main yomimasu-listen')) void cardNames();
 }
 
+// head で入れ替えるのは題と canonical だけである。canonical は iOS の Safari が共有の URL に使うので、前の画面のままだと前の URL を共有してしまう。
+// 説明と og: のタグは入れ替えない。読むのは URL ごとに HTML を取り直す検索と SNS で、ブラウザーは使わないからである。
+function swapHead(doc: Document) {
+  document.title = doc.title;
+  const canonical = doc.querySelector('link[rel="canonical"]');
+  const current = document.querySelector('link[rel="canonical"]');
+  if (canonical && current) current.replaceWith(canonical);
+  else if (canonical) document.head.append(canonical);
+  else current?.remove();
+}
+
 // 押したリンクは入れ替えで消えるので、焦点を main へ移す。移さないと body に落ち、次の Tab が画面の先頭から始まらない。
 function swap(doc: Document, url: URL) {
   const main = document.querySelector('main')!;
   main.replaceChildren(...doc.querySelector('main')!.childNodes);
-  document.title = doc.title;
+  swapHead(doc);
   main.focus({ preventScroll: true });
   shown = pathOf(url);
   prefetchNames();

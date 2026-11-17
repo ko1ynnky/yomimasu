@@ -10,7 +10,7 @@ import { INSTALL_MARKS, isOffered } from './install.ts';
 import { cardName, cardPage, cardUrl, expandCardRefs, finalSoundCounts, listHtml, parseAdvice } from './karuta.ts';
 import { kimarijiStream } from './kimariji-stream.ts';
 import { themeTocHtml } from './point.ts';
-import { outputPathOf, parseSource, renderDocument, runFor } from './render.ts';
+import { outputPathOf, parseSource, renderDocument, runFor, sitemapXml } from './render.ts';
 import { chatgptPluginZip, skillZip } from './skill-zip.ts';
 
 const CONTENT_DIR = 'content';
@@ -57,11 +57,13 @@ function writePage(path: string, html: string) {
   writeFileSync(outputPath, html);
 }
 
+const pageUrls: string[] = [];
+
 for (const entry of readdirSync(CONTENT_DIR, { recursive: true, withFileTypes: true })) {
   if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
   const sourcePath = join(entry.parentPath, entry.name);
   const contentPath = relative(CONTENT_DIR, sourcePath);
-  const { title, command, readName, tool, slug, markdown } = parseSource(readFileSync(sourcePath, 'utf8'));
+  const { title, description, command, readName, tool, slug, markdown } = parseSource(readFileSync(sourcePath, 'utf8'));
   const outputPath = outputPathOf(contentPath, slug);
   if (!isOffered(urlOf(outputPath))) continue;
   const run = runFor(contentPath, { command, readName }, commandAt(urlOf(outputPath), (token) => cardNames.get(token)));
@@ -71,15 +73,23 @@ for (const entry of readdirSync(CONTENT_DIR, { recursive: true, withFileTypes: t
     .replace(FINAL_SOUND_MARK, () => finalSoundCounts(cards))
     .replace(THEME_TOC_MARK, () => themeTocHtml(rendered));
   const bodyHtml = expandCardRefs(Object.entries(MARKS).reduce((html, [mark, make]) => html.replace(mark, make), parsed), cards);
-  writePage(outputPath, renderDocument({ title, path: urlOf(outputPath), bodyHtml, scriptPath, stylePaths, ...run, tool }));
+  writePage(outputPath, renderDocument({ title, description, path: urlOf(outputPath), bodyHtml, scriptPath, stylePaths, ...run, tool }));
+  pageUrls.push(urlOf(outputPath));
 }
 
 // 1首のページは手で書かず、札の読みの表、規則、助言の候補から組む。表が変わってもページが追いつくようにするためである。
 const advice = parseAdvice(readFileSync(ADVICE_PATH, 'utf8'));
 for (const card of cards) {
-  const { path, title, command, readName, bodyHtml } = cardPage(card, cards, advice);
-  writePage(path, renderDocument({ title, path: urlOf(path), bodyHtml, scriptPath, stylePaths, command, readName }));
+  const { path, title, description, command, readName, bodyHtml } = cardPage(card, cards, advice);
+  writePage(path, renderDocument({ title, description, path: urlOf(path), bodyHtml, scriptPath, stylePaths, command, readName }));
+  pageUrls.push(urlOf(path));
 }
+
+// 結果と前回と比べるは、端末に残した録音を出す画面で、検索から来た人には「まだ録音がありません。」しか出さないので、sitemap に入れない。
+// 例の録音の結果（/result/example/）は、だれが開いても同じ例を出すので入れる。
+const ON_DEVICE_PAGES = ['/result/', '/result/compare/'];
+for (const url of ON_DEVICE_PAGES) if (!pageUrls.includes(url)) throw new Error(`sitemap から外すページ ${url} を組み立てていません`);
+writeFileSync(join(OUT_DIR, 'sitemap.xml'), sitemapXml(pageUrls.filter((url) => !ON_DEVICE_PAGES.includes(url))));
 
 // ないパスには、配信（wrangler.jsonc の not_found_handling）がこのページを 404 で返す。文と次の操作は docs/ui-guide.md の11節「ページがない」である。
 // content/ の Markdown にしないのは、そこから組むと /404/ という開けるページになり、404 で返らないからである。
@@ -89,7 +99,8 @@ const NOT_FOUND_BODY = [
   '<p class="ask-q">次は？</p>',
   '<div class="next"><a class="btn btn--line" href="/karuta/">100首の一覧へ</a><a class="btn btn--fill" href="/">入口へ戻る</a></div>',
 ].join('\n');
-writePage('404.html', renderDocument({ title: 'ページが見つかりません', bodyHtml: NOT_FOUND_BODY, scriptPath, stylePaths }));
+const NOT_FOUND_DESCRIPTION = 'お探しのページは /yomimasu にありません。入口か100首の一覧から探せます。';
+writePage('404.html', renderDocument({ title: 'ページが見つかりません', description: NOT_FOUND_DESCRIPTION, bodyHtml: NOT_FOUND_BODY, scriptPath, stylePaths }));
 
 // AI に入れる手順の画面が配るスキルのファイル。保存のボタンは <a href="/yomimasu.zip" download> である（docs/ui-guide.md の8節）。
 // ChatGPT にだけは、同じ知識をプラグインのアーカイブの形で配る（site/skill-zip.ts）。

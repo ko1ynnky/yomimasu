@@ -229,7 +229,7 @@ export function poemHtml(card: Card, cards: readonly Card[]): string {
 
 const prioClass = (point: Point) => (point.priority === '高' ? 'prio prio--hi' : 'prio');
 
-export type CardPage = { path: string; title: string; command: string; readName: string; bodyHtml: string };
+export type CardPage = { path: string; title: string; description: string; command: string; readName: string; bodyHtml: string };
 
 // お手本の再生は JS で動くので、JS がないときはボタンを隠したままにする（100首の一覧の並べ方のボタンと同じ）。再生の印は SVG にする（docs/ui-guide.md の5節）。
 const playHtml = (card: Card) =>
@@ -264,6 +264,18 @@ function pointsSectionHtml(card: Card, cards: readonly Card[]): string[] {
   ];
 }
 
+const poemText = (card: Card) => card.phrases.map((p) => p.text).join(' ');
+
+// 題は歌番号と決まり字だけにし、歌の字は説明に書く（2026-11-17 のユーザーの判断）。
+// 歌の字を題に入れる案（初句と二句、上の句のすべて、今までの題の後ろに上の句）は、ユーザーが比べて採らなかった（docs/decisions.md）。
+const cardTitle = (card: Card) => (card.kimariji ? `${card.no}番「${card.kimariji.kana}」の読み方` : '序歌の読み方');
+
+const cardDescription = (card: Card) =>
+  [
+    card.kimariji ? `「${poemText(card)}」の読み方。決まり字は「${card.kimariji.kana}」。` : `序歌「${poemText(card)}」の読み方。1枚目の前に読む歌です。`,
+    '伸ばす箇所と気をつける点、余韻で伸ばす音の口の形を説明し、お手本の読みも聞けます。',
+  ].join('');
+
 export function cardPage(card: Card, cards: readonly Card[], advice: readonly Advice[]): CardPage {
   const name = cardName(card);
   const poemSource = poemSourceText(card);
@@ -289,7 +301,8 @@ export function cardPage(card: Card, cards: readonly Card[], advice: readonly Ad
   ].join('\n');
   return {
     path: `${cardUrl(card.no).slice(1)}index.html`,
-    title: `1首 ${name}`,
+    title: cardTitle(card),
+    description: cardDescription(card),
     command: `1首 ${name}`,
     readName: `${name}.md`,
     bodyHtml: expandCardRefs(body, cards),

@@ -1,5 +1,6 @@
 ---
 title: Claude に入れる
+description: /yomimasu の読みの知識を、claude.ai の Claude にスキルとして入れる手順です。ファイルの保存とアップロードから、入れたあとに聞いてみる例までを載せています。
 slug: install/claude
 ---
 

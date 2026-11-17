@@ -11,8 +11,8 @@ test('このアプリについては about/index.html に組み立てられる',
 });
 
 test('このアプリについては、実行の行と読んだ行を出す', () => {
-  const { title, command, readName } = source();
-  const html = renderDocument({ title, command, readName, bodyHtml: '', scriptPath: '/assets/main.js', stylePaths: [] });
+  const { title, description, command, readName } = source();
+  const html = renderDocument({ title, description, command, readName, bodyHtml: '', scriptPath: '/assets/main.js', stylePaths: [] });
   assert.match(html, /\/yomimasu このアプリについて<\/span><\/div>/);
   assert.match(html, /<div class="read">● Read このアプリについて\.md<\/div>/);
 });

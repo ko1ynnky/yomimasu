@@ -1,19 +1,24 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { outputPathOf, parseSource, renderDocument, runFor } from '../../site/render.ts';
+import { outputPathOf, parseSource, renderDocument, runFor, sitemapXml } from '../../site/render.ts';
 
-test('Markdown の先頭からタイトルを取り出し、本文と分ける', () => {
-  assert.deepEqual(parseSource('---\ntitle: 総論\n---\n\n本文です。\n'), { title: '総論', markdown: '\n本文です。\n' });
+test('Markdown の先頭からタイトルと説明を取り出し、本文と分ける', () => {
+  assert.deepEqual(parseSource('---\ntitle: 総論\ndescription: 1組の配分の説明。\n---\n\n本文です。\n'), {
+    title: '総論',
+    description: '1組の配分の説明。',
+    markdown: '\n本文です。\n',
+  });
 });
 
 test('Markdown の先頭から、読んだ行に出す知識のファイルの名前を読む', () => {
-  assert.equal(parseSource('---\ntitle: 総論\ncommand: 総論を学ぶ\nread: 総論.md\n---\n本文\n').readName, '総論.md');
-  assert.equal(parseSource('---\ntitle: 結果\ncommand: 結果を見る\n---\n本文\n').readName, undefined);
+  assert.equal(parseSource('---\ntitle: 総論\ndescription: 説明\ncommand: 総論を学ぶ\nread: 総論.md\n---\n本文\n').readName, '総論.md');
+  assert.equal(parseSource('---\ntitle: 結果\ndescription: 説明\ncommand: 結果を見る\n---\n本文\n').readName, undefined);
 });
 
 test('Markdown の先頭から、ボタンが打ち込むコマンドと道具の画面かどうかを読む', () => {
-  assert.deepEqual(parseSource('---\ntitle: 読む\ncommand: 読む 77番 29番\ntool: true\n---\n本文\n'), {
+  assert.deepEqual(parseSource('---\ntitle: 読む\ndescription: 説明\ncommand: 読む 77番 29番\ntool: true\n---\n本文\n'), {
     title: '読む',
+    description: '説明',
     command: '読む 77番 29番',
     tool: true,
     markdown: '本文\n',
@@ -22,6 +27,11 @@ test('Markdown の先頭から、ボタンが打ち込むコマンドと道具�
 
 test('タイトルのない Markdown は組み立てを止める', () => {
   assert.throws(() => parseSource('本文だけです。\n'), /title/);
+});
+
+// 検索の結果に出る説明がページの間で重ならないよう、ページごとに書かせる。
+test('説明のない Markdown は組み立てを止める', () => {
+  assert.throws(() => parseSource('---\ntitle: 総論\n---\n本文\n'), /description/);
 });
 
 test('入口のファイルはサイトの入口になる', () => {
@@ -33,17 +43,17 @@ test('ほかのファイルは固有の URL を持つ', () => {
 });
 
 test('日本語の名前のファイルは、先頭の slug の英字の URL に置く', () => {
-  const source = parseSource('---\ntitle: 総論を学ぶ\ncommand: 総論を学ぶ\nread: 総論.md\nslug: soron\n---\n本文\n');
+  const source = parseSource('---\ntitle: 総論を学ぶ\ndescription: 説明\ncommand: 総論を学ぶ\nread: 総論.md\nslug: soron\n---\n本文\n');
   assert.equal(source.slug, 'soron');
   assert.equal(outputPathOf('総論.md', source.slug), 'soron/index.html');
 });
 
 test('slug に英小文字、数字、ハイフン、区切りの / のほかを使うと組み立てを止める', () => {
-  assert.throws(() => parseSource('---\ntitle: 総論\nslug: 総論\n---\n本文\n'), /slug/);
-  assert.throws(() => parseSource('---\ntitle: 総論\nslug: ../soron\n---\n本文\n'), /slug/);
+  assert.throws(() => parseSource('---\ntitle: 総論\ndescription: 説明\nslug: 総論\n---\n本文\n'), /slug/);
+  assert.throws(() => parseSource('---\ntitle: 総論\ndescription: 説明\nslug: ../soron\n---\n本文\n'), /slug/);
 });
 
-const page = { title: '総論', bodyHtml: '<p>本文です。</p>', scriptPath: '/assets/main.js', stylePaths: ['/assets/main.css'] };
+const page = { title: '総論', description: '1組の配分の説明。', bodyHtml: '<p>本文です。</p>', scriptPath: '/assets/main.js', stylePaths: ['/assets/main.css'] };
 
 test('HTML には本文が入るので、JS なしで読める', () => {
   const html = renderDocument(page);
@@ -83,11 +93,50 @@ test('本文の <!-- ask --> から後ろは、入力の行の下に次の操作
   assert.match(html, /<p>本文<\/p>\n<section class="ask"><div class="ask-line">.*<\/div>\n<p><a href="\/read\/">まず1回読む<\/a><\/p><\/section><\/div>/);
 });
 
-test('タイトルとコマンドの記号は HTML として解釈させない', () => {
-  const html = renderDocument({ ...page, title: '<b>&"', command: '<i>' });
+test('タイトルと説明とコマンドの記号は HTML として解釈させない', () => {
+  const html = renderDocument({ ...page, title: '<b>&"', description: '"歌"と<決まり字>', command: '<i>' });
   assert.match(html, /<title>&lt;b&gt;&amp;&quot; - \/yomimasu<\/title>/);
   assert.match(html, /<meta property="og:title" content="&lt;b&gt;&amp;&quot; - \/yomimasu">/);
+  assert.match(html, /<meta name="description" content="&quot;歌&quot;と&lt;決まり字&gt;">/);
   assert.match(html, /\/yomimasu &lt;i&gt;/);
+});
+
+test('ページの説明を、検索の結果と共有したときの説明に書く', () => {
+  const html = renderDocument(page);
+  assert.match(html, /<meta name="description" content="1組の配分の説明。">/);
+  assert.match(html, /<meta property="og:description" content="1組の配分の説明。">/);
+});
+
+test('URL のあるページは、共有したときの URL と同じ本番の URL を canonical に書く', () => {
+  const html = renderDocument({ ...page, path: '/soron/' });
+  assert.match(html, /<link rel="canonical" href="https:\/\/yomimasu\.karutalog\.com\/soron\/">/);
+  assert.match(html, /<meta property="og:url" content="https:\/\/yomimasu\.karutalog\.com\/soron\/">/);
+});
+
+test('組を URL で受け取る聞く画面と録音の画面には、canonical を書かず、共有したときの URL は書く', () => {
+  for (const path of ['/read/', '/read/rec/']) {
+    const html = renderDocument({ ...page, path });
+    assert.doesNotMatch(html, /rel="canonical"/, path);
+    assert.match(html, new RegExp(`<meta property="og:url" content="https://yomimasu\\.karutalog\\.com${path}">`), path);
+  }
+});
+
+test('URL のないページ（ないページの 404）には canonical を書かない', () => {
+  assert.doesNotMatch(renderDocument(page), /rel="canonical"/);
+});
+
+test('sitemap は、渡したパスを本番の URL にして、渡した順に並べる', () => {
+  assert.equal(
+    sitemapXml(['/', '/karuta/1/']),
+    [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+      '<url><loc>https://yomimasu.karutalog.com/</loc></url>',
+      '<url><loc>https://yomimasu.karutalog.com/karuta/1/</loc></url>',
+      '</urlset>',
+      '',
+    ].join('\n'),
+  );
 });
 
 test('入力の行は、押したボタンのコマンドを打ち込める', () => {

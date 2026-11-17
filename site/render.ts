@@ -1,6 +1,8 @@
-export type SourcePage = { title: string; command?: string; readName?: string; tool?: boolean; slug?: string; markdown: string };
+export type SourcePage = { title: string; description: string; command?: string; readName?: string; tool?: boolean; slug?: string; markdown: string };
 export type DocumentParts = {
   title: string;
+  // 検索の結果と共有したときに出る説明。ページの間で重ならないよう、ページごとに書く。
+  description: string;
   // ページの URL のパス。ないページ（404.html）は、どの URL にも出るので持たない。
   path?: string;
   bodyHtml: string;
@@ -20,12 +22,15 @@ export function parseSource(source: string): SourcePage {
   const fields = new Map((match?.[1].split('\n') ?? []).map((line) => [line.slice(0, line.indexOf(':')), line.slice(line.indexOf(':') + 1).trim()]));
   const title = fields.get('title');
   if (!match || !title) throw new Error('先頭に title の行がない Markdown は組み立てられません');
+  const description = fields.get('description');
+  if (!description) throw new Error('先頭に description の行がない Markdown は組み立てられません');
   const command = fields.get('command');
   const readName = fields.get('read');
   const slug = fields.get('slug');
   if (slug !== undefined && !SLUG.test(slug)) throw new Error(`slug「${slug}」は英小文字、数字、ハイフンを / で区切って書きます`);
   return {
     title,
+    description,
     ...(command ? { command } : {}),
     ...(readName ? { readName } : {}),
     ...(fields.get('tool') === 'true' ? { tool: true } : {}),
@@ -89,10 +94,8 @@ function screenHtml(bodyHtml: string, tool: boolean | undefined, back: boolean):
 // 共有したときの URL と画像は、プレビューの URL で開いても本番を指すよう、本番のオリジンで書く。
 const ORIGIN = 'https://yomimasu.karutalog.com';
 const SITE_NAME = '/yomimasu';
-// 題と説明の文は 2026-11-07 にユーザーが決めた（docs/decisions.md）。入口の題は、アプリの名前のあとに入口の標語と題を続ける。
+// 題の文は 2026-11-07 にユーザーが決めた（docs/decisions.md）。入口の題は、アプリの名前のあとに入口の標語と題を続ける。
 const HOME_TITLE = `${SITE_NAME} - 競技かるたにかかわるすべての人に、読みを身近に。「読みます」と言うために。`;
-// 説明は今はサイトで1つにする。ページごとに替えるときは DocumentParts に足す。
-const DESCRIPTION = '競技かるたの読みを、家で録音して測り、次に直す1点を受け取る Web アプリ。総論、ポイント、100首の読み方も学べます。';
 // 画像は scripts/brand/make.ts が作る。
 const OG_IMAGE = { url: `${ORIGIN}/og.png`, width: 1200, height: 630, alt: '「読みます」と言うために。かなで描いた読手の絵' };
 
@@ -100,19 +103,27 @@ const documentTitle = (title: string, path?: string) => (path === '/' ? HOME_TIT
 
 const meta = (key: 'name' | 'property', name: string, content: string | number) => `<meta ${key}="${name}" content="${escapeHtml(String(content))}">`;
 
-// SNS は JS を動かさずに head を読むので、題、説明、アイコン、共有したときの絵は組み立てのときに書く。殻（client/ui/shell.ts）が入れ替えるのは題だけである。
-function headTags(title: string, path: string | undefined): string {
+// 聞く画面と録音の画面は、読む組を ?shimo=&kami= で受け取る。canonical を書くと、iOS の Safari の共有が組の付かない URL になり、
+// 組が相手に渡らないので書かない（2026-11-17 のユーザーの判断）。og:url は 2026-11-07 の決定のまま、組の付かない URL で書く。
+const PAIR_PAGES = ['/read/', '/read/rec/'];
+
+// SNS は JS を動かさずに head を読むので、題、説明、アイコン、共有したときの絵は組み立てのときに書く。殻（client/ui/shell.ts）が入れ替えるのは題と canonical である。
+// canonical は og:url と同じ本番の URL にする。プレビューの URL で開いても、検索が本番の1つの URL にまとめるようにするためである。
+function headTags(title: string, description: string, path: string | undefined): string {
+  const url = path === undefined ? undefined : `${ORIGIN}${path}`;
+  const canonical = path !== undefined && !PAIR_PAGES.includes(path);
   return [
     `<title>${escapeHtml(title)}</title>`,
-    meta('name', 'description', DESCRIPTION),
+    meta('name', 'description', description),
+    ...(canonical ? [`<link rel="canonical" href="${escapeHtml(url!)}">`] : []),
     '<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">',
     '<link rel="apple-touch-icon" href="/apple-touch-icon.png">',
     meta('property', 'og:type', 'website'),
     meta('property', 'og:site_name', SITE_NAME),
     meta('property', 'og:locale', 'ja_JP'),
     meta('property', 'og:title', title),
-    meta('property', 'og:description', DESCRIPTION),
-    ...(path === undefined ? [] : [meta('property', 'og:url', `${ORIGIN}${path}`)]),
+    meta('property', 'og:description', description),
+    ...(url === undefined ? [] : [meta('property', 'og:url', url)]),
     meta('property', 'og:image', OG_IMAGE.url),
     meta('property', 'og:image:width', OG_IMAGE.width),
     meta('property', 'og:image:height', OG_IMAGE.height),
@@ -123,14 +134,14 @@ function headTags(title: string, path: string | undefined): string {
 
 // 「戻る」は入口のほかのどの画面にも置く（docs/ui-guide.md の8節「戻る」）。ここで置くのは教科書のページ、つまり読んだ行のある画面である。
 // 読む流れ（聞く、読む、練習モード、結果、前回と比べる）は、画面の部品が置く（client/ui/back.tsx）。主の操作が部品の中にあって状態で替わり、録音中は出さないからである。
-export function renderDocument({ title, path, bodyHtml, scriptPath, stylePaths, command, readName, tool }: DocumentParts): string {
+export function renderDocument({ title, description, path, bodyHtml, scriptPath, stylePaths, command, readName, tool }: DocumentParts): string {
   return `<!doctype html>
 <html lang="ja">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light">
-${headTags(documentTitle(title, path), path)}
+${headTags(documentTitle(title, path), description, path)}
 ${stylePaths.map((path) => `<link rel="stylesheet" href="${path}">`).join('\n')}
 </head>
 <body>
@@ -142,4 +153,15 @@ ${stylePaths.map((path) => `<link rel="stylesheet" href="${path}">`).join('\n')}
 </body>
 </html>
 `;
+}
+
+// 更新の日（lastmod）は書かない。組み立てのたびに全ページが新しくなったように見え、検索が当てにしない値になるからである。
+export function sitemapXml(paths: readonly string[]): string {
+  return [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ...paths.map((path) => `<url><loc>${escapeHtml(`${ORIGIN}${path}`)}</loc></url>`),
+    '</urlset>',
+    '',
+  ].join('\n');
 }
