@@ -10,7 +10,7 @@
     - 結果（`/result/`）と前回と比べる（`/result/compare/`）は入れない。どちらも端末の IndexedDB に残した録音を出す画面で、検索から来た人とクローラーには「まだ録音がありません。」しか出ないからである。外すページを組み立てなくなったら、組み立てが止まる。
     - 例の録音の結果（`/result/example/`）は、だれが開いても同じ例を出すので入れる。聞く画面、練習モード、録音の画面（`/read/rec/`）も、利用者の状態によらないので入れる。
     - 更新の日（lastmod）は書かない。組み立てのたびに全ページが新しくなったように見え、検索が当てにしない値になるからである。changefreq と priority も書かない。
-  - robots.txt：`site/public/robots.txt` には `Sitemap: https://yomimasu.karutalog.com/sitemap.xml` の行と、理由のコメントだけを書く。クローラーごとの規則は書かない（下の「Cloudflare の管理の robots.txt との重なり」）。
+  - robots.txt：`site/public/robots.txt` には `Sitemap: https://yomimasu.karutalog.com/sitemap.xml` の1行だけを書く。クローラーごとの規則は書かない（下の「Cloudflare の管理の robots.txt との重なり」）。理由はファイルのコメントにせず、この項目と `e2e/head.spec.ts` の検査のそばに書く。プレビューの配信は robots.txt を charset のない `Content-Type: text/plain` で返したので、日本語のコメントの字をどう読むかが読み手によるからである。
   - canonical：og:url と同じ本番の URL を、og:url を書くページの head に書く。ないページ（404）には書かない。プレビューの URL や、組を指定する `?shimo=` の付いた URL で開いても、本番の1つの URL を指す。
     - 殻（`site/client/ui/shell.ts`）が画面を入れ替えるときは、題と一緒に canonical も入れ替える。iOS の Safari は共有に canonical の URL を使うとされ、入れ替えないと、入口から殻で移った1首のページで入口の URL を共有してしまう。PR の前の reviewer の指摘で直した。説明と og: のタグは入れ替えない。読むのは URL ごとに HTML を取り直す検索と SNS で、ブラウザーは使わないからである。
   - 説明：ページごとに中身に合った文を書く。
