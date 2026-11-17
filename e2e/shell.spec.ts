@@ -281,6 +281,21 @@ test('ブラウザーの戻る・進む操作では、前の内容に動きな�
   expect(await reloads(page)).toBe(false);
 });
 
+// iOS の Safari の共有は canonical の URL を使うので、入れ替えたあとも移った先を指していないと、前の画面の URL を共有してしまう。
+test('画面を入れ替えたあとも、canonical は今の画面の本番の URL を指す', async ({ page }) => {
+  const canonical = page.locator('link[rel="canonical"]');
+  await page.goto('/');
+  await keep(page);
+  await page.getByRole('link', { name: /\/総論を学ぶ/ }).click();
+  await expect(page).toHaveURL(/\/soron\/$/);
+  await expect(canonical).toHaveAttribute('href', 'https://yomimasu.karutalog.com/soron/');
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(canonical).toHaveAttribute('href', 'https://yomimasu.karutalog.com/');
+  await expect(canonical).toHaveCount(1);
+  expect(await reloads(page)).toBe(false);
+});
+
 test('戻る・進む操作を続けて押しても、URL と本文が食い違わない', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('link', { name: /\/総論を学ぶ/ }).click();

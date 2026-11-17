@@ -1,5 +1,6 @@
 ---
 title: Gemini に入れる
+description: /yomimasu の読みの知識を、gemini.google.com の Gemini にスキルとして入れる手順です。ファイルの保存とアップロードから、入れたあとに聞いてみる例までを載せています。
 slug: install/gemini
 ---
 

@@ -229,7 +229,7 @@ export function poemHtml(card: Card, cards: readonly Card[]): string {
 
 const prioClass = (point: Point) => (point.priority === '高' ? 'prio prio--hi' : 'prio');
 
-export type CardPage = { path: string; title: string; command: string; readName: string; bodyHtml: string };
+export type CardPage = { path: string; title: string; description: string; command: string; readName: string; bodyHtml: string };
 
 // お手本の再生は JS で動くので、JS がないときはボタンを隠したままにする（100首の一覧の並べ方のボタンと同じ）。再生の印は SVG にする（docs/ui-guide.md の5節）。
 const playHtml = (card: Card) =>
@@ -264,6 +264,22 @@ function pointsSectionHtml(card: Card, cards: readonly Card[]): string[] {
   ];
 }
 
+const phrasesText = (card: Card, count = card.phrases.length) =>
+  card.phrases
+    .slice(0, count)
+    .map((p) => p.text)
+    .join(' ');
+
+// 題は、検索で打たれる歌の初めの字と、選手が札を呼ぶ決まり字を入れ、検索の結果で切れにくい長さ（全角30字前後）に収める。
+// 上の句をすべて入れると、100首のうち36首が「 - /yomimasu」を含めて30字を超えるので、初句と二句にする（docs/decisions.md）。
+const cardTitle = (card: Card) => `${phrasesText(card, 2)}（${cardName(card)}）の読み方`;
+
+const cardDescription = (card: Card) =>
+  [
+    card.kimariji ? `「${phrasesText(card)}」の読み方。決まり字は「${card.kimariji.kana}」。` : `序歌「${phrasesText(card)}」の読み方。1枚目の前に読む歌です。`,
+    '伸ばす箇所と気をつける点、余韻で伸ばす音の口の形を説明し、お手本の読みも聞けます。',
+  ].join('');
+
 export function cardPage(card: Card, cards: readonly Card[], advice: readonly Advice[]): CardPage {
   const name = cardName(card);
   const poemSource = poemSourceText(card);
@@ -289,7 +305,8 @@ export function cardPage(card: Card, cards: readonly Card[], advice: readonly Ad
   ].join('\n');
   return {
     path: `${cardUrl(card.no).slice(1)}index.html`,
-    title: `1首 ${name}`,
+    title: cardTitle(card),
+    description: cardDescription(card),
     command: `1首 ${name}`,
     readName: `${name}.md`,
     bodyHtml: expandCardRefs(body, cards),

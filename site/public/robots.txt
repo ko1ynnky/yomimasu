@@ -1,0 +1,2 @@
+# クローラーごとの規則は、配信の Cloudflare が管理の robots.txt としてこのファイルの前に足す。ここに User-agent の組を書くと、同じ組が2つ並ぶ（docs/decisions.md）。
+Sitemap: https://yomimasu.karutalog.com/sitemap.xml
