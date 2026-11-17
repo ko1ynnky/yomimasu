@@ -19,8 +19,10 @@ jobs:
   # Claude は書き込みの権限のない job で動かす。結果を使う処理は次の job に分ける。
   # github_token を渡すと、action は Claude の App のトークンを取らず、Claude の gh も読み取りだけになる。
   # PR の内容を実行しないよう、base を取り出す。REVIEW.md とスキルも base の版が効く。
+  # フォークの PR では動かさない。このリポジトリにブランチを置けるのは、書き込みの権限を持つ人と App だけである。
+  # fork を消した PR は head.repo が null になり、fork の印では通ってしまうので、リポジトリの名前で比べる。
   review:
-    if: ${{ github.event.pull_request.user.login == 'claude[bot]' }}
+    if: ${{ github.event.pull_request.user.login == 'claude[bot]' && github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -69,11 +71,11 @@ jobs:
             echo 'RUN_SUMMARY_END'
           } >>"$GITHUB_OUTPUT"
 
-  # 必須の検査の名前である。人の PR では skip になり、成功として扱われる。
+  # 必須の検査の名前である。人の PR とフォークの PR では skip になり、成功として扱われる。
   # review が失敗しても動き、結果を読めなければ人に渡す。
   review-gate:
     needs: review
-    if: ${{ !cancelled() && github.event.pull_request.user.login == 'claude[bot]' }}
+    if: ${{ !cancelled() && github.event.pull_request.user.login == 'claude[bot]' && github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
