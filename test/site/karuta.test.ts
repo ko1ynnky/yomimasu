@@ -72,9 +72,10 @@ test('1首のページは歌番号の URL に置き、コマンドと読んだ�
   );
 });
 
-test('1首のページの題は、歌の初句と二句と決まり字で書く。序歌は決まり字の代わりに序歌と書く', () => {
-  assert.equal(cardPage(card(1), cards, advice).title, '秋の田の かりほの庵の（あきの）の読み方');
-  assert.equal(cardPage(card(0), cards, advice).title, '難波津に 咲くやこの花（序歌）の読み方');
+test('1首のページの題は、歌番号と決まり字で書く。序歌は「序歌の読み方」にする', () => {
+  assert.equal(cardPage(card(1), cards, advice).title, '1番「あきの」の読み方');
+  assert.equal(cardPage(card(100), cards, advice).title, '100番「もも」の読み方');
+  assert.equal(cardPage(card(0), cards, advice).title, '序歌の読み方');
 });
 
 test('1首のページの説明は、歌の全文と決まり字を書き、札ごとに違う', () => {

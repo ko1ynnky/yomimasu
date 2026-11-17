@@ -264,19 +264,15 @@ function pointsSectionHtml(card: Card, cards: readonly Card[]): string[] {
   ];
 }
 
-const phrasesText = (card: Card, count = card.phrases.length) =>
-  card.phrases
-    .slice(0, count)
-    .map((p) => p.text)
-    .join(' ');
+const poemText = (card: Card) => card.phrases.map((p) => p.text).join(' ');
 
-// 題は、検索で打たれる歌の初めの字と、選手が札を呼ぶ決まり字を入れ、検索の結果で切れにくい長さ（全角30字前後）に収める。
-// 上の句をすべて入れると、100首のうち36首が「 - /yomimasu」を含めて30字を超えるので、初句と二句にする（docs/decisions.md）。
-const cardTitle = (card: Card) => `${phrasesText(card, 2)}（${cardName(card)}）の読み方`;
+// 題は歌番号と決まり字だけにし、歌の字は説明に書く（2026-11-17 のユーザーの判断）。
+// 歌の字を題に入れる案（初句と二句、上の句のすべて、今までの題の後ろに上の句）は、ユーザーが比べて採らなかった（docs/decisions.md）。
+const cardTitle = (card: Card) => (card.kimariji ? `${card.no}番「${card.kimariji.kana}」の読み方` : '序歌の読み方');
 
 const cardDescription = (card: Card) =>
   [
-    card.kimariji ? `「${phrasesText(card)}」の読み方。決まり字は「${card.kimariji.kana}」。` : `序歌「${phrasesText(card)}」の読み方。1枚目の前に読む歌です。`,
+    card.kimariji ? `「${poemText(card)}」の読み方。決まり字は「${card.kimariji.kana}」。` : `序歌「${poemText(card)}」の読み方。1枚目の前に読む歌です。`,
     '伸ばす箇所と気をつける点、余韻で伸ばす音の口の形を説明し、お手本の読みも聞けます。',
   ].join('');
 

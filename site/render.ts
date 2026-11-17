@@ -103,14 +103,19 @@ const documentTitle = (title: string, path?: string) => (path === '/' ? HOME_TIT
 
 const meta = (key: 'name' | 'property', name: string, content: string | number) => `<meta ${key}="${name}" content="${escapeHtml(String(content))}">`;
 
-// SNS は JS を動かさずに head を読むので、題、説明、アイコン、共有したときの絵は組み立てのときに書く。殻（client/ui/shell.ts）が入れ替えるのは題だけである。
-// canonical は og:url と同じ本番の URL にする。プレビューの URL や、組を指定する ?shimo= の付いた URL で開いても、検索が本番の1つの URL にまとめるようにするためである。
+// 聞く画面と録音の画面は、読む組を ?shimo=&kami= で受け取る。canonical を書くと、iOS の Safari の共有が組の付かない URL になり、
+// 組が相手に渡らないので書かない（2026-11-17 のユーザーの判断）。og:url は 2026-11-07 の決定のまま、組の付かない URL で書く。
+const PAIR_PAGES = ['/read/', '/read/rec/'];
+
+// SNS は JS を動かさずに head を読むので、題、説明、アイコン、共有したときの絵は組み立てのときに書く。殻（client/ui/shell.ts）が入れ替えるのは題と canonical である。
+// canonical は og:url と同じ本番の URL にする。プレビューの URL で開いても、検索が本番の1つの URL にまとめるようにするためである。
 function headTags(title: string, description: string, path: string | undefined): string {
   const url = path === undefined ? undefined : `${ORIGIN}${path}`;
+  const canonical = path !== undefined && !PAIR_PAGES.includes(path);
   return [
     `<title>${escapeHtml(title)}</title>`,
     meta('name', 'description', description),
-    ...(url === undefined ? [] : [`<link rel="canonical" href="${escapeHtml(url)}">`]),
+    ...(canonical ? [`<link rel="canonical" href="${escapeHtml(url!)}">`] : []),
     '<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">',
     '<link rel="apple-touch-icon" href="/apple-touch-icon.png">',
     meta('property', 'og:type', 'website'),

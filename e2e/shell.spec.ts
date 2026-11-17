@@ -296,6 +296,20 @@ test('画面を入れ替えたあとも、canonical は今の画面の本番の 
   expect(await reloads(page)).toBe(false);
 });
 
+test('canonical のない聞く画面へ入れ替えると canonical を外し、戻ると入口の canonical を足す', async ({ page }) => {
+  const canonical = page.locator('link[rel="canonical"]');
+  await page.goto('/');
+  await keep(page);
+  await expect(canonical).toHaveAttribute('href', 'https://yomimasu.karutalog.com/');
+  await page.getByRole('link', { name: /\/まず1回読む/ }).click();
+  await expect(page).toHaveURL(/\/read\/$/);
+  await expect(canonical).toHaveCount(0);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(canonical).toHaveAttribute('href', 'https://yomimasu.karutalog.com/');
+  expect(await reloads(page)).toBe(false);
+});
+
 test('戻る・進む操作を続けて押しても、URL と本文が食い違わない', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('link', { name: /\/総論を学ぶ/ }).click();

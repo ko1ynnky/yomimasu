@@ -113,6 +113,14 @@ test('URL のあるページは、共有したときの URL と同じ本番の U
   assert.match(html, /<meta property="og:url" content="https:\/\/yomimasu\.karutalog\.com\/soron\/">/);
 });
 
+test('組を URL で受け取る聞く画面と録音の画面には、canonical を書かず、共有したときの URL は書く', () => {
+  for (const path of ['/read/', '/read/rec/']) {
+    const html = renderDocument({ ...page, path });
+    assert.doesNotMatch(html, /rel="canonical"/, path);
+    assert.match(html, new RegExp(`<meta property="og:url" content="https://yomimasu\\.karutalog\\.com${path}">`), path);
+  }
+});
+
 test('URL のないページ（ないページの 404）には canonical を書かない', () => {
   assert.doesNotMatch(renderDocument(page), /rel="canonical"/);
 });

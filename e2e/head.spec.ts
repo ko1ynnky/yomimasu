@@ -6,6 +6,10 @@ import { expect, test, type Page } from '@playwright/test';
 const ORIGIN = 'https://yomimasu.karutalog.com';
 const HOME_TITLE = '/yomimasu - 競技かるたにかかわるすべての人に、読みを身近に。「読みます」と言うために。';
 
+// 聞く画面と録音の画面は、読む組を ?shimo=&kami= で受け取る。組の付いた URL を共有したときに組が落ちないよう、canonical を書かない。
+const PAIR_PAGES = ['/read/', '/read/rec/'];
+const canonicalOf = (path: string) => (PAIR_PAGES.includes(path) ? undefined : `${ORIGIN}${path}`);
+
 // ページを足しても検査から漏れないよう、組み立てた結果のページを全部たどる（e2e/result.spec.ts と同じ形）。
 function builtPages(dir = 'dist', route = '/'): string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -25,7 +29,7 @@ const headOf = (page: Page): Promise<Head> =>
     ),
   }));
 
-test('組み立てたどのページも、アイコン、ページごとに違う説明、共有したときの題と画像、自分の URL を指す canonical を head に持つ', async ({ browser, baseURL }) => {
+test('組み立てたどのページも、アイコン、ページごとに違う説明、共有したときの題と画像を head に持ち、組を受け取る画面のほかは canonical が自分の URL を指す', async ({ browser, baseURL }) => {
   test.setTimeout(120_000);
   const pages = builtPages();
   expect(pages).toEqual(expect.arrayContaining(['/', '/soron/', '/karuta/', '/karuta/1/', '/karuta/joka/', '/result/']));
@@ -37,7 +41,7 @@ test('組み立てたどのページも、アイコン、ページごとに違�
     const head = await headOf(page);
     expect(head.links.icon, path).toBe('/favicon.ico');
     expect(head.links['apple-touch-icon'], path).toBe('/apple-touch-icon.png');
-    expect(head.links.canonical, path).toBe(`${ORIGIN}${path}`);
+    expect(head.links.canonical, path).toBe(canonicalOf(path));
     expect(head.metas.description, path).toBeTruthy();
     pagesByDescription.set(head.metas.description, [...(pagesByDescription.get(head.metas.description) ?? []), path]);
     expect(head.metas, path).toMatchObject({
@@ -59,7 +63,7 @@ test('組み立てたどのページも、アイコン、ページごとに違�
   await context.close();
 });
 
-test('入口の題はアプリの名前と標語、1首のページは歌の初句と二句と決まり字で、ほかのページは「ページの題 - /yomimasu」にする', async ({ browser, baseURL }) => {
+test('入口の題はアプリの名前と標語、1首のページは歌番号と決まり字で、ほかのページは「ページの題 - /yomimasu」にする', async ({ browser, baseURL }) => {
   const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
   const page = await context.newPage();
   await page.goto('/');
@@ -67,9 +71,9 @@ test('入口の題はアプリの名前と標語、1首のページは歌の初�
   await page.goto('/soron/');
   await expect(page).toHaveTitle('総論を学ぶ - /yomimasu');
   await page.goto('/karuta/1/');
-  await expect(page).toHaveTitle('秋の田の かりほの庵の（あきの）の読み方 - /yomimasu');
+  await expect(page).toHaveTitle('1番「あきの」の読み方 - /yomimasu');
   await page.goto('/karuta/joka/');
-  await expect(page).toHaveTitle('難波津に 咲くやこの花（序歌）の読み方 - /yomimasu');
+  await expect(page).toHaveTitle('序歌の読み方 - /yomimasu');
   await context.close();
 });
 
@@ -91,7 +95,7 @@ test('1首のページの説明には、歌の全文と決まり字を書く', a
 const ON_DEVICE_PAGES = ['/result/', '/result/compare/'];
 const SITEMAP_NS = 'http://www.sitemaps.org/schemas/sitemap/0.9';
 
-test('sitemap.xml は、端末の録音を出す画面のほかの組み立てたページを本番の URL で並べ、どの URL も 200 で開けて canonical が自分を指す', async ({ browser, baseURL, request }) => {
+test('sitemap.xml は、端末の録音を出す画面のほかの組み立てたページを本番の URL で並べ、どの URL も 200 で開けて、canonical を書くページでは自分を指す', async ({ browser, baseURL, request }) => {
   test.setTimeout(120_000);
   const response = await request.get('/sitemap.xml');
   expect(response.status()).toBe(200);
@@ -111,7 +115,7 @@ test('sitemap.xml は、端末の録音を出す画面のほかの組み立て�
   expect(paths.toSorted()).toEqual(builtPages().filter((path) => !ON_DEVICE_PAGES.includes(path)).toSorted());
   for (const path of paths) {
     expect((await page.goto(path))?.status(), path).toBe(200);
-    expect((await headOf(page)).links.canonical, path).toBe(`${ORIGIN}${path}`);
+    expect((await headOf(page)).links.canonical, path).toBe(canonicalOf(path));
   }
   await context.close();
 });
