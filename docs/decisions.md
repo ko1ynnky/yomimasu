@@ -11,6 +11,7 @@
   - `checks.test.sh` で、`anthropics/claude-code-action` を使う job ごとに、外の人が起こせるイベントに合わせた条件が、その job か `needs` で先に動く job の `if` にあるかを見る。`pull_request` には上のフォークの条件を、`issues` には `github.event.sender.login == github.repository_owner` を求める。`schedule` と `workflow_dispatch` は書き込みの権限を持つ人しか起こせないので、求めない。ほかのイベントは、条件を決めてこの検査に足すまで止める。CI では `check` の job のシェルの検査で動く。
   - `review-comments.sh` は、コメントを `gh api --paginate repos/{owner}/{repo}/issues/<番号>/comments` から受け、書いた人を REST の `user.login` と `user.type` で見る。レビューは `github-actions[bot]`、Claude の答えは `claude[bot]` のコメントで、どちらも `type` が `Bot` のものに限る。`review-round.sh`、`review-gate.sh`、`auto-target.sh`、`auto.yml` も同じ取り方にそろえた。
   - `ci.yml` の `deny-names` は、フォークの PR では最初の step で、一覧（secret）が渡らないのでメンテナーが確かめる、という文を出して失敗する。
+  - `ci.yml` の concurrency の group を、PR では番号で分ける（`ci-${{ github.event.pull_request.number || github.ref }}`）。`head_ref` はフォークの人が決めるブランチ名なので、同じ名前のほかの PR と実行を取り消し合う。push と手動の起動には PR がないので、今までどおり `github.ref` で分ける。`review.yml` と `risk-gate.yml` も PR の番号で分けている。
   - フォークの PR の `deny-names` は、PR の上の検査の色によらず、ユーザーが確かめる。`ci.yml` を `main` で手動で起こし、`scan_refs` を true にする。PR の参照（`refs/pull/<番号>/head`）から辿れて `main` から辿れないコミットの、メッセージ、足した行、ファイル名を見て、ログには PR の番号と SHA と件数だけが出る。通ったら、PR の上の `deny-names` が赤なら、管理者の権限で要件を外してマージする。
   - フォークの PR の検査の色は当てにしない。`pull_request` の実行は PR の側の Workflow を使うので、PR の中で検査を書き換えて緑にできる。`.github/` を変えるフォークの PR は、差分を読んで確かめる。
 - 経緯：2026-11-10 に審査が終わった。ユーザーは、Issue も PR も受け付け、AI の利用枠を使う処理は外の人が動かせないようにすると決めた。

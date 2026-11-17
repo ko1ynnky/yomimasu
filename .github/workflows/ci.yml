@@ -35,7 +35,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.head_ref || github.ref }}
+  # PR は番号で分ける。head_ref はフォークの人が決めるブランチ名なので、同じ名前のほかの PR の実行を取り消し合う。
+  group: ci-${{ github.event.pull_request.number || github.ref }}
   # main の実行を取り消すと、そのコミットのメッセージを誰も見なくなる。
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
